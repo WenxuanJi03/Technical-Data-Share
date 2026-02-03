@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechWorkshopMapper">
+    
+    <resultMap type="TechWorkshop" id="TechWorkshopResult">
+        <result property="workshopId"    column="workshop_id"    />
+        <result property="workshopCode"    column="workshop_code"    />
+        <result property="workshopName"    column="workshop_name"    />
+        <result property="workshopOrder"    column="workshop_order"    />
+        <result property="leaderId"    column="leader_id"    />
+        <result property="leaderName"    column="leader_name"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectTechWorkshopVo">
+        select workshop_id, workshop_code, workshop_name, workshop_order, leader_id, leader_name, status, remark, create_time from tech_workshop
+    </sql>
+
+    <select id="selectTechWorkshopList" parameterType="TechWorkshop" resultMap="TechWorkshopResult">
+        <include refid="selectTechWorkshopVo"/>
+        <where>  
+            <if test="workshopCode != null  and workshopCode != ''"> and workshop_code = #{workshopCode}</if>
+            <if test="workshopName != null  and workshopName != ''"> and workshop_name like concat('%', #{workshopName}, '%')</if>
+            <if test="workshopOrder != null "> and workshop_order = #{workshopOrder}</if>
+            <if test="leaderId != null "> and leader_id = #{leaderId}</if>
+            <if test="leaderName != null  and leaderName != ''"> and leader_name like concat('%', #{leaderName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechWorkshopByWorkshopId" parameterType="Long" resultMap="TechWorkshopResult">
+        <include refid="selectTechWorkshopVo"/>
+        where workshop_id = #{workshopId}
+    </select>
+
+    <insert id="insertTechWorkshop" parameterType="TechWorkshop" useGeneratedKeys="true" keyProperty="workshopId">
+        insert into tech_workshop
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="workshopCode != null and workshopCode != ''">workshop_code,</if>
+            <if test="workshopName != null and workshopName != ''">workshop_name,</if>
+            <if test="workshopOrder != null">workshop_order,</if>
+            <if test="leaderId != null">leader_id,</if>
+            <if test="leaderName != null">leader_name,</if>
+            <if test="status != null">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="workshopCode != null and workshopCode != ''">#{workshopCode},</if>
+            <if test="workshopName != null and workshopName != ''">#{workshopName},</if>
+            <if test="workshopOrder != null">#{workshopOrder},</if>
+            <if test="leaderId != null">#{leaderId},</if>
+            <if test="leaderName != null">#{leaderName},</if>
+            <if test="status != null">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechWorkshop" parameterType="TechWorkshop">
+        update tech_workshop
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="workshopCode != null and workshopCode != ''">workshop_code = #{workshopCode},</if>
+            <if test="workshopName != null and workshopName != ''">workshop_name = #{workshopName},</if>
+            <if test="workshopOrder != null">workshop_order = #{workshopOrder},</if>
+            <if test="leaderId != null">leader_id = #{leaderId},</if>
+            <if test="leaderName != null">leader_name = #{leaderName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where workshop_id = #{workshopId}
+    </update>
+
+    <delete id="deleteTechWorkshopByWorkshopId" parameterType="Long">
+        delete from tech_workshop where workshop_id = #{workshopId}
+    </delete>
+
+    <delete id="deleteTechWorkshopByWorkshopIds" parameterType="String">
+        delete from tech_workshop where workshop_id in 
+        <foreach item="workshopId" collection="array" open="(" separator="," close=")">
+            #{workshopId}
+        </foreach>
+    </delete>
+</mapper>

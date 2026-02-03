@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechTrialProcessMapper">
+    
+    <resultMap type="TechTrialProcess" id="TechTrialProcessResult">
+        <result property="processId"    column="process_id"    />
+        <result property="trialId"    column="trial_id"    />
+        <result property="workshopOrder"    column="workshop_order"    />
+        <result property="workshopCode"    column="workshop_code"    />
+        <result property="workshopName"    column="workshop_name"    />
+        <result property="status"    column="status"    />
+        <result property="receiverId"    column="receiver_id"    />
+        <result property="receiverName"    column="receiver_name"    />
+        <result property="receiveTime"    column="receive_time"    />
+        <result property="handlerId"    column="handler_id"    />
+        <result property="handlerName"    column="handler_name"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="workHours"    column="work_hours"    />
+        <result property="result"    column="result"    />
+        <result property="problem"    column="problem"    />
+        <result property="remark"    column="remark"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTechTrialProcessVo">
+        select process_id, trial_id, workshop_order, workshop_code, workshop_name, status, receiver_id, receiver_name, receive_time, handler_id, handler_name, handle_time, work_hours, result, problem, remark, create_time, update_time from tech_trial_process
+    </sql>
+
+    <select id="selectTechTrialProcessList" parameterType="TechTrialProcess" resultMap="TechTrialProcessResult">
+        <include refid="selectTechTrialProcessVo"/>
+        <where>  
+            <if test="trialId != null "> and trial_id = #{trialId}</if>
+            <if test="workshopOrder != null "> and workshop_order = #{workshopOrder}</if>
+            <if test="workshopCode != null  and workshopCode != ''"> and workshop_code = #{workshopCode}</if>
+            <if test="workshopName != null  and workshopName != ''"> and workshop_name like concat('%', #{workshopName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="receiverId != null "> and receiver_id = #{receiverId}</if>
+            <if test="receiverName != null  and receiverName != ''"> and receiver_name like concat('%', #{receiverName}, '%')</if>
+            <if test="receiveTime != null "> and receive_time = #{receiveTime}</if>
+            <if test="handlerId != null "> and handler_id = #{handlerId}</if>
+            <if test="handlerName != null  and handlerName != ''"> and handler_name like concat('%', #{handlerName}, '%')</if>
+            <if test="handleTime != null "> and handle_time = #{handleTime}</if>
+            <if test="workHours != null "> and work_hours = #{workHours}</if>
+            <if test="result != null  and result != ''"> and result = #{result}</if>
+            <if test="problem != null  and problem != ''"> and problem = #{problem}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechTrialProcessByProcessId" parameterType="Long" resultMap="TechTrialProcessResult">
+        <include refid="selectTechTrialProcessVo"/>
+        where process_id = #{processId}
+    </select>
+
+    <insert id="insertTechTrialProcess" parameterType="TechTrialProcess" useGeneratedKeys="true" keyProperty="processId">
+        insert into tech_trial_process
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="trialId != null">trial_id,</if>
+            <if test="workshopOrder != null">workshop_order,</if>
+            <if test="workshopCode != null and workshopCode != ''">workshop_code,</if>
+            <if test="workshopName != null and workshopName != ''">workshop_name,</if>
+            <if test="status != null">status,</if>
+            <if test="receiverId != null">receiver_id,</if>
+            <if test="receiverName != null">receiver_name,</if>
+            <if test="receiveTime != null">receive_time,</if>
+            <if test="handlerId != null">handler_id,</if>
+            <if test="handlerName != null">handler_name,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="workHours != null">work_hours,</if>
+            <if test="result != null">result,</if>
+            <if test="problem != null">problem,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="trialId != null">#{trialId},</if>
+            <if test="workshopOrder != null">#{workshopOrder},</if>
+            <if test="workshopCode != null and workshopCode != ''">#{workshopCode},</if>
+            <if test="workshopName != null and workshopName != ''">#{workshopName},</if>
+            <if test="status != null">#{status},</if>
+            <if test="receiverId != null">#{receiverId},</if>
+            <if test="receiverName != null">#{receiverName},</if>
+            <if test="receiveTime != null">#{receiveTime},</if>
+            <if test="handlerId != null">#{handlerId},</if>
+            <if test="handlerName != null">#{handlerName},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="workHours != null">#{workHours},</if>
+            <if test="result != null">#{result},</if>
+            <if test="problem != null">#{problem},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechTrialProcess" parameterType="TechTrialProcess">
+        update tech_trial_process
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="trialId != null">trial_id = #{trialId},</if>
+            <if test="workshopOrder != null">workshop_order = #{workshopOrder},</if>
+            <if test="workshopCode != null and workshopCode != ''">workshop_code = #{workshopCode},</if>
+            <if test="workshopName != null and workshopName != ''">workshop_name = #{workshopName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="receiverId != null">receiver_id = #{receiverId},</if>
+            <if test="receiverName != null">receiver_name = #{receiverName},</if>
+            <if test="receiveTime != null">receive_time = #{receiveTime},</if>
+            <if test="handlerId != null">handler_id = #{handlerId},</if>
+            <if test="handlerName != null">handler_name = #{handlerName},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="problem != null">problem = #{problem},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where process_id = #{processId}
+    </update>
+
+    <delete id="deleteTechTrialProcessByProcessId" parameterType="Long">
+        delete from tech_trial_process where process_id = #{processId}
+    </delete>
+
+    <delete id="deleteTechTrialProcessByProcessIds" parameterType="String">
+        delete from tech_trial_process where process_id in 
+        <foreach item="processId" collection="array" open="(" separator="," close=")">
+            #{processId}
+        </foreach>
+    </delete>
+</mapper>

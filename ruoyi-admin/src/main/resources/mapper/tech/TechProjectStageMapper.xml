@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechProjectStageMapper">
+    
+    <resultMap type="TechProjectStage" id="TechProjectStageResult">
+        <result property="stageId"    column="stage_id"    />
+        <result property="projectId"    column="project_id"    />
+        <result property="stageCode"    column="stage_code"    />
+        <result property="stageName"    column="stage_name"    />
+        <result property="stageStatus"    column="stage_status"    />
+        <result property="planStartDate"    column="plan_start_date"    />
+        <result property="planEndDate"    column="plan_end_date"    />
+        <result property="actualStartDate"    column="actual_start_date"    />
+        <result property="actualEndDate"    column="actual_end_date"    />
+        <result property="operatorId"    column="operator_id"    />
+        <result property="operatorName"    column="operator_name"    />
+        <result property="result"    column="result"    />
+        <result property="remark"    column="remark"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTechProjectStageVo">
+        select stage_id, project_id, stage_code, stage_name, stage_status, plan_start_date, plan_end_date, actual_start_date, actual_end_date, operator_id, operator_name, result, remark, create_time, update_time from tech_project_stage
+    </sql>
+
+    <select id="selectTechProjectStageList" parameterType="TechProjectStage" resultMap="TechProjectStageResult">
+        <include refid="selectTechProjectStageVo"/>
+        <where>  
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="stageCode != null  and stageCode != ''"> and stage_code = #{stageCode}</if>
+            <if test="stageName != null  and stageName != ''"> and stage_name like concat('%', #{stageName}, '%')</if>
+            <if test="stageStatus != null  and stageStatus != ''"> and stage_status = #{stageStatus}</if>
+            <if test="planStartDate != null "> and plan_start_date = #{planStartDate}</if>
+            <if test="planEndDate != null "> and plan_end_date = #{planEndDate}</if>
+            <if test="actualStartDate != null "> and actual_start_date = #{actualStartDate}</if>
+            <if test="actualEndDate != null "> and actual_end_date = #{actualEndDate}</if>
+            <if test="operatorId != null "> and operator_id = #{operatorId}</if>
+            <if test="operatorName != null  and operatorName != ''"> and operator_name like concat('%', #{operatorName}, '%')</if>
+            <if test="result != null  and result != ''"> and result = #{result}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechProjectStageByStageId" parameterType="Long" resultMap="TechProjectStageResult">
+        <include refid="selectTechProjectStageVo"/>
+        where stage_id = #{stageId}
+    </select>
+
+    <insert id="insertTechProjectStage" parameterType="TechProjectStage" useGeneratedKeys="true" keyProperty="stageId">
+        insert into tech_project_stage
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">project_id,</if>
+            <if test="stageCode != null and stageCode != ''">stage_code,</if>
+            <if test="stageName != null and stageName != ''">stage_name,</if>
+            <if test="stageStatus != null">stage_status,</if>
+            <if test="planStartDate != null">plan_start_date,</if>
+            <if test="planEndDate != null">plan_end_date,</if>
+            <if test="actualStartDate != null">actual_start_date,</if>
+            <if test="actualEndDate != null">actual_end_date,</if>
+            <if test="operatorId != null">operator_id,</if>
+            <if test="operatorName != null">operator_name,</if>
+            <if test="result != null">result,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">#{projectId},</if>
+            <if test="stageCode != null and stageCode != ''">#{stageCode},</if>
+            <if test="stageName != null and stageName != ''">#{stageName},</if>
+            <if test="stageStatus != null">#{stageStatus},</if>
+            <if test="planStartDate != null">#{planStartDate},</if>
+            <if test="planEndDate != null">#{planEndDate},</if>
+            <if test="actualStartDate != null">#{actualStartDate},</if>
+            <if test="actualEndDate != null">#{actualEndDate},</if>
+            <if test="operatorId != null">#{operatorId},</if>
+            <if test="operatorName != null">#{operatorName},</if>
+            <if test="result != null">#{result},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechProjectStage" parameterType="TechProjectStage">
+        update tech_project_stage
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="stageCode != null and stageCode != ''">stage_code = #{stageCode},</if>
+            <if test="stageName != null and stageName != ''">stage_name = #{stageName},</if>
+            <if test="stageStatus != null">stage_status = #{stageStatus},</if>
+            <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
+            <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
+            <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            <if test="operatorId != null">operator_id = #{operatorId},</if>
+            <if test="operatorName != null">operator_name = #{operatorName},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where stage_id = #{stageId}
+    </update>
+
+    <delete id="deleteTechProjectStageByStageId" parameterType="Long">
+        delete from tech_project_stage where stage_id = #{stageId}
+    </delete>
+
+    <delete id="deleteTechProjectStageByStageIds" parameterType="String">
+        delete from tech_project_stage where stage_id in 
+        <foreach item="stageId" collection="array" open="(" separator="," close=")">
+            #{stageId}
+        </foreach>
+    </delete>
+</mapper>

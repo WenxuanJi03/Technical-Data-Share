@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechChangeMapper">
+    
+    <resultMap type="TechChange" id="TechChangeResult">
+        <result property="changeId"    column="change_id"    />
+        <result property="changeCode"    column="change_code"    />
+        <result property="changeTitle"    column="change_title"    />
+        <result property="changeType"    column="change_type"    />
+        <result property="projectId"    column="project_id"    />
+        <result property="projectName"    column="project_name"    />
+        <result property="status"    column="status"    />
+        <result property="urgency"    column="urgency"    />
+        <result property="changeReason"    column="change_reason"    />
+        <result property="changeContent"    column="change_content"    />
+        <result property="changeEffect"    column="change_effect"    />
+        <result property="applicantId"    column="applicant_id"    />
+        <result property="applicantName"    column="applicant_name"    />
+        <result property="applyTime"    column="apply_time"    />
+        <result property="approverId"    column="approver_id"    />
+        <result property="approverName"    column="approver_name"    />
+        <result property="approveTime"    column="approve_time"    />
+        <result property="approveOpinion"    column="approve_opinion"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectTechChangeVo">
+        select change_id, change_code, change_title, change_type, project_id, project_name, status, urgency, change_reason, change_content, change_effect, applicant_id, applicant_name, apply_time, approver_id, approver_name, approve_time, approve_opinion, create_by, create_time, update_by, update_time, del_flag, remark from tech_change
+    </sql>
+
+    <select id="selectTechChangeList" parameterType="TechChange" resultMap="TechChangeResult">
+        <include refid="selectTechChangeVo"/>
+        <where>  
+            <if test="changeCode != null  and changeCode != ''"> and change_code = #{changeCode}</if>
+            <if test="changeTitle != null  and changeTitle != ''"> and change_title = #{changeTitle}</if>
+            <if test="changeType != null  and changeType != ''"> and change_type = #{changeType}</if>
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="projectName != null  and projectName != ''"> and project_name like concat('%', #{projectName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="urgency != null  and urgency != ''"> and urgency = #{urgency}</if>
+            <if test="changeReason != null  and changeReason != ''"> and change_reason = #{changeReason}</if>
+            <if test="changeContent != null  and changeContent != ''"> and change_content = #{changeContent}</if>
+            <if test="changeEffect != null  and changeEffect != ''"> and change_effect = #{changeEffect}</if>
+            <if test="applicantId != null "> and applicant_id = #{applicantId}</if>
+            <if test="applicantName != null  and applicantName != ''"> and applicant_name like concat('%', #{applicantName}, '%')</if>
+            <if test="applyTime != null "> and apply_time = #{applyTime}</if>
+            <if test="approverId != null "> and approver_id = #{approverId}</if>
+            <if test="approverName != null  and approverName != ''"> and approver_name like concat('%', #{approverName}, '%')</if>
+            <if test="approveTime != null "> and approve_time = #{approveTime}</if>
+            <if test="approveOpinion != null  and approveOpinion != ''"> and approve_opinion = #{approveOpinion}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechChangeByChangeId" parameterType="Long" resultMap="TechChangeResult">
+        <include refid="selectTechChangeVo"/>
+        where change_id = #{changeId}
+    </select>
+
+    <insert id="insertTechChange" parameterType="TechChange" useGeneratedKeys="true" keyProperty="changeId">
+        insert into tech_change
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="changeCode != null and changeCode != ''">change_code,</if>
+            <if test="changeTitle != null and changeTitle != ''">change_title,</if>
+            <if test="changeType != null">change_type,</if>
+            <if test="projectId != null">project_id,</if>
+            <if test="projectName != null">project_name,</if>
+            <if test="status != null">status,</if>
+            <if test="urgency != null">urgency,</if>
+            <if test="changeReason != null">change_reason,</if>
+            <if test="changeContent != null">change_content,</if>
+            <if test="changeEffect != null">change_effect,</if>
+            <if test="applicantId != null">applicant_id,</if>
+            <if test="applicantName != null">applicant_name,</if>
+            <if test="applyTime != null">apply_time,</if>
+            <if test="approverId != null">approver_id,</if>
+            <if test="approverName != null">approver_name,</if>
+            <if test="approveTime != null">approve_time,</if>
+            <if test="approveOpinion != null">approve_opinion,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="changeCode != null and changeCode != ''">#{changeCode},</if>
+            <if test="changeTitle != null and changeTitle != ''">#{changeTitle},</if>
+            <if test="changeType != null">#{changeType},</if>
+            <if test="projectId != null">#{projectId},</if>
+            <if test="projectName != null">#{projectName},</if>
+            <if test="status != null">#{status},</if>
+            <if test="urgency != null">#{urgency},</if>
+            <if test="changeReason != null">#{changeReason},</if>
+            <if test="changeContent != null">#{changeContent},</if>
+            <if test="changeEffect != null">#{changeEffect},</if>
+            <if test="applicantId != null">#{applicantId},</if>
+            <if test="applicantName != null">#{applicantName},</if>
+            <if test="applyTime != null">#{applyTime},</if>
+            <if test="approverId != null">#{approverId},</if>
+            <if test="approverName != null">#{approverName},</if>
+            <if test="approveTime != null">#{approveTime},</if>
+            <if test="approveOpinion != null">#{approveOpinion},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechChange" parameterType="TechChange">
+        update tech_change
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="changeCode != null and changeCode != ''">change_code = #{changeCode},</if>
+            <if test="changeTitle != null and changeTitle != ''">change_title = #{changeTitle},</if>
+            <if test="changeType != null">change_type = #{changeType},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="projectName != null">project_name = #{projectName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="urgency != null">urgency = #{urgency},</if>
+            <if test="changeReason != null">change_reason = #{changeReason},</if>
+            <if test="changeContent != null">change_content = #{changeContent},</if>
+            <if test="changeEffect != null">change_effect = #{changeEffect},</if>
+            <if test="applicantId != null">applicant_id = #{applicantId},</if>
+            <if test="applicantName != null">applicant_name = #{applicantName},</if>
+            <if test="applyTime != null">apply_time = #{applyTime},</if>
+            <if test="approverId != null">approver_id = #{approverId},</if>
+            <if test="approverName != null">approver_name = #{approverName},</if>
+            <if test="approveTime != null">approve_time = #{approveTime},</if>
+            <if test="approveOpinion != null">approve_opinion = #{approveOpinion},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where change_id = #{changeId}
+    </update>
+
+    <delete id="deleteTechChangeByChangeId" parameterType="Long">
+        delete from tech_change where change_id = #{changeId}
+    </delete>
+
+    <delete id="deleteTechChangeByChangeIds" parameterType="String">
+        delete from tech_change where change_id in 
+        <foreach item="changeId" collection="array" open="(" separator="," close=")">
+            #{changeId}
+        </foreach>
+    </delete>
+</mapper>

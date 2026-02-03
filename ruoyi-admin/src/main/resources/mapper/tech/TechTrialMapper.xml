@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechTrialMapper">
+    
+    <resultMap type="TechTrial" id="TechTrialResult">
+        <result property="trialId"    column="trial_id"    />
+        <result property="trialCode"    column="trial_code"    />
+        <result property="trialName"    column="trial_name"    />
+        <result property="projectId"    column="project_id"    />
+        <result property="projectName"    column="project_name"    />
+        <result property="trialType"    column="trial_type"    />
+        <result property="quantity"    column="quantity"    />
+        <result property="status"    column="status"    />
+        <result property="currentWorkshop"    column="current_workshop"    />
+        <result property="initiatorId"    column="initiator_id"    />
+        <result property="initiatorName"    column="initiator_name"    />
+        <result property="planStartDate"    column="plan_start_date"    />
+        <result property="planEndDate"    column="plan_end_date"    />
+        <result property="actualStartDate"    column="actual_start_date"    />
+        <result property="actualEndDate"    column="actual_end_date"    />
+        <result property="requirement"    column="requirement"    />
+        <result property="result"    column="result"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectTechTrialVo">
+        select trial_id, trial_code, trial_name, project_id, project_name, trial_type, quantity, status, current_workshop, initiator_id, initiator_name, plan_start_date, plan_end_date, actual_start_date, actual_end_date, requirement, result, create_by, create_time, update_by, update_time, del_flag, remark from tech_trial
+    </sql>
+
+    <select id="selectTechTrialList" parameterType="TechTrial" resultMap="TechTrialResult">
+        <include refid="selectTechTrialVo"/>
+        <where>  
+            <if test="trialCode != null  and trialCode != ''"> and trial_code = #{trialCode}</if>
+            <if test="trialName != null  and trialName != ''"> and trial_name like concat('%', #{trialName}, '%')</if>
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="projectName != null  and projectName != ''"> and project_name like concat('%', #{projectName}, '%')</if>
+            <if test="trialType != null  and trialType != ''"> and trial_type = #{trialType}</if>
+            <if test="quantity != null "> and quantity = #{quantity}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="currentWorkshop != null  and currentWorkshop != ''"> and current_workshop = #{currentWorkshop}</if>
+            <if test="initiatorId != null "> and initiator_id = #{initiatorId}</if>
+            <if test="initiatorName != null  and initiatorName != ''"> and initiator_name like concat('%', #{initiatorName}, '%')</if>
+            <if test="planStartDate != null "> and plan_start_date = #{planStartDate}</if>
+            <if test="planEndDate != null "> and plan_end_date = #{planEndDate}</if>
+            <if test="actualStartDate != null "> and actual_start_date = #{actualStartDate}</if>
+            <if test="actualEndDate != null "> and actual_end_date = #{actualEndDate}</if>
+            <if test="requirement != null  and requirement != ''"> and requirement = #{requirement}</if>
+            <if test="result != null  and result != ''"> and result = #{result}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechTrialByTrialId" parameterType="Long" resultMap="TechTrialResult">
+        <include refid="selectTechTrialVo"/>
+        where trial_id = #{trialId}
+    </select>
+
+    <insert id="insertTechTrial" parameterType="TechTrial" useGeneratedKeys="true" keyProperty="trialId">
+        insert into tech_trial
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="trialCode != null and trialCode != ''">trial_code,</if>
+            <if test="trialName != null and trialName != ''">trial_name,</if>
+            <if test="projectId != null">project_id,</if>
+            <if test="projectName != null">project_name,</if>
+            <if test="trialType != null">trial_type,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="status != null">status,</if>
+            <if test="currentWorkshop != null">current_workshop,</if>
+            <if test="initiatorId != null">initiator_id,</if>
+            <if test="initiatorName != null">initiator_name,</if>
+            <if test="planStartDate != null">plan_start_date,</if>
+            <if test="planEndDate != null">plan_end_date,</if>
+            <if test="actualStartDate != null">actual_start_date,</if>
+            <if test="actualEndDate != null">actual_end_date,</if>
+            <if test="requirement != null">requirement,</if>
+            <if test="result != null">result,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="trialCode != null and trialCode != ''">#{trialCode},</if>
+            <if test="trialName != null and trialName != ''">#{trialName},</if>
+            <if test="projectId != null">#{projectId},</if>
+            <if test="projectName != null">#{projectName},</if>
+            <if test="trialType != null">#{trialType},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="status != null">#{status},</if>
+            <if test="currentWorkshop != null">#{currentWorkshop},</if>
+            <if test="initiatorId != null">#{initiatorId},</if>
+            <if test="initiatorName != null">#{initiatorName},</if>
+            <if test="planStartDate != null">#{planStartDate},</if>
+            <if test="planEndDate != null">#{planEndDate},</if>
+            <if test="actualStartDate != null">#{actualStartDate},</if>
+            <if test="actualEndDate != null">#{actualEndDate},</if>
+            <if test="requirement != null">#{requirement},</if>
+            <if test="result != null">#{result},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechTrial" parameterType="TechTrial">
+        update tech_trial
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="trialCode != null and trialCode != ''">trial_code = #{trialCode},</if>
+            <if test="trialName != null and trialName != ''">trial_name = #{trialName},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="projectName != null">project_name = #{projectName},</if>
+            <if test="trialType != null">trial_type = #{trialType},</if>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="currentWorkshop != null">current_workshop = #{currentWorkshop},</if>
+            <if test="initiatorId != null">initiator_id = #{initiatorId},</if>
+            <if test="initiatorName != null">initiator_name = #{initiatorName},</if>
+            <if test="planStartDate != null">plan_start_date = #{planStartDate},</if>
+            <if test="planEndDate != null">plan_end_date = #{planEndDate},</if>
+            <if test="actualStartDate != null">actual_start_date = #{actualStartDate},</if>
+            <if test="actualEndDate != null">actual_end_date = #{actualEndDate},</if>
+            <if test="requirement != null">requirement = #{requirement},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where trial_id = #{trialId}
+    </update>
+
+    <delete id="deleteTechTrialByTrialId" parameterType="Long">
+        delete from tech_trial where trial_id = #{trialId}
+    </delete>
+
+    <delete id="deleteTechTrialByTrialIds" parameterType="String">
+        delete from tech_trial where trial_id in 
+        <foreach item="trialId" collection="array" open="(" separator="," close=")">
+            #{trialId}
+        </foreach>
+    </delete>
+</mapper>

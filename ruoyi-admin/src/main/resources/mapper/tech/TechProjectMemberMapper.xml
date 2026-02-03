@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechProjectMemberMapper">
+    
+    <resultMap type="TechProjectMember" id="TechProjectMemberResult">
+        <result property="id"    column="id"    />
+        <result property="projectId"    column="project_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="roleType"    column="role_type"    />
+        <result property="joinDate"    column="join_date"    />
+        <result property="remark"    column="remark"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectTechProjectMemberVo">
+        select id, project_id, user_id, user_name, role_type, join_date, remark, create_time from tech_project_member
+    </sql>
+
+    <select id="selectTechProjectMemberList" parameterType="TechProjectMember" resultMap="TechProjectMemberResult">
+        <include refid="selectTechProjectMemberVo"/>
+        <where>  
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="userName != null  and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="roleType != null  and roleType != ''"> and role_type = #{roleType}</if>
+            <if test="joinDate != null "> and join_date = #{joinDate}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechProjectMemberById" parameterType="Long" resultMap="TechProjectMemberResult">
+        <include refid="selectTechProjectMemberVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertTechProjectMember" parameterType="TechProjectMember" useGeneratedKeys="true" keyProperty="id">
+        insert into tech_project_member
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">project_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null">user_name,</if>
+            <if test="roleType != null">role_type,</if>
+            <if test="joinDate != null">join_date,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectId != null">#{projectId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null">#{userName},</if>
+            <if test="roleType != null">#{roleType},</if>
+            <if test="joinDate != null">#{joinDate},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechProjectMember" parameterType="TechProjectMember">
+        update tech_project_member
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="roleType != null">role_type = #{roleType},</if>
+            <if test="joinDate != null">join_date = #{joinDate},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTechProjectMemberById" parameterType="Long">
+        delete from tech_project_member where id = #{id}
+    </delete>
+
+    <delete id="deleteTechProjectMemberByIds" parameterType="String">
+        delete from tech_project_member where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

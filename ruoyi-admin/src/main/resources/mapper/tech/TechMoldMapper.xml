@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechMoldMapper">
+    
+    <resultMap type="TechMold" id="TechMoldResult">
+        <result property="moldId"    column="mold_id"    />
+        <result property="moldCode"    column="mold_code"    />
+        <result property="moldName"    column="mold_name"    />
+        <result property="moldType"    column="mold_type"    />
+        <result property="projectId"    column="project_id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="specification"    column="specification"    />
+        <result property="material"    column="material"    />
+        <result property="supplier"    column="supplier"    />
+        <result property="status"    column="status"    />
+        <result property="location"    column="location"    />
+        <result property="designLife"    column="design_life"    />
+        <result property="currentCount"    column="current_count"    />
+        <result property="manufactureDate"    column="manufacture_date"    />
+        <result property="acceptanceDate"    column="acceptance_date"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectTechMoldVo">
+        select mold_id, mold_code, mold_name, mold_type, project_id, product_name, specification, material, supplier, status, location, design_life, current_count, manufacture_date, acceptance_date, create_by, create_time, update_by, update_time, del_flag, remark from tech_mold
+    </sql>
+
+    <select id="selectTechMoldList" parameterType="TechMold" resultMap="TechMoldResult">
+        <include refid="selectTechMoldVo"/>
+        <where>  
+            <if test="moldCode != null  and moldCode != ''"> and mold_code = #{moldCode}</if>
+            <if test="moldName != null  and moldName != ''"> and mold_name like concat('%', #{moldName}, '%')</if>
+            <if test="moldType != null  and moldType != ''"> and mold_type = #{moldType}</if>
+            <if test="projectId != null "> and project_id = #{projectId}</if>
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="specification != null  and specification != ''"> and specification = #{specification}</if>
+            <if test="material != null  and material != ''"> and material = #{material}</if>
+            <if test="supplier != null  and supplier != ''"> and supplier = #{supplier}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="location != null  and location != ''"> and location = #{location}</if>
+            <if test="designLife != null "> and design_life = #{designLife}</if>
+            <if test="currentCount != null "> and current_count = #{currentCount}</if>
+            <if test="manufactureDate != null "> and manufacture_date = #{manufactureDate}</if>
+            <if test="acceptanceDate != null "> and acceptance_date = #{acceptanceDate}</if>
+        </where>
+    </select>
+    
+    <select id="selectTechMoldByMoldId" parameterType="Long" resultMap="TechMoldResult">
+        <include refid="selectTechMoldVo"/>
+        where mold_id = #{moldId}
+    </select>
+
+    <insert id="insertTechMold" parameterType="TechMold" useGeneratedKeys="true" keyProperty="moldId">
+        insert into tech_mold
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">mold_code,</if>
+            <if test="moldName != null and moldName != ''">mold_name,</if>
+            <if test="moldType != null">mold_type,</if>
+            <if test="projectId != null">project_id,</if>
+            <if test="productName != null">product_name,</if>
+            <if test="specification != null">specification,</if>
+            <if test="material != null">material,</if>
+            <if test="supplier != null">supplier,</if>
+            <if test="status != null">status,</if>
+            <if test="location != null">location,</if>
+            <if test="designLife != null">design_life,</if>
+            <if test="currentCount != null">current_count,</if>
+            <if test="manufactureDate != null">manufacture_date,</if>
+            <if test="acceptanceDate != null">acceptance_date,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">#{moldCode},</if>
+            <if test="moldName != null and moldName != ''">#{moldName},</if>
+            <if test="moldType != null">#{moldType},</if>
+            <if test="projectId != null">#{projectId},</if>
+            <if test="productName != null">#{productName},</if>
+            <if test="specification != null">#{specification},</if>
+            <if test="material != null">#{material},</if>
+            <if test="supplier != null">#{supplier},</if>
+            <if test="status != null">#{status},</if>
+            <if test="location != null">#{location},</if>
+            <if test="designLife != null">#{designLife},</if>
+            <if test="currentCount != null">#{currentCount},</if>
+            <if test="manufactureDate != null">#{manufactureDate},</if>
+            <if test="acceptanceDate != null">#{acceptanceDate},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTechMold" parameterType="TechMold">
+        update tech_mold
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">mold_code = #{moldCode},</if>
+            <if test="moldName != null and moldName != ''">mold_name = #{moldName},</if>
+            <if test="moldType != null">mold_type = #{moldType},</if>
+            <if test="projectId != null">project_id = #{projectId},</if>
+            <if test="productName != null">product_name = #{productName},</if>
+            <if test="specification != null">specification = #{specification},</if>
+            <if test="material != null">material = #{material},</if>
+            <if test="supplier != null">supplier = #{supplier},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="designLife != null">design_life = #{designLife},</if>
+            <if test="currentCount != null">current_count = #{currentCount},</if>
+            <if test="manufactureDate != null">manufacture_date = #{manufactureDate},</if>
+            <if test="acceptanceDate != null">acceptance_date = #{acceptanceDate},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where mold_id = #{moldId}
+    </update>
+
+    <delete id="deleteTechMoldByMoldId" parameterType="Long">
+        delete from tech_mold where mold_id = #{moldId}
+    </delete>
+
+    <delete id="deleteTechMoldByMoldIds" parameterType="String">
+        delete from tech_mold where mold_id in 
+        <foreach item="moldId" collection="array" open="(" separator="," close=")">
+            #{moldId}
+        </foreach>
+    </delete>
+</mapper>
