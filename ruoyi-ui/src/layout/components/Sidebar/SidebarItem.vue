@@ -2,13 +2,13 @@
   <div v-if="!item.hidden">
     <template v-if="hasOneShowingChild(item.children,item) && (!onlyOneChild.children||onlyOneChild.noShowingChildren)&&!item.alwaysShow">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
-        <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
+        <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest, 'overdue-menu-item': isOverdueItem(onlyOneChild)}">
           <item :icon="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" :title="onlyOneChild.meta.title" />
         </el-menu-item>
       </app-link>
     </template>
 
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
+    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body :class="{'overdue-submenu': isOverdueMenu(item)}">
       <template slot="title">
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>
@@ -26,6 +26,7 @@
 
 <script>
 import path from 'path'
+import { mapGetters } from 'vuex'
 import { isExternal } from '@/utils/validate'
 import Item from './Item'
 import AppLink from './Link'
@@ -54,7 +55,22 @@ export default {
     this.onlyOneChild = null
     return {}
   },
+  computed: {
+    ...mapGetters(['hasOverdue'])
+  },
   methods: {
+    // 检查是否是逾期相关的主菜单（试制管理）
+    isOverdueMenu(item) {
+      if (!this.hasOverdue) return false
+      const title = item.meta && item.meta.title
+      return title === '试制管理'
+    },
+    // 检查是否是逾期相关的子菜单项（试制流程）
+    isOverdueItem(item) {
+      if (!this.hasOverdue) return false
+      const title = item.meta && item.meta.title
+      return title === '试制流程'
+    },
     hasOneShowingChild(children = [], parent) {
       if (!children) {
         children = []

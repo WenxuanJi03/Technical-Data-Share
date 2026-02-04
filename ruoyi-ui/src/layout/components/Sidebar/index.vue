@@ -52,6 +52,53 @@ export default {
         isCollapse() {
             return !this.sidebar.opened
         }
+    },
+    mounted() {
+        // 延迟2秒检查，确保用户信息已加载
+        setTimeout(() => {
+            console.log('开始检查逾期任务...')
+            this.$store.dispatch('overdue/checkUserOverdue').then(result => {
+                console.log('逾期检查完成，结果:', result, '当前hasOverdue状态:', this.$store.getters.hasOverdue)
+            })
+        }, 2000)
+        // 每5分钟检查一次
+        this.overdueTimer = setInterval(() => {
+            this.$store.dispatch('overdue/checkUserOverdue')
+        }, 5 * 60 * 1000)
+    },
+    beforeDestroy() {
+        if (this.overdueTimer) {
+            clearInterval(this.overdueTimer)
+        }
     }
 }
 </script>
+
+<style lang="scss">
+// 逾期任务菜单样式
+.overdue-submenu > .el-submenu__title {
+    color: #f56c6c !important;
+    font-weight: bold;
+    
+    span {
+        color: #f56c6c !important;
+    }
+    
+    .svg-icon {
+        color: #f56c6c !important;
+    }
+}
+
+.overdue-menu-item {
+    color: #f56c6c !important;
+    font-weight: bold;
+    
+    span {
+        color: #f56c6c !important;
+    }
+    
+    .svg-icon {
+        color: #f56c6c !important;
+    }
+}
+</style>

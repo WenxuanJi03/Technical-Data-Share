@@ -202,7 +202,9 @@
               <el-col :span="6">
                 <div class="form-item">
                   <label>责任人</label>
-                  <el-input v-model="detailForm.managerName" placeholder="请输入" />
+                  <el-select v-model="detailForm.managerName" placeholder="请选择" filterable style="width:100%">
+                    <el-option v-for="user in userList" :key="user.userId" :label="user.nickName" :value="user.nickName" />
+                  </el-select>
                 </div>
               </el-col>
             </el-row>
@@ -855,7 +857,9 @@
           </el-select>
         </el-form-item>
         <el-form-item label="负责人" prop="managerName">
-          <el-input v-model="form.managerName" placeholder="请输入负责人" />
+          <el-select v-model="form.managerName" placeholder="请选择负责人" filterable style="width:100%">
+            <el-option v-for="user in userList" :key="user.userId" :label="user.nickName" :value="user.nickName" />
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -868,12 +872,14 @@
 
 <script>
 import { listProject, getProject, delProject, addProject, updateProject } from "@/api/tech/project"
+import { getAllUsers } from "@/api/tech/common"
 
 export default {
   name: "Project",
   data() {
     return {
       loading: true,
+      userList: [],
       total: 0,
       projectList: [],
       title: "",
@@ -1019,6 +1025,7 @@ export default {
   },
   created() {
     this.getList()
+    this.loadUserList()
   },
   methods: {
     getList() {
@@ -1027,6 +1034,11 @@ export default {
         this.projectList = response.rows
         this.total = response.total
         this.loading = false
+      })
+    },
+    loadUserList() {
+      getAllUsers().then(response => {
+        this.userList = response.rows || []
       })
     },
     formatDate(date) {

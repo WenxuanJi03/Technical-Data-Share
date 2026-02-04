@@ -16,6 +16,7 @@ const getters = {
   permission_routes: state => state.permission.routes,
   topbarRouters: state => state.permission.topbarRouters,
   defaultRoutes: state => state.permission.defaultRoutes,
-  sidebarRouters: state => state.permission.sidebarRouters
+  sidebarRouters: state => state.permission.sidebarRouters,
+  hasOverdue: state => state.overdue.hasOverdue
 }
 export default getters
