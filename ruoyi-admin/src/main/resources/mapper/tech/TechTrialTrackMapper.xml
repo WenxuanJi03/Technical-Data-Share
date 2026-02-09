@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechTrialTrackMapper">
+
+    <resultMap type="TechTrialTrack" id="TechTrialTrackResult">
+        <result property="trackId"            column="track_id"             />
+        <result property="moldCode"           column="mold_code"            />
+        <result property="productSpec"        column="product_spec"         />
+        <result property="moldType"           column="mold_type"            />
+        <result property="surfaceStatus"      column="surface_status"       />
+        <result property="machineType"        column="machine_type"         />
+        <result property="machineCount"       column="machine_count"        />
+        <result property="planMachineTime"    column="plan_machine_time"    />
+        <result property="hotMachineDate"     column="hot_machine_date"     />
+        <result property="roundKeepTime"      column="round_keep_time"      />
+        <result property="hotProduction"      column="hot_production"       />
+        <result property="improveRecord"      column="improve_record"       />
+        <result property="hotImprovePerson"   column="hot_improve_person"   />
+        <result property="spinMachineDate"    column="spin_machine_date"    />
+        <result property="spinMachineStation" column="spin_machine_station" />
+        <result property="spinProduction"     column="spin_production"      />
+        <result property="moldModifyRecord"   column="mold_modify_record"   />
+        <result property="spinImprovePerson"  column="spin_improve_person"  />
+        <result property="roughMachineDate"   column="rough_machine_date"   />
+        <result property="roughProduction"    column="rough_production"     />
+        <result property="roughImprovePerson" column="rough_improve_person" />
+        <result property="improvePlan"        column="improve_plan"         />
+        <result property="fineMachineDate"    column="fine_machine_date"    />
+        <result property="fineProduction"     column="fine_production"      />
+        <result property="paintMachineDate"   column="paint_machine_date"   />
+        <result property="paintProduction"    column="paint_production"     />
+        <result property="paintImprovePerson" column="paint_improve_person" />
+        <result property="impactTestDate"     column="impact_test_date"     />
+        <result property="impactTestResult"   column="impact_test_result"   />
+        <result property="completeDate"       column="complete_date"        />
+        <result property="failProductTrace"   column="fail_product_trace"   />
+        <result property="failAnalysis"       column="fail_analysis"        />
+        <result property="productionSummary"  column="production_summary"   />
+        <result property="improveMeasures"    column="improve_measures"     />
+        <result property="lessonsLearned"     column="lessons_learned"      />
+        <result property="allProcessDone"     column="all_process_done"     />
+        <result property="createBy"           column="create_by"            />
+        <result property="createTime"         column="create_time"          />
+        <result property="updateBy"           column="update_by"            />
+        <result property="updateTime"         column="update_time"          />
+        <result property="delFlag"            column="del_flag"             />
+        <result property="remark"             column="remark"               />
+    </resultMap>
+
+    <sql id="selectVo">
+        select track_id, mold_code, product_spec, mold_type, surface_status, machine_type,
+               machine_count, plan_machine_time, hot_machine_date, round_keep_time,
+               hot_production, improve_record, hot_improve_person,
+               spin_machine_date, spin_machine_station, spin_production, mold_modify_record, spin_improve_person,
+               rough_machine_date, rough_production, rough_improve_person, improve_plan,
+               fine_machine_date, fine_production, paint_machine_date, paint_production, paint_improve_person,
+               impact_test_date, impact_test_result, complete_date, fail_product_trace, fail_analysis,
+               production_summary, improve_measures, lessons_learned, all_process_done,
+               create_by, create_time, update_by, update_time, del_flag, remark
+        from tech_trial_track
+    </sql>
+
+    <select id="selectTechTrialTrackList" parameterType="TechTrialTrack" resultMap="TechTrialTrackResult">
+        <include refid="selectVo"/>
+        <where>
+            <if test="moldCode != null and moldCode != ''"> and mold_code like concat('%', #{moldCode}, '%')</if>
+            <if test="moldType != null and moldType != ''"> and mold_type = #{moldType}</if>
+            <if test="surfaceStatus != null and surfaceStatus != ''"> and surface_status = #{surfaceStatus}</if>
+            <if test="machineType != null and machineType != ''"> and machine_type = #{machineType}</if>
+            <if test="allProcessDone != null and allProcessDone != ''"> and all_process_done = #{allProcessDone}</if>
+            and del_flag = '0'
+        </where>
+        order by track_id desc
+    </select>
+
+    <select id="selectTechTrialTrackByTrackId" parameterType="Long" resultMap="TechTrialTrackResult">
+        <include refid="selectVo"/> where track_id = #{trackId}
+    </select>
+
+    <insert id="insertTechTrialTrack" parameterType="TechTrialTrack" useGeneratedKeys="true" keyProperty="trackId">
+        insert into tech_trial_track
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">mold_code,</if>
+            <if test="productSpec != null">product_spec,</if>
+            <if test="moldType != null">mold_type,</if>
+            <if test="surfaceStatus != null">surface_status,</if>
+            <if test="machineType != null">machine_type,</if>
+            <if test="machineCount != null">machine_count,</if>
+            <if test="planMachineTime != null">plan_machine_time,</if>
+            <if test="hotMachineDate != null">hot_machine_date,</if>
+            <if test="roundKeepTime != null">round_keep_time,</if>
+            <if test="hotProduction != null">hot_production,</if>
+            <if test="improveRecord != null">improve_record,</if>
+            <if test="hotImprovePerson != null">hot_improve_person,</if>
+            <if test="spinMachineDate != null">spin_machine_date,</if>
+            <if test="spinMachineStation != null">spin_machine_station,</if>
+            <if test="spinProduction != null">spin_production,</if>
+            <if test="moldModifyRecord != null">mold_modify_record,</if>
+            <if test="spinImprovePerson != null">spin_improve_person,</if>
+            <if test="roughMachineDate != null">rough_machine_date,</if>
+            <if test="roughProduction != null">rough_production,</if>
+            <if test="roughImprovePerson != null">rough_improve_person,</if>
+            <if test="improvePlan != null">improve_plan,</if>
+            <if test="fineMachineDate != null">fine_machine_date,</if>
+            <if test="fineProduction != null">fine_production,</if>
+            <if test="paintMachineDate != null">paint_machine_date,</if>
+            <if test="paintProduction != null">paint_production,</if>
+            <if test="paintImprovePerson != null">paint_improve_person,</if>
+            <if test="impactTestDate != null">impact_test_date,</if>
+            <if test="impactTestResult != null">impact_test_result,</if>
+            <if test="completeDate != null">complete_date,</if>
+            <if test="failProductTrace != null">fail_product_trace,</if>
+            <if test="failAnalysis != null">fail_analysis,</if>
+            <if test="productionSummary != null">production_summary,</if>
+            <if test="improveMeasures != null">improve_measures,</if>
+            <if test="lessonsLearned != null">lessons_learned,</if>
+            <if test="allProcessDone != null">all_process_done,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">#{moldCode},</if>
+            <if test="productSpec != null">#{productSpec},</if>
+            <if test="moldType != null">#{moldType},</if>
+            <if test="surfaceStatus != null">#{surfaceStatus},</if>
+            <if test="machineType != null">#{machineType},</if>
+            <if test="machineCount != null">#{machineCount},</if>
+            <if test="planMachineTime != null">#{planMachineTime},</if>
+            <if test="hotMachineDate != null">#{hotMachineDate},</if>
+            <if test="roundKeepTime != null">#{roundKeepTime},</if>
+            <if test="hotProduction != null">#{hotProduction},</if>
+            <if test="improveRecord != null">#{improveRecord},</if>
+            <if test="hotImprovePerson != null">#{hotImprovePerson},</if>
+            <if test="spinMachineDate != null">#{spinMachineDate},</if>
+            <if test="spinMachineStation != null">#{spinMachineStation},</if>
+            <if test="spinProduction != null">#{spinProduction},</if>
+            <if test="moldModifyRecord != null">#{moldModifyRecord},</if>
+            <if test="spinImprovePerson != null">#{spinImprovePerson},</if>
+            <if test="roughMachineDate != null">#{roughMachineDate},</if>
+            <if test="roughProduction != null">#{roughProduction},</if>
+            <if test="roughImprovePerson != null">#{roughImprovePerson},</if>
+            <if test="improvePlan != null">#{improvePlan},</if>
+            <if test="fineMachineDate != null">#{fineMachineDate},</if>
+            <if test="fineProduction != null">#{fineProduction},</if>
+            <if test="paintMachineDate != null">#{paintMachineDate},</if>
+            <if test="paintProduction != null">#{paintProduction},</if>
+            <if test="paintImprovePerson != null">#{paintImprovePerson},</if>
+            <if test="impactTestDate != null">#{impactTestDate},</if>
+            <if test="impactTestResult != null">#{impactTestResult},</if>
+            <if test="completeDate != null">#{completeDate},</if>
+            <if test="failProductTrace != null">#{failProductTrace},</if>
+            <if test="failAnalysis != null">#{failAnalysis},</if>
+            <if test="productionSummary != null">#{productionSummary},</if>
+            <if test="improveMeasures != null">#{improveMeasures},</if>
+            <if test="lessonsLearned != null">#{lessonsLearned},</if>
+            <if test="allProcessDone != null">#{allProcessDone},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTechTrialTrack" parameterType="TechTrialTrack">
+        update tech_trial_track
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moldCode != null and moldCode != ''">mold_code = #{moldCode},</if>
+            <if test="productSpec != null">product_spec = #{productSpec},</if>
+            <if test="moldType != null">mold_type = #{moldType},</if>
+            <if test="surfaceStatus != null">surface_status = #{surfaceStatus},</if>
+            <if test="machineType != null">machine_type = #{machineType},</if>
+            <if test="machineCount != null">machine_count = #{machineCount},</if>
+            <if test="planMachineTime != null">plan_machine_time = #{planMachineTime},</if>
+            <if test="hotMachineDate != null">hot_machine_date = #{hotMachineDate},</if>
+            <if test="roundKeepTime != null">round_keep_time = #{roundKeepTime},</if>
+            <if test="hotProduction != null">hot_production = #{hotProduction},</if>
+            <if test="improveRecord != null">improve_record = #{improveRecord},</if>
+            <if test="hotImprovePerson != null">hot_improve_person = #{hotImprovePerson},</if>
+            <if test="spinMachineDate != null">spin_machine_date = #{spinMachineDate},</if>
+            <if test="spinMachineStation != null">spin_machine_station = #{spinMachineStation},</if>
+            <if test="spinProduction != null">spin_production = #{spinProduction},</if>
+            <if test="moldModifyRecord != null">mold_modify_record = #{moldModifyRecord},</if>
+            <if test="spinImprovePerson != null">spin_improve_person = #{spinImprovePerson},</if>
+            <if test="roughMachineDate != null">rough_machine_date = #{roughMachineDate},</if>
+            <if test="roughProduction != null">rough_production = #{roughProduction},</if>
+            <if test="roughImprovePerson != null">rough_improve_person = #{roughImprovePerson},</if>
+            <if test="improvePlan != null">improve_plan = #{improvePlan},</if>
+            <if test="fineMachineDate != null">fine_machine_date = #{fineMachineDate},</if>
+            <if test="fineProduction != null">fine_production = #{fineProduction},</if>
+            <if test="paintMachineDate != null">paint_machine_date = #{paintMachineDate},</if>
+            <if test="paintProduction != null">paint_production = #{paintProduction},</if>
+            <if test="paintImprovePerson != null">paint_improve_person = #{paintImprovePerson},</if>
+            <if test="impactTestDate != null">impact_test_date = #{impactTestDate},</if>
+            <if test="impactTestResult != null">impact_test_result = #{impactTestResult},</if>
+            <if test="completeDate != null">complete_date = #{completeDate},</if>
+            <if test="failProductTrace != null">fail_product_trace = #{failProductTrace},</if>
+            <if test="failAnalysis != null">fail_analysis = #{failAnalysis},</if>
+            <if test="productionSummary != null">production_summary = #{productionSummary},</if>
+            <if test="improveMeasures != null">improve_measures = #{improveMeasures},</if>
+            <if test="lessonsLearned != null">lessons_learned = #{lessonsLearned},</if>
+            <if test="allProcessDone != null">all_process_done = #{allProcessDone},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where track_id = #{trackId}
+    </update>
+
+    <delete id="deleteTechTrialTrackByTrackId" parameterType="Long">
+        delete from tech_trial_track where track_id = #{trackId}
+    </delete>
+    <delete id="deleteTechTrialTrackByTrackIds" parameterType="String">
+        delete from tech_trial_track where track_id in
+        <foreach item="trackId" collection="array" open="(" separator="," close=")">#{trackId}</foreach>
+    </delete>
+</mapper>

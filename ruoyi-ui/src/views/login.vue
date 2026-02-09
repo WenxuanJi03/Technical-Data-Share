@@ -175,7 +175,8 @@ export default {
 
 .login-form {
   border-radius: 6px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
   width: 400px;
   padding: 25px 25px 5px 25px;
   z-index: 1;
@@ -212,8 +213,8 @@ export default {
   bottom: 0;
   width: 100%;
   text-align: center;
-  color: #fff;
-  font-family: Arial;
+  color: #333333;
+  font-family: Arial, "Microsoft YaHei", sans-serif;
   font-size: 12px;
   letter-spacing: 1px;
 }

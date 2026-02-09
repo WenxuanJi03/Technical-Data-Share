@@ -21,6 +21,15 @@ public class TechTrialProcessServiceImpl implements ITechTrialProcessService
     private TechTrialProcessMapper techTrialProcessMapper;
 
     /**
+     * 检查用户是否有逾期任务
+     */
+    @Override
+    public boolean checkUserOverdue(String userName)
+    {
+        return techTrialProcessMapper.checkUserOverdue(userName) > 0;
+    }
+
+    /**
      * 查询试制流程记录
      * 
      * @param processId 试制流程记录主键

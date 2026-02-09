@@ -1,0 +1,23 @@
+{
+  "name": "ruoyi-tech-app",
+  "version": "1.0.0",
+  "description": "技术管理系统微信小程序",
+  "main": "main.js",
+  "scripts": {
+    "dev:mp-weixin": "uni -p mp-weixin",
+    "build:mp-weixin": "uni build -p mp-weixin"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-4010120250128001",
+    "@dcloudio/uni-app-plus": "3.0.0-4010120250128001",
+    "@dcloudio/uni-components": "3.0.0-4010120250128001",
+    "@dcloudio/uni-h5": "3.0.0-4010120250128001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-4010120250128001",
+    "vue": "^2.7.16",
+    "vuex": "^3.6.2"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-cli-shared": "3.0.0-4010120250128001",
+    "@dcloudio/vite-plugin-uni": "3.0.0-4010120250128001"
+  }
+}

@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询试制流程列表
 export function listTrialProcess(query) {
   return request({
-    url: '/tech/trialProcess/list',
+    url: '/tech/process/list',
     method: 'get',
     params: query
   })
@@ -12,7 +12,7 @@ export function listTrialProcess(query) {
 // 检查用户是否有逾期任务
 export function checkOverdue(userName) {
   return request({
-    url: '/tech/trialProcess/checkOverdue',
+    url: '/tech/process/checkOverdue',
     method: 'get',
     params: { userName }
   })
@@ -21,7 +21,7 @@ export function checkOverdue(userName) {
 // 查询试制流程详细
 export function getTrialProcess(processId) {
   return request({
-    url: '/tech/trialProcess/' + processId,
+    url: '/tech/process/' + processId,
     method: 'get'
   })
 }
@@ -29,7 +29,7 @@ export function getTrialProcess(processId) {
 // 新增试制流程
 export function addTrialProcess(data) {
   return request({
-    url: '/tech/trialProcess',
+    url: '/tech/process',
     method: 'post',
     data: data
   })
@@ -38,7 +38,7 @@ export function addTrialProcess(data) {
 // 修改试制流程
 export function updateTrialProcess(data) {
   return request({
-    url: '/tech/trialProcess',
+    url: '/tech/process',
     method: 'put',
     data: data
   })
@@ -47,7 +47,7 @@ export function updateTrialProcess(data) {
 // 删除试制流程
 export function delTrialProcess(processId) {
   return request({
-    url: '/tech/trialProcess/' + processId,
+    url: '/tech/process/' + processId,
     method: 'delete'
   })
 }

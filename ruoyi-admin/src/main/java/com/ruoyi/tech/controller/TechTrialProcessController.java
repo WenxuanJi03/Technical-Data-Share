@@ -20,6 +20,7 @@ import com.ruoyi.tech.domain.TechTrialProcess;
 import com.ruoyi.tech.service.ITechTrialProcessService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 试制流程记录Controller
@@ -29,18 +30,27 @@ import com.ruoyi.common.core.page.TableDataInfo;
  */
 @RestController
 @RequestMapping("/tech/process")
-public class TechTrialProcessController extends BaseController
-{
+public class TechTrialProcessController extends BaseController {
     @Autowired
     private ITechTrialProcessService techTrialProcessService;
+
+    /**
+     * 检查用户是否有逾期任务（截止日期<=今天 且 步骤未完成）
+     */
+    @GetMapping("/checkOverdue")
+    public AjaxResult checkOverdue(@RequestParam(required = false) String userName) {
+        if (userName == null || userName.isEmpty()) {
+            return success(false);
+        }
+        return success(techTrialProcessService.checkUserOverdue(userName));
+    }
 
     /**
      * 查询试制流程记录列表
      */
     @PreAuthorize("@ss.hasPermi('tech:process:list')")
     @GetMapping("/list")
-    public TableDataInfo list(TechTrialProcess techTrialProcess)
-    {
+    public TableDataInfo list(TechTrialProcess techTrialProcess) {
         startPage();
         List<TechTrialProcess> list = techTrialProcessService.selectTechTrialProcessList(techTrialProcess);
         return getDataTable(list);
@@ -52,8 +62,7 @@ public class TechTrialProcessController extends BaseController
     @PreAuthorize("@ss.hasPermi('tech:process:export')")
     @Log(title = "试制流程记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, TechTrialProcess techTrialProcess)
-    {
+    public void export(HttpServletResponse response, TechTrialProcess techTrialProcess) {
         List<TechTrialProcess> list = techTrialProcessService.selectTechTrialProcessList(techTrialProcess);
         ExcelUtil<TechTrialProcess> util = new ExcelUtil<TechTrialProcess>(TechTrialProcess.class);
         util.exportExcel(response, list, "试制流程记录数据");
@@ -64,8 +73,7 @@ public class TechTrialProcessController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('tech:process:query')")
     @GetMapping(value = "/{processId}")
-    public AjaxResult getInfo(@PathVariable("processId") Long processId)
-    {
+    public AjaxResult getInfo(@PathVariable("processId") Long processId) {
         return success(techTrialProcessService.selectTechTrialProcessByProcessId(processId));
     }
 
@@ -75,8 +83,7 @@ public class TechTrialProcessController extends BaseController
     @PreAuthorize("@ss.hasPermi('tech:process:add')")
     @Log(title = "试制流程记录", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody TechTrialProcess techTrialProcess)
-    {
+    public AjaxResult add(@RequestBody TechTrialProcess techTrialProcess) {
         return toAjax(techTrialProcessService.insertTechTrialProcess(techTrialProcess));
     }
 
@@ -86,8 +93,7 @@ public class TechTrialProcessController extends BaseController
     @PreAuthorize("@ss.hasPermi('tech:process:edit')")
     @Log(title = "试制流程记录", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody TechTrialProcess techTrialProcess)
-    {
+    public AjaxResult edit(@RequestBody TechTrialProcess techTrialProcess) {
         return toAjax(techTrialProcessService.updateTechTrialProcess(techTrialProcess));
     }
 
@@ -96,9 +102,8 @@ public class TechTrialProcessController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('tech:process:remove')")
     @Log(title = "试制流程记录", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{processIds}")
-    public AjaxResult remove(@PathVariable Long[] processIds)
-    {
+    @DeleteMapping("/{processIds}")
+    public AjaxResult remove(@PathVariable Long[] processIds) {
         return toAjax(techTrialProcessService.deleteTechTrialProcessByProcessIds(processIds));
     }
 }

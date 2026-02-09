@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechProductMapper">
+
+    <resultMap type="TechProduct" id="TechProductResult">
+        <result property="productId"          column="product_id"           />
+        <result property="serialNo"           column="serial_no"            />
+        <result property="wheelCode"          column="wheel_code"           />
+        <result property="frontImage"         column="front_image"          />
+        <result property="customer"           column="customer"             />
+        <result property="shipLocation"       column="ship_location"        />
+        <result property="productType"        column="product_type"         />
+        <result property="productSource"      column="product_source"       />
+        <result property="firstMoldNo"        column="first_mold_no"        />
+        <result property="moldSource"         column="mold_source"          />
+        <result property="productStatus"      column="product_status"       />
+        <result property="statusRemark"       column="status_remark"        />
+        <result property="similarWheels"      column="similar_wheels"       />
+        <result property="similarDiff"        column="similar_diff"         />
+        <result property="sizeSpec"           column="size_spec"            />
+        <result property="offsetEt"           column="offset_et"            />
+        <result property="pcd"                column="pcd"                  />
+        <result property="centerHole"         column="center_hole"          />
+        <result property="designWeight"       column="design_weight"        />
+        <result property="surfaceTreatment"   column="surface_treatment"    />
+        <result property="color"              column="color"                />
+        <result property="labelInfo"          column="label_info"           />
+        <result property="transferTime"       column="transfer_time"        />
+        <result property="internalEvalTime"   column="internal_eval_time"   />
+        <result property="qualityCheckTime"   column="quality_check_time"   />
+        <result property="moldOpenTime"       column="mold_open_time"       />
+        <result property="qualityArrivalTime" column="quality_arrival_time" />
+        <result property="sampleWheelTime"    column="sample_wheel_time"    />
+        <result property="paintArrivalTime"   column="paint_arrival_time"   />
+        <result property="drawingIssueTime"   column="drawing_issue_time"   />
+        <result property="feaResult"          column="fea_result"           />
+        <result property="firstMoldArrival"   column="first_mold_arrival"   />
+        <result property="firstMachineTime"   column="first_machine_time"   />
+        <result property="sampleSubmitTime"   column="sample_submit_time"   />
+        <result property="samplePassTime"     column="sample_pass_time"     />
+        <result property="sampleHistory"      column="sample_history"       />
+        <result property="trialSummaryTime"   column="trial_summary_time"   />
+        <result property="trialSituation"     column="trial_situation"      />
+        <result property="batchSummaryTime"   column="batch_summary_time"   />
+        <result property="batchSituation"     column="batch_situation"      />
+        <result property="impactDeliveryTime" column="impact_delivery_time" />
+        <result property="impactDeliveryItem" column="impact_delivery_item" />
+        <result property="massProdTime"       column="mass_prod_time"       />
+        <result property="latestChangeTime"   column="latest_change_time"   />
+        <result property="latestChangeContent" column="latest_change_content"/>
+        <result property="controlPoints"      column="control_points"       />
+        <result property="createBy"           column="create_by"            />
+        <result property="createTime"         column="create_time"          />
+        <result property="updateBy"           column="update_by"            />
+        <result property="updateTime"         column="update_time"          />
+        <result property="delFlag"            column="del_flag"             />
+        <result property="remark"             column="remark"               />
+    </resultMap>
+
+    <sql id="selectTechProductVo">
+        select product_id, serial_no, wheel_code, front_image, customer, ship_location,
+               product_type, product_source, first_mold_no, mold_source, product_status,
+               status_remark, similar_wheels, similar_diff, size_spec, offset_et, pcd,
+               center_hole, design_weight, surface_treatment, color, label_info,
+               transfer_time, internal_eval_time, quality_check_time, mold_open_time,
+               quality_arrival_time, sample_wheel_time, paint_arrival_time, drawing_issue_time,
+               fea_result, first_mold_arrival, first_machine_time, sample_submit_time,
+               sample_pass_time, sample_history, trial_summary_time,
+               trial_situation, batch_summary_time, batch_situation,
+               impact_delivery_time, impact_delivery_item, mass_prod_time,
+               latest_change_time, latest_change_content, control_points,
+               create_by, create_time, update_by, update_time, del_flag, remark
+        from tech_product
+    </sql>
+
+    <select id="selectTechProductList" parameterType="TechProduct" resultMap="TechProductResult">
+        <include refid="selectTechProductVo"/>
+        <where>
+            <if test="wheelCode != null and wheelCode != ''"> and wheel_code like concat('%', #{wheelCode}, '%')</if>
+            <if test="customer != null and customer != ''"> and customer like concat('%', #{customer}, '%')</if>
+            <if test="shipLocation != null and shipLocation != ''"> and ship_location = #{shipLocation}</if>
+            <if test="productType != null and productType != ''"> and product_type = #{productType}</if>
+            <if test="productSource != null and productSource != ''"> and product_source = #{productSource}</if>
+            <if test="productStatus != null and productStatus != ''"> and product_status = #{productStatus}</if>
+            <if test="sizeSpec != null and sizeSpec != ''"> and size_spec like concat('%', #{sizeSpec}, '%')</if>
+            <if test="pcd != null and pcd != ''"> and pcd = #{pcd}</if>
+            <if test="surfaceTreatment != null and surfaceTreatment != ''"> and surface_treatment = #{surfaceTreatment}</if>
+            and del_flag = '0'
+        </where>
+        order by serial_no asc, product_id asc
+    </select>
+
+    <select id="selectTechProductByProductId" parameterType="Long" resultMap="TechProductResult">
+        <include refid="selectTechProductVo"/>
+        where product_id = #{productId}
+    </select>
+
+    <insert id="insertTechProduct" parameterType="TechProduct" useGeneratedKeys="true" keyProperty="productId">
+        insert into tech_product
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="serialNo != null">serial_no,</if>
+            <if test="wheelCode != null and wheelCode != ''">wheel_code,</if>
+            <if test="frontImage != null">front_image,</if>
+            <if test="customer != null">customer,</if>
+            <if test="shipLocation != null">ship_location,</if>
+            <if test="productType != null">product_type,</if>
+            <if test="productSource != null">product_source,</if>
+            <if test="firstMoldNo != null">first_mold_no,</if>
+            <if test="moldSource != null">mold_source,</if>
+            <if test="productStatus != null">product_status,</if>
+            <if test="statusRemark != null">status_remark,</if>
+            <if test="similarWheels != null">similar_wheels,</if>
+            <if test="similarDiff != null">similar_diff,</if>
+            <if test="sizeSpec != null">size_spec,</if>
+            <if test="offsetEt != null">offset_et,</if>
+            <if test="pcd != null">pcd,</if>
+            <if test="centerHole != null">center_hole,</if>
+            <if test="designWeight != null">design_weight,</if>
+            <if test="surfaceTreatment != null">surface_treatment,</if>
+            <if test="color != null">color,</if>
+            <if test="labelInfo != null">label_info,</if>
+            <if test="transferTime != null">transfer_time,</if>
+            <if test="internalEvalTime != null">internal_eval_time,</if>
+            <if test="qualityCheckTime != null">quality_check_time,</if>
+            <if test="moldOpenTime != null">mold_open_time,</if>
+            <if test="qualityArrivalTime != null">quality_arrival_time,</if>
+            <if test="sampleWheelTime != null">sample_wheel_time,</if>
+            <if test="paintArrivalTime != null">paint_arrival_time,</if>
+            <if test="drawingIssueTime != null">drawing_issue_time,</if>
+            <if test="feaResult != null">fea_result,</if>
+            <if test="firstMoldArrival != null">first_mold_arrival,</if>
+            <if test="firstMachineTime != null">first_machine_time,</if>
+            <if test="sampleSubmitTime != null">sample_submit_time,</if>
+            <if test="samplePassTime != null">sample_pass_time,</if>
+            <if test="sampleHistory != null">sample_history,</if>
+            <if test="trialSummaryTime != null">trial_summary_time,</if>
+            <if test="trialSituation != null">trial_situation,</if>
+            <if test="batchSummaryTime != null">batch_summary_time,</if>
+            <if test="batchSituation != null">batch_situation,</if>
+            <if test="impactDeliveryTime != null">impact_delivery_time,</if>
+            <if test="impactDeliveryItem != null">impact_delivery_item,</if>
+            <if test="massProdTime != null">mass_prod_time,</if>
+            <if test="latestChangeTime != null">latest_change_time,</if>
+            <if test="latestChangeContent != null">latest_change_content,</if>
+            <if test="controlPoints != null">control_points,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="serialNo != null">#{serialNo},</if>
+            <if test="wheelCode != null and wheelCode != ''">#{wheelCode},</if>
+            <if test="frontImage != null">#{frontImage},</if>
+            <if test="customer != null">#{customer},</if>
+            <if test="shipLocation != null">#{shipLocation},</if>
+            <if test="productType != null">#{productType},</if>
+            <if test="productSource != null">#{productSource},</if>
+            <if test="firstMoldNo != null">#{firstMoldNo},</if>
+            <if test="moldSource != null">#{moldSource},</if>
+            <if test="productStatus != null">#{productStatus},</if>
+            <if test="statusRemark != null">#{statusRemark},</if>
+            <if test="similarWheels != null">#{similarWheels},</if>
+            <if test="similarDiff != null">#{similarDiff},</if>
+            <if test="sizeSpec != null">#{sizeSpec},</if>
+            <if test="offsetEt != null">#{offsetEt},</if>
+            <if test="pcd != null">#{pcd},</if>
+            <if test="centerHole != null">#{centerHole},</if>
+            <if test="designWeight != null">#{designWeight},</if>
+            <if test="surfaceTreatment != null">#{surfaceTreatment},</if>
+            <if test="color != null">#{color},</if>
+            <if test="labelInfo != null">#{labelInfo},</if>
+            <if test="transferTime != null">#{transferTime},</if>
+            <if test="internalEvalTime != null">#{internalEvalTime},</if>
+            <if test="qualityCheckTime != null">#{qualityCheckTime},</if>
+            <if test="moldOpenTime != null">#{moldOpenTime},</if>
+            <if test="qualityArrivalTime != null">#{qualityArrivalTime},</if>
+            <if test="sampleWheelTime != null">#{sampleWheelTime},</if>
+            <if test="paintArrivalTime != null">#{paintArrivalTime},</if>
+            <if test="drawingIssueTime != null">#{drawingIssueTime},</if>
+            <if test="feaResult != null">#{feaResult},</if>
+            <if test="firstMoldArrival != null">#{firstMoldArrival},</if>
+            <if test="firstMachineTime != null">#{firstMachineTime},</if>
+            <if test="sampleSubmitTime != null">#{sampleSubmitTime},</if>
+            <if test="samplePassTime != null">#{samplePassTime},</if>
+            <if test="sampleHistory != null">#{sampleHistory},</if>
+            <if test="trialSummaryTime != null">#{trialSummaryTime},</if>
+            <if test="trialSituation != null">#{trialSituation},</if>
+            <if test="batchSummaryTime != null">#{batchSummaryTime},</if>
+            <if test="batchSituation != null">#{batchSituation},</if>
+            <if test="impactDeliveryTime != null">#{impactDeliveryTime},</if>
+            <if test="impactDeliveryItem != null">#{impactDeliveryItem},</if>
+            <if test="massProdTime != null">#{massProdTime},</if>
+            <if test="latestChangeTime != null">#{latestChangeTime},</if>
+            <if test="latestChangeContent != null">#{latestChangeContent},</if>
+            <if test="controlPoints != null">#{controlPoints},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTechProduct" parameterType="TechProduct">
+        update tech_product
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="serialNo != null">serial_no = #{serialNo},</if>
+            <if test="wheelCode != null and wheelCode != ''">wheel_code = #{wheelCode},</if>
+            <if test="frontImage != null">front_image = #{frontImage},</if>
+            <if test="customer != null">customer = #{customer},</if>
+            <if test="shipLocation != null">ship_location = #{shipLocation},</if>
+            <if test="productType != null">product_type = #{productType},</if>
+            <if test="productSource != null">product_source = #{productSource},</if>
+            <if test="firstMoldNo != null">first_mold_no = #{firstMoldNo},</if>
+            <if test="moldSource != null">mold_source = #{moldSource},</if>
+            <if test="productStatus != null">product_status = #{productStatus},</if>
+            <if test="statusRemark != null">status_remark = #{statusRemark},</if>
+            <if test="similarWheels != null">similar_wheels = #{similarWheels},</if>
+            <if test="similarDiff != null">similar_diff = #{similarDiff},</if>
+            <if test="sizeSpec != null">size_spec = #{sizeSpec},</if>
+            <if test="offsetEt != null">offset_et = #{offsetEt},</if>
+            <if test="pcd != null">pcd = #{pcd},</if>
+            <if test="centerHole != null">center_hole = #{centerHole},</if>
+            <if test="designWeight != null">design_weight = #{designWeight},</if>
+            <if test="surfaceTreatment != null">surface_treatment = #{surfaceTreatment},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="labelInfo != null">label_info = #{labelInfo},</if>
+            <if test="transferTime != null">transfer_time = #{transferTime},</if>
+            <if test="internalEvalTime != null">internal_eval_time = #{internalEvalTime},</if>
+            <if test="qualityCheckTime != null">quality_check_time = #{qualityCheckTime},</if>
+            <if test="moldOpenTime != null">mold_open_time = #{moldOpenTime},</if>
+            <if test="qualityArrivalTime != null">quality_arrival_time = #{qualityArrivalTime},</if>
+            <if test="sampleWheelTime != null">sample_wheel_time = #{sampleWheelTime},</if>
+            <if test="paintArrivalTime != null">paint_arrival_time = #{paintArrivalTime},</if>
+            <if test="drawingIssueTime != null">drawing_issue_time = #{drawingIssueTime},</if>
+            <if test="feaResult != null">fea_result = #{feaResult},</if>
+            <if test="firstMoldArrival != null">first_mold_arrival = #{firstMoldArrival},</if>
+            <if test="firstMachineTime != null">first_machine_time = #{firstMachineTime},</if>
+            <if test="sampleSubmitTime != null">sample_submit_time = #{sampleSubmitTime},</if>
+            <if test="samplePassTime != null">sample_pass_time = #{samplePassTime},</if>
+            <if test="sampleHistory != null">sample_history = #{sampleHistory},</if>
+            <if test="trialSummaryTime != null">trial_summary_time = #{trialSummaryTime},</if>
+            <if test="trialSituation != null">trial_situation = #{trialSituation},</if>
+            <if test="batchSummaryTime != null">batch_summary_time = #{batchSummaryTime},</if>
+            <if test="batchSituation != null">batch_situation = #{batchSituation},</if>
+            <if test="impactDeliveryTime != null">impact_delivery_time = #{impactDeliveryTime},</if>
+            <if test="impactDeliveryItem != null">impact_delivery_item = #{impactDeliveryItem},</if>
+            <if test="massProdTime != null">mass_prod_time = #{massProdTime},</if>
+            <if test="latestChangeTime != null">latest_change_time = #{latestChangeTime},</if>
+            <if test="latestChangeContent != null">latest_change_content = #{latestChangeContent},</if>
+            <if test="controlPoints != null">control_points = #{controlPoints},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where product_id = #{productId}
+    </update>
+
+    <delete id="deleteTechProductByProductId" parameterType="Long">
+        delete from tech_product where product_id = #{productId}
+    </delete>
+
+    <delete id="deleteTechProductByProductIds" parameterType="String">
+        delete from tech_product where product_id in
+        <foreach item="productId" collection="array" open="(" separator="," close=")">
+            #{productId}
+        </foreach>
+    </delete>
+</mapper>

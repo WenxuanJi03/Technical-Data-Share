@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -77,6 +78,7 @@ public class TechDocumentController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody TechDocument techDocument)
     {
+        techDocument.setCreateBy(getUsername());
         return toAjax(techDocumentService.insertTechDocument(techDocument));
     }
 
@@ -88,6 +90,7 @@ public class TechDocumentController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody TechDocument techDocument)
     {
+        techDocument.setUpdateBy(getUsername());
         return toAjax(techDocumentService.updateTechDocument(techDocument));
     }
 
@@ -100,5 +103,30 @@ public class TechDocumentController extends BaseController
     public AjaxResult remove(@PathVariable Long[] docIds)
     {
         return toAjax(techDocumentService.deleteTechDocumentByDocIds(docIds));
+    }
+
+    /**
+     * 导入技术文档数据
+     */
+    @Log(title = "技术文档", businessType = BusinessType.IMPORT)
+    @PreAuthorize("@ss.hasPermi('tech:document:add')")
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
+    {
+        ExcelUtil<TechDocument> util = new ExcelUtil<TechDocument>(TechDocument.class);
+        List<TechDocument> docList = util.importExcel(file.getInputStream());
+        String operName = getUsername();
+        String message = techDocumentService.importDocuments(docList, updateSupport, operName);
+        return success(message);
+    }
+
+    /**
+     * 下载导入模板
+     */
+    @PostMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response)
+    {
+        ExcelUtil<TechDocument> util = new ExcelUtil<TechDocument>(TechDocument.class);
+        util.importTemplateExcel(response, "技术文档数据");
     }
 }

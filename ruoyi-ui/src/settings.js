@@ -52,5 +52,5 @@ module.exports = {
   /**
    * 底部版权文本内容
    */
-  footerContent: 'Copyright © 2018-2026 RuoYi. All Rights Reserved.'
+  footerContent: '对本平台有任何使用问题或建议欢迎联系戴湘研发工程师纪文轩，电话号码：19996597993，微信号：jwx2465499077'
 }

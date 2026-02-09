@@ -541,110 +541,221 @@
       </div>
     </el-dialog>
 
-    <!-- 待办任务弹窗 -->
+    <!-- 待办任务弹窗 - 近全屏 -->
     <el-dialog 
       title="过程/文件确认 - 待办任务"
       :visible.sync="todoOpen" 
-      width="1200px" 
+      :fullscreen="true"
       :close-on-click-modal="false"
       custom-class="todo-dialog"
     >
-      <!-- 顶部筛选和统计区域 -->
+      <!-- 顶部筛选区域 -->
       <div class="todo-header">
         <div class="filter-section">
-          <el-tag type="info" effect="plain" size="medium">
-            已筛选: {{ todoQueryParams.status || '全部' }} + {{ todoQueryParams.responsible || '全部负责人' }}
-          </el-tag>
-          <el-select v-model="todoQueryParams.status" placeholder="任务状态" clearable size="small" style="width:120px;margin-left:10px">
+          <el-input v-model="todoQueryParams.moldCode" placeholder="模具编号" clearable size="small" style="width:130px" @keyup.enter.native="handleTodoQuery" />
+          <el-select v-model="todoQueryParams.taskStatus" placeholder="任务状态" clearable size="small" style="width:120px;margin-left:8px">
             <el-option v-for="item in taskStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-input v-model="todoQueryParams.responsible" placeholder="负责人" clearable size="small" style="width:120px;margin-left:10px" />
-          <el-button type="primary" size="small" icon="el-icon-search" style="margin-left:10px" @click="filterTodo">筛选</el-button>
+          <el-select v-model="todoQueryParams.priority" placeholder="优先级" clearable size="small" style="width:100px;margin-left:8px">
+            <el-option label="正常" value="正常" />
+            <el-option label="紧急" value="紧急" />
+            <el-option label="特急" value="特急" />
+          </el-select>
+          <el-input v-model="todoQueryParams.responsible" placeholder="责任人" clearable size="small" style="width:110px;margin-left:8px" />
+          <el-button type="primary" size="small" icon="el-icon-search" style="margin-left:10px" @click="handleTodoQuery">筛选</el-button>
           <el-button size="small" icon="el-icon-refresh" @click="resetTodoFilter">重置</el-button>
         </div>
-        
-        <!-- 统计表格 -->
-        <div class="stats-table-wrapper">
-          <table class="stats-mini-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th v-for="n in 12" :key="n">{{ n }}月</th>
-                <th>合计</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="row-label">新</td>
-                <td v-for="n in 12" :key="'new'+n">{{ Math.floor(Math.random() * 50) }}</td>
-                <td class="total">{{ 34 }}</td>
-              </tr>
-              <tr>
-                <td class="row-label">旧</td>
-                <td v-for="n in 12" :key="'old'+n">{{ Math.floor(Math.random() * 30) }}</td>
-                <td class="total">{{ 16 }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="todo-actions">
+          <el-button type="primary" size="small" icon="el-icon-plus" @click="handleTodoAdd">新增</el-button>
+          <el-button type="success" size="small" icon="el-icon-download" @click="handleTodoExport">导出Excel</el-button>
         </div>
       </div>
 
       <!-- 任务列表表格 -->
       <el-table 
-        :data="filteredTodoList" 
+        :data="todoList" 
         v-loading="todoLoading"
         border
         size="small"
-        max-height="400"
+        height="calc(100vh - 250px)"
         highlight-current-row
         :row-class-name="todoRowClassName"
+        style="width:100%"
       >
-        <el-table-column label="项目编号" prop="projectCode" width="120" fixed>
+        <el-table-column label="模具编号" prop="moldCode" min-width="120">
           <template slot-scope="scope">
-            <span class="project-link" @click="goToProject(scope.row)">{{ scope.row.projectCode }}</span>
+            <span class="project-link">{{ scope.row.moldCode }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="开发类型" prop="devType" width="90" />
-        <el-table-column label="途程" prop="route" width="80" />
-        <el-table-column label="工序" prop="process" width="120" />
-        <el-table-column label="任务来源" prop="taskSource" width="110" />
-        <el-table-column label="优先级" prop="priority" width="70" align="center">
+        <el-table-column label="开发类型" prop="devType" min-width="90" align="center" />
+        <el-table-column label="流程" prop="processName" min-width="100" />
+        <el-table-column label="工序" prop="procedureName" min-width="110" />
+        <el-table-column label="任务类别" prop="taskCategory" min-width="90" align="center" />
+        <el-table-column label="优先级" prop="priority" min-width="75" align="center">
           <template slot-scope="scope">
-            <el-tag :type="scope.row.priority === '紧急' ? 'danger' : (scope.row.priority === '高' ? 'warning' : 'success')" size="mini">
-              {{ scope.row.priority }}
+            <el-tag :type="scope.row.priority === '特急' ? 'danger' : (scope.row.priority === '紧急' ? 'warning' : 'success')" size="mini">
+              {{ scope.row.priority || '正常' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="任务状态" prop="taskStatus" width="100" align="center">
+        <el-table-column label="任务状态" prop="taskStatus" min-width="85" align="center">
           <template slot-scope="scope">
-            <el-select v-model="scope.row.taskStatus" size="mini" @change="handleTaskStatusChange(scope.row)">
-              <el-option v-for="item in taskStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-          </template>
-        </el-table-column>
-        <el-table-column label="负责人" prop="responsible" width="80" align="center" />
-        <el-table-column label="开始时间" prop="startTime" width="100" align="center" />
-        <el-table-column label="最迟时间" prop="deadline" width="100" align="center" />
-        <el-table-column label="状态" prop="status" width="70" align="center">
-          <template slot-scope="scope">
-            <el-tag :type="scope.row.status === '正常' ? 'success' : (scope.row.status === '延期' ? 'danger' : 'warning')" size="mini">
-              {{ scope.row.status }}
+            <el-tag :type="scope.row.taskStatus === '已完成' ? 'success' : (scope.row.taskStatus === '待处理' ? 'warning' : 'primary')" size="mini">
+              {{ scope.row.taskStatus }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="序号" prop="seq" width="60" align="center" />
-        <el-table-column label="上次负责人" prop="lastResponsible" width="90" align="center" />
-        <el-table-column label="操作" width="100" align="center" fixed="right">
+        <el-table-column label="责任人" prop="responsible" min-width="80" align="center" />
+        <el-table-column label="开始时间" prop="startTime" min-width="100" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="mini" icon="el-icon-view" @click="viewTaskDetail(scope.row)">查看</el-button>
-            <el-button type="text" size="mini" icon="el-icon-check" style="color:#67c23a" @click="completeTask(scope.row)">完成</el-button>
+            <span>{{ scope.row.startTime ? scope.row.startTime.substring(0,10) : '' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="截止时间" prop="deadline" min-width="100" align="center">
+          <template slot-scope="scope">
+            <span>{{ scope.row.deadline ? scope.row.deadline.substring(0,10) : '' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="时效" prop="timeliness" min-width="70" align="center">
+          <template slot-scope="scope">
+            <el-tag :type="scope.row.timeliness === '正常' ? 'success' : 'danger'" size="mini">
+              {{ scope.row.timeliness || '正常' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="天数" prop="days" min-width="60" align="center" />
+        <el-table-column label="上传责任人" prop="uploadResponsible" min-width="95" align="center" />
+        <el-table-column label="操作" min-width="130" align="center" fixed="right">
+          <template slot-scope="scope">
+            <el-button type="text" size="mini" icon="el-icon-edit" @click="handleTodoEdit(scope.row)">修改</el-button>
+            <el-button type="text" size="mini" icon="el-icon-delete" style="color:#f56c6c" @click="handleTodoDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <div slot="footer" class="todo-footer">
-        <span class="todo-summary">共 {{ filteredTodoList.length }} 条待办任务</span>
+      <!-- 分页 -->
+      <div class="todo-footer">
+        <span class="todo-summary">共 {{ todoTotal }} 条待办任务</span>
+        <pagination
+          v-show="todoTotal > 0"
+          :total="todoTotal"
+          :page.sync="todoQueryParams.pageNum"
+          :limit.sync="todoQueryParams.pageSize"
+          @pagination="getTodoList"
+          layout="total, sizes, prev, pager, next, jumper"
+        />
         <el-button @click="todoOpen = false">关闭</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 待办任务新增/编辑弹窗 -->
+    <el-dialog :title="todoDialogTitle" :visible.sync="todoFormOpen" width="650px" append-to-body>
+      <el-form ref="todoForm" :model="todoForm" :rules="todoRules" label-width="100px">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="模具编号" prop="moldCode">
+              <el-input v-model="todoForm.moldCode" placeholder="请输入模具编号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="开发类型" prop="devType">
+              <el-select v-model="todoForm.devType" placeholder="请选择" style="width:100%">
+                <el-option label="定点开发" value="定点开发" />
+                <el-option label="样件开发" value="样件开发" />
+                <el-option label="量产变更" value="量产变更" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="流程" prop="processName">
+              <el-input v-model="todoForm.processName" placeholder="请输入流程" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="工序" prop="procedureName">
+              <el-input v-model="todoForm.procedureName" placeholder="请输入工序" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="任务类别" prop="taskCategory">
+              <el-select v-model="todoForm.taskCategory" placeholder="请选择" style="width:100%">
+                <el-option label="过程确认" value="过程确认" />
+                <el-option label="文件确认" value="文件确认" />
+                <el-option label="资料提交" value="资料提交" />
+                <el-option label="审批" value="审批" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="优先级" prop="priority">
+              <el-select v-model="todoForm.priority" placeholder="请选择" style="width:100%">
+                <el-option label="正常" value="正常" />
+                <el-option label="紧急" value="紧急" />
+                <el-option label="特急" value="特急" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="任务状态" prop="taskStatus">
+              <el-select v-model="todoForm.taskStatus" placeholder="请选择" style="width:100%">
+                <el-option v-for="item in taskStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="责任人" prop="responsible">
+              <el-select v-model="todoForm.responsible" placeholder="请选择" filterable style="width:100%">
+                <el-option v-for="user in userList" :key="user.userId" :label="user.nickName" :value="user.nickName" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="开始时间" prop="startTime">
+              <el-date-picker v-model="todoForm.startTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="截止时间" prop="deadline">
+              <el-date-picker v-model="todoForm.deadline" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="时效" prop="timeliness">
+              <el-select v-model="todoForm.timeliness" placeholder="请选择" style="width:100%">
+                <el-option label="正常" value="正常" />
+                <el-option label="延期" value="延期" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="天数" prop="days">
+              <el-input-number v-model="todoForm.days" :min="0" style="width:100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="上传责任人" prop="uploadResponsible">
+              <el-select v-model="todoForm.uploadResponsible" placeholder="请选择" filterable style="width:100%">
+                <el-option v-for="user in userList" :key="user.userId" :label="user.nickName" :value="user.nickName" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="todoFormOpen = false">取 消</el-button>
+        <el-button type="primary" @click="submitTodoForm">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -873,6 +984,7 @@
 <script>
 import { listProject, getProject, delProject, addProject, updateProject } from "@/api/tech/project"
 import { getAllUsers } from "@/api/tech/common"
+import { listTodoTask, getTodoTask, addTodoTask, updateTodoTask, delTodoTask } from "@/api/tech/todoTask"
 
 export default {
   name: "Project",
@@ -894,22 +1006,25 @@ export default {
       },
       // 待办任务相关
       todoOpen: false,
-      todoCount: 135,
+      todoCount: 0,
       todoLoading: false,
+      todoTotal: 0,
       todoQueryParams: {
-        status: '',
+        pageNum: 1,
+        pageSize: 20,
+        moldCode: '',
+        taskStatus: '',
+        priority: '',
         responsible: ''
       },
-      todoList: [
-        { id: 1, projectCode: '07325C06-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: 'CAE分析报告', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 2, projectCode: '07325C07-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: 'CAE分析报告', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 3, projectCode: '07325C06-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '二维码标准', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 4, projectCode: '07325C07-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '二维码标准', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 5, projectCode: '07325C06-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '包装工艺', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 6, projectCode: '07325C06-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '包装工艺', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 7, projectCode: '07325C06-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '发运单', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-        { id: 8, projectCode: '07325C07-M1', devType: '定点开发', route: '资料输入', process: '集团资料接收二', taskSource: '发运单', priority: '正常', taskStatus: '待处理', responsible: '李罗程', startTime: '2025/12/25', deadline: '2025/12/28', status: '正常', seq: -2, lastResponsible: '李罗程' },
-      ],
+      todoList: [],
+      todoFormOpen: false,
+      todoDialogTitle: '新增待办任务',
+      todoForm: {},
+      todoRules: {
+        moldCode: [{ required: true, message: '模具编号不能为空', trigger: 'blur' }],
+        responsible: [{ required: true, message: '责任人不能为空', trigger: 'change' }],
+      },
       taskStatusOptions: [
         { label: '待处理', value: '待处理' },
         { label: '处理中', value: '处理中' },
@@ -1004,16 +1119,6 @@ export default {
     }
   },
   computed: {
-    filteredTodoList() {
-      let list = this.todoList
-      if (this.todoQueryParams.status) {
-        list = list.filter(item => item.taskStatus === this.todoQueryParams.status)
-      }
-      if (this.todoQueryParams.responsible) {
-        list = list.filter(item => item.responsible.includes(this.todoQueryParams.responsible))
-      }
-      return list
-    },
     filteredFolderList() {
       if (!this.fileSearchKeyword) {
         return this.folderList
@@ -1026,6 +1131,7 @@ export default {
   created() {
     this.getList()
     this.loadUserList()
+    this.loadTodoCount()
   },
   methods: {
     getList() {
@@ -1187,42 +1293,106 @@ export default {
       this.currentPath = []
       this.loadFolderData()
     },
-    openTodoList() {
-      this.todoOpen = true
-    },
-    filterTodo() {
-      this.$modal.msgSuccess("筛选已应用")
-    },
-    resetTodoFilter() {
-      this.todoQueryParams = { status: '', responsible: '' }
-    },
-    handleTaskStatusChange(row) {
-      this.$modal.msgSuccess(`任务 ${row.projectCode} 状态已更新为 ${row.taskStatus}`)
-    },
-    goToProject(row) {
-      this.todoOpen = false
-      // 查找并打开对应项目
-      const project = this.projectList.find(p => p.projectCode === row.projectCode.split('-')[0])
-      if (project) {
-        this.openDetail(project)
-      }
-    },
-    viewTaskDetail(row) {
-      this.$modal.msgSuccess(`查看任务详情: ${row.projectCode} - ${row.taskSource}`)
-    },
-    completeTask(row) {
-      this.$confirm(`确认完成任务 "${row.taskSource}" 吗?`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        row.taskStatus = '已完成'
-        this.todoCount--
-        this.$modal.msgSuccess('任务已完成')
+    /** 页面加载时获取待办任务总数 */
+    loadTodoCount() {
+      listTodoTask({ pageNum: 1, pageSize: 1 }).then(response => {
+        this.todoCount = response.total || 0
       }).catch(() => {})
     },
+    openTodoList() {
+      this.todoOpen = true
+      this.getTodoList()
+    },
+    /** 查询待办任务列表 */
+    getTodoList() {
+      this.todoLoading = true
+      listTodoTask(this.todoQueryParams).then(response => {
+        this.todoList = response.rows
+        this.todoTotal = response.total
+        this.todoCount = response.total
+        this.todoLoading = false
+      }).catch(() => {
+        this.todoLoading = false
+      })
+    },
+    handleTodoQuery() {
+      this.todoQueryParams.pageNum = 1
+      this.getTodoList()
+    },
+    resetTodoFilter() {
+      this.todoQueryParams = {
+        pageNum: 1,
+        pageSize: 20,
+        moldCode: '',
+        taskStatus: '',
+        priority: '',
+        responsible: ''
+      }
+      this.getTodoList()
+    },
+    resetTodoForm() {
+      this.todoForm = {
+        taskId: null,
+        moldCode: '',
+        devType: '定点开发',
+        processName: '',
+        procedureName: '',
+        taskCategory: '过程确认',
+        priority: '正常',
+        taskStatus: '待处理',
+        responsible: '',
+        startTime: null,
+        deadline: null,
+        timeliness: '正常',
+        days: 0,
+        uploadResponsible: ''
+      }
+    },
+    handleTodoAdd() {
+      this.resetTodoForm()
+      this.todoDialogTitle = '新增待办任务'
+      this.todoFormOpen = true
+    },
+    handleTodoEdit(row) {
+      this.resetTodoForm()
+      getTodoTask(row.taskId).then(response => {
+        this.todoForm = response.data
+        this.todoDialogTitle = '修改待办任务'
+        this.todoFormOpen = true
+      })
+    },
+    submitTodoForm() {
+      this.$refs['todoForm'].validate(valid => {
+        if (valid) {
+          if (this.todoForm.taskId != null) {
+            updateTodoTask(this.todoForm).then(() => {
+              this.$modal.msgSuccess('修改成功')
+              this.todoFormOpen = false
+              this.getTodoList()
+            })
+          } else {
+            addTodoTask(this.todoForm).then(() => {
+              this.$modal.msgSuccess('新增成功')
+              this.todoFormOpen = false
+              this.getTodoList()
+            })
+          }
+        }
+      })
+    },
+    handleTodoDelete(row) {
+      this.$modal.confirm('是否确认删除该待办任务？').then(() => {
+        return delTodoTask(row.taskId)
+      }).then(() => {
+        this.getTodoList()
+        this.$modal.msgSuccess('删除成功')
+      }).catch(() => {})
+    },
+    handleTodoExport() {
+      this.download('tech/todoTask/export', { ...this.todoQueryParams }, `待办任务_${new Date().getTime()}.xlsx`)
+    },
     todoRowClassName({ row }) {
-      if (row.status === '延期') return 'row-danger'
+      if (row.timeliness === '延期') return 'row-danger'
       if (row.taskStatus === '已完成') return 'row-success'
       return ''
     },
@@ -1730,54 +1900,31 @@ export default {
 ::v-deep .todo-dialog {
   .el-dialog__body {
     padding: 15px 20px;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 }
 
 .todo-header {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
   
   .filter-section {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
     flex-wrap: wrap;
-    gap: 5px;
-  }
-}
-
-.stats-table-wrapper {
-  overflow-x: auto;
-  margin-bottom: 10px;
-}
-
-.stats-mini-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  
-  th, td {
-    border: 1px solid #ebeef5;
-    padding: 6px 8px;
-    text-align: center;
-    min-width: 40px;
+    gap: 0;
   }
   
-  th {
-    background: #f5f7fa;
-    font-weight: 600;
-    color: #606266;
-  }
-  
-  .row-label {
-    background: #f5f7fa;
-    font-weight: 600;
-    color: #409EFF;
-  }
-  
-  .total {
-    background: #e6f7ff;
-    font-weight: 600;
-    color: #1890ff;
+  .todo-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
   }
 }
 
@@ -1794,10 +1941,18 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-top: 10px;
+  flex-shrink: 0;
   
   .todo-summary {
     color: #909399;
     font-size: 13px;
+    flex-shrink: 0;
+  }
+  
+  ::v-deep .pagination-container {
+    padding: 0 !important;
+    margin: 0 !important;
   }
 }
 

@@ -5,127 +5,225 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.ruoyi.tech.mapper.TechTrialProcessMapper">
     
     <resultMap type="TechTrialProcess" id="TechTrialProcessResult">
-        <result property="processId"    column="process_id"    />
-        <result property="trialId"    column="trial_id"    />
-        <result property="workshopOrder"    column="workshop_order"    />
-        <result property="workshopCode"    column="workshop_code"    />
-        <result property="workshopName"    column="workshop_name"    />
-        <result property="status"    column="status"    />
-        <result property="receiverId"    column="receiver_id"    />
-        <result property="receiverName"    column="receiver_name"    />
-        <result property="receiveTime"    column="receive_time"    />
-        <result property="handlerId"    column="handler_id"    />
-        <result property="handlerName"    column="handler_name"    />
-        <result property="handleTime"    column="handle_time"    />
-        <result property="workHours"    column="work_hours"    />
-        <result property="result"    column="result"    />
-        <result property="problem"    column="problem"    />
-        <result property="remark"    column="remark"    />
-        <result property="createTime"    column="create_time"    />
-        <result property="updateTime"    column="update_time"    />
+        <result property="processId"        column="process_id"        />
+        <result property="projectCode"      column="project_code"      />
+        <result property="projectName"      column="project_name"      />
+        <result property="initiator"        column="initiator"         />
+        <result property="description"      column="description"       />
+        <result property="status"           column="status"            />
+        <result property="step1Status"      column="step1_status"      />
+        <result property="step2Status"      column="step2_status"      />
+        <result property="step3Status"      column="step3_status"      />
+        <result property="step4Status"      column="step4_status"      />
+        <result property="step5Status"      column="step5_status"      />
+        <result property="step6Status"      column="step6_status"      />
+        <result property="step1Deadline"    column="step1_deadline"    />
+        <result property="step2Deadline"    column="step2_deadline"    />
+        <result property="step3Deadline"    column="step3_deadline"    />
+        <result property="step4Deadline"    column="step4_deadline"    />
+        <result property="step5Deadline"    column="step5_deadline"    />
+        <result property="step6Deadline"    column="step6_deadline"    />
+        <result property="step1Responsible" column="step1_responsible" />
+        <result property="step2Responsible" column="step2_responsible" />
+        <result property="step3Responsible" column="step3_responsible" />
+        <result property="step4Responsible" column="step4_responsible" />
+        <result property="step5Responsible" column="step5_responsible" />
+        <result property="step6Responsible" column="step6_responsible" />
+        <result property="step1Files"       column="step1_files"       />
+        <result property="step2Files"       column="step2_files"       />
+        <result property="step3Files"       column="step3_files"       />
+        <result property="step4Files"       column="step4_files"       />
+        <result property="step5Files"       column="step5_files"       />
+        <result property="step6Files"       column="step6_files"       />
+        <result property="step1Comments"    column="step1_comments"    />
+        <result property="step2Comments"    column="step2_comments"    />
+        <result property="step3Comments"    column="step3_comments"    />
+        <result property="step4Comments"    column="step4_comments"    />
+        <result property="step5Comments"    column="step5_comments"    />
+        <result property="step6Comments"    column="step6_comments"    />
+        <result property="delFlag"          column="del_flag"          />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="remark"           column="remark"            />
     </resultMap>
 
     <sql id="selectTechTrialProcessVo">
-        select process_id, trial_id, workshop_order, workshop_code, workshop_name, status, receiver_id, receiver_name, receive_time, handler_id, handler_name, handle_time, work_hours, result, problem, remark, create_time, update_time from tech_trial_process
+        select process_id, project_code, project_name, initiator, description, status,
+            step1_status, step2_status, step3_status, step4_status, step5_status, step6_status,
+            step1_deadline, step2_deadline, step3_deadline, step4_deadline, step5_deadline, step6_deadline,
+            step1_responsible, step2_responsible, step3_responsible, step4_responsible, step5_responsible, step6_responsible,
+            step1_files, step2_files, step3_files, step4_files, step5_files, step6_files,
+            step1_comments, step2_comments, step3_comments, step4_comments, step5_comments, step6_comments,
+            del_flag, create_by, create_time, update_by, update_time, remark
+        from tech_trial_process
     </sql>
+
+    <!-- 检查用户是否有逾期任务：截止日期 <= 今天，且步骤状态不是done -->
+    <select id="checkUserOverdue" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM tech_trial_process WHERE del_flag = '0' AND (
+            (step1_responsible = #{userName} AND step1_deadline IS NOT NULL AND step1_deadline &lt;= CURDATE() AND (step1_status IS NULL OR step1_status != 'done'))
+            OR (step2_responsible = #{userName} AND step2_deadline IS NOT NULL AND step2_deadline &lt;= CURDATE() AND (step2_status IS NULL OR step2_status != 'done'))
+            OR (step3_responsible = #{userName} AND step3_deadline IS NOT NULL AND step3_deadline &lt;= CURDATE() AND (step3_status IS NULL OR step3_status != 'done'))
+            OR (step4_responsible = #{userName} AND step4_deadline IS NOT NULL AND step4_deadline &lt;= CURDATE() AND (step4_status IS NULL OR step4_status != 'done'))
+            OR (step5_responsible = #{userName} AND step5_deadline IS NOT NULL AND step5_deadline &lt;= CURDATE() AND (step5_status IS NULL OR step5_status != 'done'))
+            OR (step6_responsible = #{userName} AND step6_deadline IS NOT NULL AND step6_deadline &lt;= CURDATE() AND (step6_status IS NULL OR step6_status != 'done'))
+        )
+    </select>
 
     <select id="selectTechTrialProcessList" parameterType="TechTrialProcess" resultMap="TechTrialProcessResult">
         <include refid="selectTechTrialProcessVo"/>
-        <where>  
-            <if test="trialId != null "> and trial_id = #{trialId}</if>
-            <if test="workshopOrder != null "> and workshop_order = #{workshopOrder}</if>
-            <if test="workshopCode != null  and workshopCode != ''"> and workshop_code = #{workshopCode}</if>
-            <if test="workshopName != null  and workshopName != ''"> and workshop_name like concat('%', #{workshopName}, '%')</if>
-            <if test="status != null  and status != ''"> and status = #{status}</if>
-            <if test="receiverId != null "> and receiver_id = #{receiverId}</if>
-            <if test="receiverName != null  and receiverName != ''"> and receiver_name like concat('%', #{receiverName}, '%')</if>
-            <if test="receiveTime != null "> and receive_time = #{receiveTime}</if>
-            <if test="handlerId != null "> and handler_id = #{handlerId}</if>
-            <if test="handlerName != null  and handlerName != ''"> and handler_name like concat('%', #{handlerName}, '%')</if>
-            <if test="handleTime != null "> and handle_time = #{handleTime}</if>
-            <if test="workHours != null "> and work_hours = #{workHours}</if>
-            <if test="result != null  and result != ''"> and result = #{result}</if>
-            <if test="problem != null  and problem != ''"> and problem = #{problem}</if>
+        <where>
+            del_flag = '0'
+            <if test="projectCode != null and projectCode != ''"> and project_code like concat('%', #{projectCode}, '%')</if>
+            <if test="projectName != null and projectName != ''"> and project_name like concat('%', #{projectName}, '%')</if>
+            <if test="initiator != null and initiator != ''"> and initiator like concat('%', #{initiator}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
         </where>
+        order by create_time desc
     </select>
     
     <select id="selectTechTrialProcessByProcessId" parameterType="Long" resultMap="TechTrialProcessResult">
         <include refid="selectTechTrialProcessVo"/>
-        where process_id = #{processId}
+        where process_id = #{processId} and del_flag = '0'
     </select>
 
     <insert id="insertTechTrialProcess" parameterType="TechTrialProcess" useGeneratedKeys="true" keyProperty="processId">
         insert into tech_trial_process
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="trialId != null">trial_id,</if>
-            <if test="workshopOrder != null">workshop_order,</if>
-            <if test="workshopCode != null and workshopCode != ''">workshop_code,</if>
-            <if test="workshopName != null and workshopName != ''">workshop_name,</if>
+            <if test="projectCode != null">project_code,</if>
+            <if test="projectName != null">project_name,</if>
+            <if test="initiator != null">initiator,</if>
+            <if test="description != null">description,</if>
             <if test="status != null">status,</if>
-            <if test="receiverId != null">receiver_id,</if>
-            <if test="receiverName != null">receiver_name,</if>
-            <if test="receiveTime != null">receive_time,</if>
-            <if test="handlerId != null">handler_id,</if>
-            <if test="handlerName != null">handler_name,</if>
-            <if test="handleTime != null">handle_time,</if>
-            <if test="workHours != null">work_hours,</if>
-            <if test="result != null">result,</if>
-            <if test="problem != null">problem,</if>
+            <if test="step1Status != null">step1_status,</if>
+            <if test="step2Status != null">step2_status,</if>
+            <if test="step3Status != null">step3_status,</if>
+            <if test="step4Status != null">step4_status,</if>
+            <if test="step5Status != null">step5_status,</if>
+            <if test="step6Status != null">step6_status,</if>
+            <if test="step1Deadline != null">step1_deadline,</if>
+            <if test="step2Deadline != null">step2_deadline,</if>
+            <if test="step3Deadline != null">step3_deadline,</if>
+            <if test="step4Deadline != null">step4_deadline,</if>
+            <if test="step5Deadline != null">step5_deadline,</if>
+            <if test="step6Deadline != null">step6_deadline,</if>
+            <if test="step1Responsible != null">step1_responsible,</if>
+            <if test="step2Responsible != null">step2_responsible,</if>
+            <if test="step3Responsible != null">step3_responsible,</if>
+            <if test="step4Responsible != null">step4_responsible,</if>
+            <if test="step5Responsible != null">step5_responsible,</if>
+            <if test="step6Responsible != null">step6_responsible,</if>
+            <if test="step1Files != null">step1_files,</if>
+            <if test="step2Files != null">step2_files,</if>
+            <if test="step3Files != null">step3_files,</if>
+            <if test="step4Files != null">step4_files,</if>
+            <if test="step5Files != null">step5_files,</if>
+            <if test="step6Files != null">step6_files,</if>
+            <if test="step1Comments != null">step1_comments,</if>
+            <if test="step2Comments != null">step2_comments,</if>
+            <if test="step3Comments != null">step3_comments,</if>
+            <if test="step4Comments != null">step4_comments,</if>
+            <if test="step5Comments != null">step5_comments,</if>
+            <if test="step6Comments != null">step6_comments,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time,
             <if test="remark != null">remark,</if>
-            <if test="createTime != null">create_time,</if>
-            <if test="updateTime != null">update_time,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="trialId != null">#{trialId},</if>
-            <if test="workshopOrder != null">#{workshopOrder},</if>
-            <if test="workshopCode != null and workshopCode != ''">#{workshopCode},</if>
-            <if test="workshopName != null and workshopName != ''">#{workshopName},</if>
+            <if test="projectCode != null">#{projectCode},</if>
+            <if test="projectName != null">#{projectName},</if>
+            <if test="initiator != null">#{initiator},</if>
+            <if test="description != null">#{description},</if>
             <if test="status != null">#{status},</if>
-            <if test="receiverId != null">#{receiverId},</if>
-            <if test="receiverName != null">#{receiverName},</if>
-            <if test="receiveTime != null">#{receiveTime},</if>
-            <if test="handlerId != null">#{handlerId},</if>
-            <if test="handlerName != null">#{handlerName},</if>
-            <if test="handleTime != null">#{handleTime},</if>
-            <if test="workHours != null">#{workHours},</if>
-            <if test="result != null">#{result},</if>
-            <if test="problem != null">#{problem},</if>
+            <if test="step1Status != null">#{step1Status},</if>
+            <if test="step2Status != null">#{step2Status},</if>
+            <if test="step3Status != null">#{step3Status},</if>
+            <if test="step4Status != null">#{step4Status},</if>
+            <if test="step5Status != null">#{step5Status},</if>
+            <if test="step6Status != null">#{step6Status},</if>
+            <if test="step1Deadline != null">#{step1Deadline},</if>
+            <if test="step2Deadline != null">#{step2Deadline},</if>
+            <if test="step3Deadline != null">#{step3Deadline},</if>
+            <if test="step4Deadline != null">#{step4Deadline},</if>
+            <if test="step5Deadline != null">#{step5Deadline},</if>
+            <if test="step6Deadline != null">#{step6Deadline},</if>
+            <if test="step1Responsible != null">#{step1Responsible},</if>
+            <if test="step2Responsible != null">#{step2Responsible},</if>
+            <if test="step3Responsible != null">#{step3Responsible},</if>
+            <if test="step4Responsible != null">#{step4Responsible},</if>
+            <if test="step5Responsible != null">#{step5Responsible},</if>
+            <if test="step6Responsible != null">#{step6Responsible},</if>
+            <if test="step1Files != null">#{step1Files},</if>
+            <if test="step2Files != null">#{step2Files},</if>
+            <if test="step3Files != null">#{step3Files},</if>
+            <if test="step4Files != null">#{step4Files},</if>
+            <if test="step5Files != null">#{step5Files},</if>
+            <if test="step6Files != null">#{step6Files},</if>
+            <if test="step1Comments != null">#{step1Comments},</if>
+            <if test="step2Comments != null">#{step2Comments},</if>
+            <if test="step3Comments != null">#{step3Comments},</if>
+            <if test="step4Comments != null">#{step4Comments},</if>
+            <if test="step5Comments != null">#{step5Comments},</if>
+            <if test="step6Comments != null">#{step6Comments},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate(),
             <if test="remark != null">#{remark},</if>
-            <if test="createTime != null">#{createTime},</if>
-            <if test="updateTime != null">#{updateTime},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateTechTrialProcess" parameterType="TechTrialProcess">
         update tech_trial_process
         <trim prefix="SET" suffixOverrides=",">
-            <if test="trialId != null">trial_id = #{trialId},</if>
-            <if test="workshopOrder != null">workshop_order = #{workshopOrder},</if>
-            <if test="workshopCode != null and workshopCode != ''">workshop_code = #{workshopCode},</if>
-            <if test="workshopName != null and workshopName != ''">workshop_name = #{workshopName},</if>
+            <if test="projectCode != null">project_code = #{projectCode},</if>
+            <if test="projectName != null">project_name = #{projectName},</if>
+            <if test="initiator != null">initiator = #{initiator},</if>
+            <if test="description != null">description = #{description},</if>
             <if test="status != null">status = #{status},</if>
-            <if test="receiverId != null">receiver_id = #{receiverId},</if>
-            <if test="receiverName != null">receiver_name = #{receiverName},</if>
-            <if test="receiveTime != null">receive_time = #{receiveTime},</if>
-            <if test="handlerId != null">handler_id = #{handlerId},</if>
-            <if test="handlerName != null">handler_name = #{handlerName},</if>
-            <if test="handleTime != null">handle_time = #{handleTime},</if>
-            <if test="workHours != null">work_hours = #{workHours},</if>
-            <if test="result != null">result = #{result},</if>
-            <if test="problem != null">problem = #{problem},</if>
+            <if test="step1Status != null">step1_status = #{step1Status},</if>
+            <if test="step2Status != null">step2_status = #{step2Status},</if>
+            <if test="step3Status != null">step3_status = #{step3Status},</if>
+            <if test="step4Status != null">step4_status = #{step4Status},</if>
+            <if test="step5Status != null">step5_status = #{step5Status},</if>
+            <if test="step6Status != null">step6_status = #{step6Status},</if>
+            <if test="step1Deadline != null">step1_deadline = #{step1Deadline},</if>
+            <if test="step2Deadline != null">step2_deadline = #{step2Deadline},</if>
+            <if test="step3Deadline != null">step3_deadline = #{step3Deadline},</if>
+            <if test="step4Deadline != null">step4_deadline = #{step4Deadline},</if>
+            <if test="step5Deadline != null">step5_deadline = #{step5Deadline},</if>
+            <if test="step6Deadline != null">step6_deadline = #{step6Deadline},</if>
+            <if test="step1Responsible != null">step1_responsible = #{step1Responsible},</if>
+            <if test="step2Responsible != null">step2_responsible = #{step2Responsible},</if>
+            <if test="step3Responsible != null">step3_responsible = #{step3Responsible},</if>
+            <if test="step4Responsible != null">step4_responsible = #{step4Responsible},</if>
+            <if test="step5Responsible != null">step5_responsible = #{step5Responsible},</if>
+            <if test="step6Responsible != null">step6_responsible = #{step6Responsible},</if>
+            <if test="step1Files != null">step1_files = #{step1Files},</if>
+            <if test="step2Files != null">step2_files = #{step2Files},</if>
+            <if test="step3Files != null">step3_files = #{step3Files},</if>
+            <if test="step4Files != null">step4_files = #{step4Files},</if>
+            <if test="step5Files != null">step5_files = #{step5Files},</if>
+            <if test="step6Files != null">step6_files = #{step6Files},</if>
+            <if test="step1Comments != null">step1_comments = #{step1Comments},</if>
+            <if test="step2Comments != null">step2_comments = #{step2Comments},</if>
+            <if test="step3Comments != null">step3_comments = #{step3Comments},</if>
+            <if test="step4Comments != null">step4_comments = #{step4Comments},</if>
+            <if test="step5Comments != null">step5_comments = #{step5Comments},</if>
+            <if test="step6Comments != null">step6_comments = #{step6Comments},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
             <if test="remark != null">remark = #{remark},</if>
-            <if test="createTime != null">create_time = #{createTime},</if>
-            <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where process_id = #{processId}
     </update>
 
     <delete id="deleteTechTrialProcessByProcessId" parameterType="Long">
-        delete from tech_trial_process where process_id = #{processId}
+        update tech_trial_process set del_flag = '2' where process_id = #{processId}
     </delete>
 
     <delete id="deleteTechTrialProcessByProcessIds" parameterType="String">
-        delete from tech_trial_process where process_id in 
+        update tech_trial_process set del_flag = '2' where process_id in 
         <foreach item="processId" collection="array" open="(" separator="," close=")">
             #{processId}
         </foreach>

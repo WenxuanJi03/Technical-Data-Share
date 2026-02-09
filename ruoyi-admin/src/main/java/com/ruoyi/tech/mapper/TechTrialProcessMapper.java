@@ -2,6 +2,7 @@ package com.ruoyi.tech.mapper;
 
 import java.util.List;
 import com.ruoyi.tech.domain.TechTrialProcess;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 试制流程记录Mapper接口
@@ -11,6 +12,10 @@ import com.ruoyi.tech.domain.TechTrialProcess;
  */
 public interface TechTrialProcessMapper 
 {
+    /**
+     * 检查用户是否有逾期任务（截止日期 <= 今天 且 步骤未完成）
+     */
+    public int checkUserOverdue(@Param("userName") String userName);
     /**
      * 查询试制流程记录
      * 

@@ -37,6 +37,11 @@ nbdist/
 .nb-gradle/
 
 ######################################################################
+# Upload files (user uploaded data, not source code)
+upload/
+avatar/
+
+######################################################################
 # Others
 *.log
 *.xml.versionsBackup

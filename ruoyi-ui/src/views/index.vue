@@ -56,8 +56,22 @@ export default {
 <style scoped lang="scss">
 .dashboard-container {
   padding: 20px;
-  background: #f0f2f5;
   min-height: calc(100vh - 84px);
+  position: relative;
+  background: transparent;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('~@/assets/images/home-background.jpg') center / cover no-repeat;
+    opacity: 0.4;
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
 .welcome-section {

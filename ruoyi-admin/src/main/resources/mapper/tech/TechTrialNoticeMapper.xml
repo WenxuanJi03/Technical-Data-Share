@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechTrialNoticeMapper">
+    
+    <resultMap type="TechTrialNotice" id="TechTrialNoticeResult">
+        <result property="noticeId"        column="notice_id"        />
+        <result property="noticeCode"      column="notice_code"      />
+        <result property="wheelCode"       column="wheel_code"       />
+        <result property="trialStatus"     column="trial_status"     />
+        <result property="trialType"       column="trial_type"       />
+        <result property="devType"         column="dev_type"         />
+        <result property="customerName"    column="customer_name"    />
+        <result property="responsible"     column="responsible"      />
+        <result property="surfaceStatus"   column="surface_status"   />
+        <result property="sizeSpec"        column="size_spec"        />
+        <result property="urgency"         column="urgency"          />
+        <result property="trialQuantity"   column="trial_quantity"   />
+        <result property="sampleQuantity"  column="sample_quantity"  />
+        <result property="trialStart"      column="trial_start"      />
+        <result property="sampleDate"      column="sample_date"      />
+        <result property="craftProcess"    column="craft_process"    />
+        <result property="experimentItems" column="experiment_items" />
+        <result property="wheelImage"      column="wheel_image"      />
+        <result property="processData"     column="process_data"     />
+        <result property="status"          column="status"           />
+        <result property="delFlag"         column="del_flag"         />
+        <result property="createBy"        column="create_by"        />
+        <result property="createTime"      column="create_time"      />
+        <result property="updateBy"        column="update_by"        />
+        <result property="updateTime"      column="update_time"      />
+        <result property="remark"          column="remark"           />
+    </resultMap>
+
+    <sql id="selectTechTrialNoticeVo">
+        select notice_id, notice_code, wheel_code, trial_status, trial_type, dev_type,
+            customer_name, responsible, surface_status, size_spec, urgency,
+            trial_quantity, sample_quantity, trial_start, sample_date,
+            craft_process, experiment_items, wheel_image, process_data,
+            status, del_flag, create_by, create_time, update_by, update_time, remark
+        from tech_trial_notice
+    </sql>
+
+    <select id="selectTechTrialNoticeList" parameterType="TechTrialNotice" resultMap="TechTrialNoticeResult">
+        <include refid="selectTechTrialNoticeVo"/>
+        <where>
+            del_flag = '0'
+            <if test="noticeCode != null and noticeCode != ''"> and notice_code like concat('%', #{noticeCode}, '%')</if>
+            <if test="wheelCode != null and wheelCode != ''"> and wheel_code like concat('%', #{wheelCode}, '%')</if>
+            <if test="trialStatus != null and trialStatus != ''"> and trial_status = #{trialStatus}</if>
+            <if test="trialType != null and trialType != ''"> and trial_type = #{trialType}</if>
+            <if test="devType != null and devType != ''"> and dev_type = #{devType}</if>
+            <if test="customerName != null and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="responsible != null and responsible != ''"> and responsible like concat('%', #{responsible}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+            <if test="craftProcess != null and craftProcess != ''"> and craft_process = #{craftProcess}</if>
+        </where>
+        order by create_time desc
+    </select>
+    
+    <select id="selectTechTrialNoticeByNoticeId" parameterType="Long" resultMap="TechTrialNoticeResult">
+        <include refid="selectTechTrialNoticeVo"/>
+        where notice_id = #{noticeId} and del_flag = '0'
+    </select>
+
+    <insert id="insertTechTrialNotice" parameterType="TechTrialNotice" useGeneratedKeys="true" keyProperty="noticeId">
+        insert into tech_trial_notice
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="noticeCode != null">notice_code,</if>
+            <if test="wheelCode != null">wheel_code,</if>
+            <if test="trialStatus != null">trial_status,</if>
+            <if test="trialType != null">trial_type,</if>
+            <if test="devType != null">dev_type,</if>
+            <if test="customerName != null">customer_name,</if>
+            <if test="responsible != null">responsible,</if>
+            <if test="surfaceStatus != null">surface_status,</if>
+            <if test="sizeSpec != null">size_spec,</if>
+            <if test="urgency != null">urgency,</if>
+            <if test="trialQuantity != null">trial_quantity,</if>
+            <if test="sampleQuantity != null">sample_quantity,</if>
+            <if test="trialStart != null">trial_start,</if>
+            <if test="sampleDate != null">sample_date,</if>
+            <if test="craftProcess != null">craft_process,</if>
+            <if test="experimentItems != null">experiment_items,</if>
+            <if test="wheelImage != null">wheel_image,</if>
+            <if test="processData != null">process_data,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time,
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="noticeCode != null">#{noticeCode},</if>
+            <if test="wheelCode != null">#{wheelCode},</if>
+            <if test="trialStatus != null">#{trialStatus},</if>
+            <if test="trialType != null">#{trialType},</if>
+            <if test="devType != null">#{devType},</if>
+            <if test="customerName != null">#{customerName},</if>
+            <if test="responsible != null">#{responsible},</if>
+            <if test="surfaceStatus != null">#{surfaceStatus},</if>
+            <if test="sizeSpec != null">#{sizeSpec},</if>
+            <if test="urgency != null">#{urgency},</if>
+            <if test="trialQuantity != null">#{trialQuantity},</if>
+            <if test="sampleQuantity != null">#{sampleQuantity},</if>
+            <if test="trialStart != null">#{trialStart},</if>
+            <if test="sampleDate != null">#{sampleDate},</if>
+            <if test="craftProcess != null">#{craftProcess},</if>
+            <if test="experimentItems != null">#{experimentItems},</if>
+            <if test="wheelImage != null">#{wheelImage},</if>
+            <if test="processData != null">#{processData},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate(),
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTechTrialNotice" parameterType="TechTrialNotice">
+        update tech_trial_notice
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="noticeCode != null">notice_code = #{noticeCode},</if>
+            <if test="wheelCode != null">wheel_code = #{wheelCode},</if>
+            <if test="trialStatus != null">trial_status = #{trialStatus},</if>
+            <if test="trialType != null">trial_type = #{trialType},</if>
+            <if test="devType != null">dev_type = #{devType},</if>
+            <if test="customerName != null">customer_name = #{customerName},</if>
+            <if test="responsible != null">responsible = #{responsible},</if>
+            <if test="surfaceStatus != null">surface_status = #{surfaceStatus},</if>
+            <if test="sizeSpec != null">size_spec = #{sizeSpec},</if>
+            <if test="urgency != null">urgency = #{urgency},</if>
+            <if test="trialQuantity != null">trial_quantity = #{trialQuantity},</if>
+            <if test="sampleQuantity != null">sample_quantity = #{sampleQuantity},</if>
+            <if test="trialStart != null">trial_start = #{trialStart},</if>
+            <if test="sampleDate != null">sample_date = #{sampleDate},</if>
+            <if test="craftProcess != null">craft_process = #{craftProcess},</if>
+            <if test="experimentItems != null">experiment_items = #{experimentItems},</if>
+            <if test="wheelImage != null">wheel_image = #{wheelImage},</if>
+            <if test="processData != null">process_data = #{processData},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where notice_id = #{noticeId}
+    </update>
+
+    <delete id="deleteTechTrialNoticeByNoticeId" parameterType="Long">
+        update tech_trial_notice set del_flag = '2' where notice_id = #{noticeId}
+    </delete>
+
+    <delete id="deleteTechTrialNoticeByNoticeIds" parameterType="String">
+        update tech_trial_notice set del_flag = '2' where notice_id in 
+        <foreach item="noticeId" collection="array" open="(" separator="," close=")">
+            #{noticeId}
+        </foreach>
+    </delete>
+</mapper>

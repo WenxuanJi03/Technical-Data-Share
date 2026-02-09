@@ -32,10 +32,11 @@
             v-for="(step, index) in getSteps(item)" 
             :key="index" 
             class="step-item"
-            :class="{ 'is-active': step.status === 'active', 'is-done': step.status === 'done', 'is-expired': isExpired(step) }"
+            :class="getStepClass(step)"
           >
-            <div class="step-icon" :class="{ 'expired': isExpired(step) }">
-              <i :class="getStepIcon(step.name)"></i>
+            <div class="step-icon" :class="getStepIconClass(step)">
+              <i v-if="step.status === 'done'" class="el-icon-check"></i>
+              <i v-else :class="getStepIcon(step.name)"></i>
             </div>
             <div class="step-name">{{ step.name }}</div>
             <div class="step-responsible" v-if="step.responsible">
@@ -44,12 +45,21 @@
             <div class="step-deadline" v-if="step.deadline">
               <i class="el-icon-time"></i> {{ step.deadline }}
             </div>
+            <div class="step-status-tag" v-if="step.status === 'done'">
+              <el-tag type="info" size="mini" effect="plain">已完成</el-tag>
+            </div>
             <div class="step-actions">
               <el-button size="mini" type="text" icon="el-icon-upload2" @click="openUpload(item, step, index)">上传</el-button>
               <el-button size="mini" type="text" icon="el-icon-edit" @click="openComment(item, step, index)">意见</el-button>
-              <el-button size="mini" type="text" icon="el-icon-date" @click="setDeadline(item, step, index)">截止</el-button>
+              <template v-if="step.status !== 'done'">
+                <el-button size="mini" type="text" icon="el-icon-date" @click="setDeadline(item, step, index)">截止</el-button>
+                <el-button size="mini" type="text" icon="el-icon-circle-check" style="color:#67c23a" @click="markStepDone(item, index)">完成</el-button>
+              </template>
+              <template v-else>
+                <el-button size="mini" type="text" icon="el-icon-refresh-left" style="color:#e6a23c" @click="markStepUndo(item, index)">撤回</el-button>
+              </template>
             </div>
-            <div class="step-line" v-if="index < 5"></div>
+            <div class="step-line" v-if="index < 5" :class="{ 'line-done': step.status === 'done' }"></div>
           </div>
         </div>
 
@@ -305,10 +315,64 @@ export default {
       this.queryParams.pageNum = 1
       this.getList()
     },
+    /** 判断步骤是否临近截止或已过期（截止日期当天或前一天） */
     isExpired(step) {
-      if (!step.deadline) return false
-      const today = new Date().toISOString().slice(0, 10)
-      return step.deadline <= today && step.status !== 'done'
+      if (!step.deadline || step.status === 'done') return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const deadlineDate = new Date(step.deadline + 'T00:00:00')
+      const diffDays = Math.floor((deadlineDate - today) / (1000 * 60 * 60 * 24))
+      return diffDays <= 1 // 截止日期当天(0)或前一天(1)都标红
+    },
+    /** 获取步骤整体CSS类 */
+    getStepClass(step) {
+      if (step.status === 'done') return 'is-done'
+      if (this.isExpired(step)) return 'is-expired'
+      // 有截止日期或负责人但未到期的也算进行中，显示蓝色
+      if (step.status === 'active' || step.deadline || step.responsible) return 'is-active'
+      return ''
+    },
+    /** 获取步骤图标CSS类 */
+    getStepIconClass(step) {
+      if (step.status === 'done') return 'icon-done'
+      if (this.isExpired(step)) return 'icon-expired'
+      if (step.status === 'active' || step.deadline || step.responsible) return 'icon-active'
+      return ''
+    },
+    /** 标记步骤为已完成 */
+    markStepDone(item, index) {
+      const stepNum = index + 1
+      this.$confirm(`确认将"${this.stepNames[index]}"标记为已完成？`, '提示', {
+        confirmButtonText: '确定', cancelButtonText: '取消', type: 'info'
+      }).then(() => {
+        const updateData = { processId: item.processId }
+        updateData[`step${stepNum}Status`] = 'done'
+        // 自动激活下一个步骤
+        if (stepNum < 6) {
+          const nextKey = `step${stepNum + 1}Status`
+          if (!item[nextKey] || item[nextKey] === 'pending') {
+            updateData[nextKey] = 'active'
+          }
+        }
+        updateTrialProcess(updateData).then(() => {
+          this.$modal.msgSuccess('已标记为完成')
+          this.getList()
+        })
+      }).catch(() => {})
+    },
+    /** 撤回步骤完成状态 */
+    markStepUndo(item, index) {
+      const stepNum = index + 1
+      this.$confirm(`确认撤回"${this.stepNames[index]}"的完成状态？`, '提示', {
+        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
+      }).then(() => {
+        const updateData = { processId: item.processId }
+        updateData[`step${stepNum}Status`] = 'active'
+        updateTrialProcess(updateData).then(() => {
+          this.$modal.msgSuccess('已撤回')
+          this.getList()
+        })
+      }).catch(() => {})
     },
     getStepIcon(name) {
       const icons = {
@@ -655,21 +719,24 @@ export default {
     margin-bottom: 10px;
     transition: all 0.3s;
     
-    &.expired {
-      background: #f56c6c !important;
-      color: #fff !important;
+    /* 蓝色 - 进行中、未过期 */
+    &.icon-active {
+      background: #409EFF;
+      color: #fff;
+    }
+    
+    /* 红色 - 截止日期当天或前一天 */
+    &.icon-expired {
+      background: #f56c6c;
+      color: #fff;
       animation: pulse 1.5s infinite;
     }
-  }
-  
-  &.is-done .step-icon {
-    background: #67c23a;
-    color: #fff;
-  }
-  
-  &.is-active .step-icon {
-    background: #409EFF;
-    color: #fff;
+    
+    /* 灰色 - 已完成 */
+    &.icon-done {
+      background: #c0c4cc;
+      color: #fff;
+    }
   }
   
   .step-name {
@@ -677,6 +744,16 @@ export default {
     color: #303133;
     text-align: center;
     margin-bottom: 5px;
+  }
+  
+  &.is-done .step-name {
+    color: #c0c4cc;
+    text-decoration: line-through;
+  }
+  
+  &.is-expired .step-name {
+    color: #f56c6c;
+    font-weight: 600;
   }
   
   .step-responsible {
@@ -689,19 +766,34 @@ export default {
     }
   }
   
+  &.is-expired .step-responsible {
+    color: #f56c6c;
+  }
+  
   .step-deadline {
     font-size: 11px;
     color: #909399;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     
     i {
       margin-right: 3px;
     }
   }
   
+  &.is-expired .step-deadline {
+    color: #f56c6c;
+    font-weight: 600;
+  }
+  
+  .step-status-tag {
+    margin-bottom: 4px;
+  }
+  
   .step-actions {
     display: flex;
-    gap: 5px;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   
   .step-line {
@@ -711,10 +803,10 @@ export default {
     width: calc(100% - 60px);
     height: 2px;
     background: #e0e0e0;
-  }
-  
-  &.is-done .step-line {
-    background: #67c23a;
+    
+    &.line-done {
+      background: #c0c4cc;
+    }
   }
 }
 

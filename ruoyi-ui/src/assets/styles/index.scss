@@ -122,6 +122,22 @@ aside {
 //main-container全局样式
 .app-container {
   padding: 20px;
+  min-height: calc(100vh - 84px);
+  position: relative;
+  background: transparent;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('~@/assets/images/content-background.jpg') center / cover no-repeat;
+    opacity: 0.4;
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
 .components-container {
@@ -175,4 +191,37 @@ aside {
     vertical-align: middle;
     margin-bottom: 10px;
   }
+}
+
+// 全局表格美化
+.el-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+// 全局卡片美化
+.el-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  border: none !important;
+}
+
+// 全局对话框美化
+.el-dialog {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+// 全局按钮微调
+.el-button--primary {
+  box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+}
+
+.el-button--success {
+  box-shadow: 0 2px 6px rgba(103, 194, 58, 0.3);
+}
+
+.el-button--danger {
+  box-shadow: 0 2px 6px rgba(245, 108, 108, 0.3);
 }

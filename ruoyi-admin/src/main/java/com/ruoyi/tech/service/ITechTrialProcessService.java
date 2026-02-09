@@ -12,6 +12,11 @@ import com.ruoyi.tech.domain.TechTrialProcess;
 public interface ITechTrialProcessService 
 {
     /**
+     * 检查用户是否有逾期任务
+     */
+    public boolean checkUserOverdue(String userName);
+
+    /**
      * 查询试制流程记录
      * 
      * @param processId 试制流程记录主键

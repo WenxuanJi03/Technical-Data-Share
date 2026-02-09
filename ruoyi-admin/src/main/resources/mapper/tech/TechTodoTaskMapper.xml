@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechTodoTaskMapper">
+    
+    <resultMap type="TechTodoTask" id="TechTodoTaskResult">
+        <result property="taskId"            column="task_id"            />
+        <result property="moldCode"          column="mold_code"          />
+        <result property="devType"           column="dev_type"           />
+        <result property="processName"       column="process_name"       />
+        <result property="procedureName"     column="procedure_name"     />
+        <result property="taskCategory"      column="task_category"      />
+        <result property="priority"          column="priority"           />
+        <result property="taskStatus"        column="task_status"        />
+        <result property="responsible"       column="responsible"        />
+        <result property="startTime"         column="start_time"         />
+        <result property="deadline"          column="deadline"           />
+        <result property="timeliness"        column="timeliness"         />
+        <result property="days"              column="days"               />
+        <result property="uploadResponsible" column="upload_responsible" />
+        <result property="delFlag"           column="del_flag"           />
+        <result property="createBy"          column="create_by"          />
+        <result property="createTime"        column="create_time"        />
+        <result property="updateBy"          column="update_by"          />
+        <result property="updateTime"        column="update_time"        />
+        <result property="remark"            column="remark"             />
+    </resultMap>
+
+    <sql id="selectTechTodoTaskVo">
+        select task_id, mold_code, dev_type, process_name, procedure_name, task_category, priority, task_status, responsible, start_time, deadline, timeliness, days, upload_responsible, del_flag, create_by, create_time, update_by, update_time, remark from tech_todo_task
+    </sql>
+
+    <select id="selectTechTodoTaskList" parameterType="TechTodoTask" resultMap="TechTodoTaskResult">
+        <include refid="selectTechTodoTaskVo"/>
+        <where>
+            del_flag = '0'
+            <if test="moldCode != null and moldCode != ''"> and mold_code like concat('%', #{moldCode}, '%')</if>
+            <if test="devType != null and devType != ''"> and dev_type = #{devType}</if>
+            <if test="processName != null and processName != ''"> and process_name like concat('%', #{processName}, '%')</if>
+            <if test="procedureName != null and procedureName != ''"> and procedure_name like concat('%', #{procedureName}, '%')</if>
+            <if test="taskCategory != null and taskCategory != ''"> and task_category = #{taskCategory}</if>
+            <if test="priority != null and priority != ''"> and priority = #{priority}</if>
+            <if test="taskStatus != null and taskStatus != ''"> and task_status = #{taskStatus}</if>
+            <if test="responsible != null and responsible != ''"> and responsible like concat('%', #{responsible}, '%')</if>
+            <if test="timeliness != null and timeliness != ''"> and timeliness = #{timeliness}</if>
+            <if test="uploadResponsible != null and uploadResponsible != ''"> and upload_responsible like concat('%', #{uploadResponsible}, '%')</if>
+        </where>
+        order by create_time desc
+    </select>
+    
+    <select id="selectTechTodoTaskByTaskId" parameterType="Long" resultMap="TechTodoTaskResult">
+        <include refid="selectTechTodoTaskVo"/>
+        where task_id = #{taskId} and del_flag = '0'
+    </select>
+
+    <insert id="insertTechTodoTask" parameterType="TechTodoTask" useGeneratedKeys="true" keyProperty="taskId">
+        insert into tech_todo_task
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null">mold_code,</if>
+            <if test="devType != null">dev_type,</if>
+            <if test="processName != null">process_name,</if>
+            <if test="procedureName != null">procedure_name,</if>
+            <if test="taskCategory != null">task_category,</if>
+            <if test="priority != null">priority,</if>
+            <if test="taskStatus != null">task_status,</if>
+            <if test="responsible != null">responsible,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="deadline != null">deadline,</if>
+            <if test="timeliness != null">timeliness,</if>
+            <if test="days != null">days,</if>
+            <if test="uploadResponsible != null">upload_responsible,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="moldCode != null">#{moldCode},</if>
+            <if test="devType != null">#{devType},</if>
+            <if test="processName != null">#{processName},</if>
+            <if test="procedureName != null">#{procedureName},</if>
+            <if test="taskCategory != null">#{taskCategory},</if>
+            <if test="priority != null">#{priority},</if>
+            <if test="taskStatus != null">#{taskStatus},</if>
+            <if test="responsible != null">#{responsible},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="deadline != null">#{deadline},</if>
+            <if test="timeliness != null">#{timeliness},</if>
+            <if test="days != null">#{days},</if>
+            <if test="uploadResponsible != null">#{uploadResponsible},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTechTodoTask" parameterType="TechTodoTask">
+        update tech_todo_task
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moldCode != null">mold_code = #{moldCode},</if>
+            <if test="devType != null">dev_type = #{devType},</if>
+            <if test="processName != null">process_name = #{processName},</if>
+            <if test="procedureName != null">procedure_name = #{procedureName},</if>
+            <if test="taskCategory != null">task_category = #{taskCategory},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="taskStatus != null">task_status = #{taskStatus},</if>
+            <if test="responsible != null">responsible = #{responsible},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="deadline != null">deadline = #{deadline},</if>
+            <if test="timeliness != null">timeliness = #{timeliness},</if>
+            <if test="days != null">days = #{days},</if>
+            <if test="uploadResponsible != null">upload_responsible = #{uploadResponsible},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where task_id = #{taskId}
+    </update>
+
+    <delete id="deleteTechTodoTaskByTaskId" parameterType="Long">
+        update tech_todo_task set del_flag = '2' where task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteTechTodoTaskByTaskIds" parameterType="String">
+        update tech_todo_task set del_flag = '2' where task_id in 
+        <foreach item="taskId" collection="array" open="(" separator="," close=")">
+            #{taskId}
+        </foreach>
+    </delete>
+</mapper>

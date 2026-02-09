@@ -42,3 +42,12 @@ export function delDocument(docId) {
     method: 'delete'
   })
 }
+
+// 导入技术文档
+export function importDocument(data) {
+  return request({
+    url: '/tech/document/importData',
+    method: 'post',
+    data: data
+  })
+}

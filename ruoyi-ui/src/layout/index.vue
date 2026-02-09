@@ -99,6 +99,10 @@ export default {
     z-index: 9;
     width: calc(100% - #{$base-sidebar-width});
     transition: width 0.28s;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
   }
 
   .hideSidebar .fixed-header {
