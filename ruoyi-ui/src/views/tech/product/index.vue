@@ -61,6 +61,9 @@
       <el-divider direction="vertical"></el-divider>
       <span class="stats-item" v-if="queryParams.productStatus">筛选: {{ queryParams.productStatus }}</span>
       <span class="stats-item" v-if="queryParams.customer">客户: {{ queryParams.customer }}</span>
+      <el-divider direction="vertical"></el-divider>
+      <el-checkbox v-model="selectAll" style="margin-left:8px">全选所有 {{ total }} 条产品</el-checkbox>
+      <el-button v-if="selectAll" type="danger" size="mini" icon="el-icon-delete" style="margin-left:12px" @click="handleCleanAll" v-hasPermi="['tech:product:remove']">删除全部</el-button>
     </div>
 
     <!-- ★ 卡片视图（默认） -->
@@ -116,29 +119,65 @@
     <!-- 表格视图 -->
     <el-table v-if="viewMode === 'table'" v-loading="loading" :data="productList" @selection-change="handleSelectionChange" border size="mini">
       <el-table-column type="selection" width="40" align="center" />
-      <el-table-column label="正面图" align="center" width="80">
-        <template slot-scope="scope">
-          <img v-if="scope.row.frontImage" :src="baseUrl + scope.row.frontImage" style="width:50px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer" @click="showDetail(scope.row)" />
-          <span v-else style="color:#c0c4cc;font-size:12px">无图</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="轮型号" align="center" prop="wheelCode" width="110">
+      <!-- 基础信息 -->
+      <el-table-column label="序号" align="center" prop="serialNo" width="55" />
+      <el-table-column label="轮型号" align="center" prop="wheelCode" width="100" fixed="left">
         <template slot-scope="scope">
           <el-link type="primary" @click="showDetail(scope.row)">{{ scope.row.wheelCode }}</el-link>
         </template>
       </el-table-column>
-      <el-table-column label="客户" align="center" prop="customer" width="80" />
-      <el-table-column label="发货地" align="center" prop="shipLocation" width="70" />
-      <el-table-column label="产品状态" align="center" prop="productStatus" width="100">
+      <el-table-column label="客户" align="center" prop="customer" width="70" />
+      <el-table-column label="发货地" align="center" prop="shipLocation" width="65" />
+      <el-table-column label="产品类型" align="center" prop="productType" width="80" show-overflow-tooltip />
+      <el-table-column label="产品来源" align="center" prop="productSource" width="80" show-overflow-tooltip />
+      <el-table-column label="首模号" align="center" prop="firstMoldNo" width="90" />
+      <el-table-column label="首模来源" align="center" prop="moldSource" width="80" show-overflow-tooltip />
+      <el-table-column label="产品状态" align="center" prop="productStatus" width="90">
         <template slot-scope="scope">
           <el-tag :type="getStatusType(scope.row.productStatus)" size="mini">{{ scope.row.productStatus || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="规格" align="center" prop="sizeSpec" width="60" />
-      <el-table-column label="偏距ET" align="center" prop="offsetEt" width="65" />
-      <el-table-column label="PCD" align="center" prop="pcd" width="75" />
-      <el-table-column label="中心孔" align="center" prop="centerHole" width="65" />
+      <el-table-column label="状态备注" align="center" prop="statusRemark" width="90" show-overflow-tooltip />
+      <el-table-column label="相似轮型" align="center" prop="similarWheels" width="100" show-overflow-tooltip />
+      <el-table-column label="差异点" align="center" prop="similarDiff" width="100" show-overflow-tooltip />
+      <!-- 基础参数 -->
+      <el-table-column label="规格" align="center" prop="sizeSpec" width="55" />
+      <el-table-column label="ET" align="center" prop="offsetEt" width="55" />
+      <el-table-column label="PCD" align="center" prop="pcd" width="70" />
+      <el-table-column label="中心孔" align="center" prop="centerHole" width="60" />
+      <el-table-column label="设计单重" align="center" prop="designWeight" width="75" />
       <el-table-column label="表面处理" align="center" prop="surfaceTreatment" width="80" />
+      <el-table-column label="颜色" align="center" prop="color" width="70" />
+      <el-table-column label="标签" align="center" prop="labelInfo" width="70" show-overflow-tooltip />
+      <!-- 准备阶段里程碑 -->
+      <el-table-column label="转移时间" align="center" prop="transferTime" width="90" />
+      <el-table-column label="内评时间" align="center" prop="internalEvalTime" width="90" />
+      <el-table-column label="工检清单" align="center" prop="qualityCheckTime" width="90" />
+      <el-table-column label="开模时间" align="center" prop="moldOpenTime" width="90" />
+      <el-table-column label="工检到厂" align="center" prop="qualityArrivalTime" width="90" />
+      <el-table-column label="样轮到厂" align="center" prop="sampleWheelTime" width="90" />
+      <el-table-column label="油漆到厂" align="center" prop="paintArrivalTime" width="90" />
+      <el-table-column label="图纸签发" align="center" prop="drawingIssueTime" width="90" />
+      <!-- 产品开发里程碑 -->
+      <el-table-column label="FEA结果" align="center" prop="feaResult" width="100" show-overflow-tooltip />
+      <el-table-column label="首模到厂" align="center" prop="firstMoldArrival" width="90" />
+      <el-table-column label="首上机" align="center" prop="firstMachineTime" width="90" />
+      <el-table-column label="送样时间" align="center" prop="sampleSubmitTime" width="90" />
+      <el-table-column label="样件合格" align="center" prop="samplePassTime" width="90" />
+      <el-table-column label="送样履历" align="center" prop="sampleHistory" width="100" show-overflow-tooltip />
+      <el-table-column label="试制总结" align="center" prop="trialSummaryTime" width="90" />
+      <!-- 量产阶段里程碑 -->
+      <el-table-column label="试制情况" align="center" prop="trialSituation" width="100" show-overflow-tooltip />
+      <el-table-column label="小批量总结" align="center" prop="batchSummaryTime" width="90" />
+      <el-table-column label="小批量情况" align="center" prop="batchSituation" width="100" show-overflow-tooltip />
+      <el-table-column label="影响交付" align="center" prop="impactDeliveryTime" width="90" />
+      <el-table-column label="交付事项" align="center" prop="impactDeliveryItem" width="100" show-overflow-tooltip />
+      <el-table-column label="量产时间" align="center" prop="massProdTime" width="90" />
+      <!-- 持续改进里程碑 -->
+      <el-table-column label="变更关闭" align="center" prop="latestChangeTime" width="90" />
+      <el-table-column label="变更内容" align="center" prop="latestChangeContent" width="120" show-overflow-tooltip />
+      <el-table-column label="控制要点" align="center" prop="controlPoints" width="120" show-overflow-tooltip />
+      <!-- 操作 -->
       <el-table-column label="操作" align="center" width="140" fixed="right" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="showDetail(scope.row)">详情</el-button>
@@ -437,7 +476,7 @@
 </template>
 
 <script>
-import { listProduct, getProduct, delProduct, addProduct, updateProduct } from "@/api/tech/product"
+import { listProduct, getProduct, delProduct, addProduct, updateProduct, cleanAllProducts } from "@/api/tech/product"
 import { getToken } from "@/utils/auth"
 
 export default {
@@ -451,6 +490,7 @@ export default {
       showSearch: true,
       total: 0,
       productList: [],
+      selectAll: false,
       title: "",
       open: false,
       viewMode: "card",
@@ -470,7 +510,7 @@ export default {
       batchImageFiles: [],
       uploadHeaders: { Authorization: "Bearer " + getToken() },
       baseUrl: process.env.VUE_APP_BASE_API,
-      queryParams: { pageNum: 1, pageSize: 20, wheelCode: null, customer: null, productStatus: null, sizeSpec: null, pcd: null },
+      queryParams: { pageNum: 1, pageSize: 24, wheelCode: null, customer: null, productStatus: null, sizeSpec: null, pcd: null },
       form: {},
       rules: { wheelCode: [{ required: true, message: "轮型号不能为空", trigger: "blur" }] }
     }
@@ -575,8 +615,14 @@ export default {
       }).catch(() => {})
     },
     handleBatchDelete() {
-      this.$modal.confirm('确认删除选中的产品？').then(() => delProduct(this.ids.join(','))).then(() => {
+      this.$modal.confirm('确认删除选中的 ' + this.ids.length + ' 个产品？').then(() => delProduct(this.ids.join(','))).then(() => {
         this.getList(); this.$modal.msgSuccess("删除成功")
+      }).catch(() => {})
+    },
+    handleCleanAll() {
+      const q = { ...this.queryParams }; delete q.pageNum; delete q.pageSize;
+      this.$modal.confirm('确认删除全部 ' + this.total + ' 条产品？此操作不可恢复！').then(() => cleanAllProducts(q)).then(res => {
+        this.selectAll = false; this.getList(); this.$modal.msgSuccess(res.msg || "删除成功")
       }).catch(() => {})
     },
     handleImport() { this.importOpen = true },

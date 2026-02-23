@@ -15,3 +15,6 @@ export function updateTrialTrack(data) {
 export function delTrialTrack(trackId) {
   return request({ url: '/tech/trialTrack/' + trackId, method: 'delete' })
 }
+export function cleanAllTrialTracks(query) {
+  return request({ url: '/tech/trialTrack/cleanAll', method: 'delete', params: query })
+}

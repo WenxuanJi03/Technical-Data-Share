@@ -42,3 +42,12 @@ export function delProduct(productId) {
     method: 'delete'
   })
 }
+
+// 按搜索条件清空全部产品
+export function cleanAllProducts(query) {
+  return request({
+    url: '/tech/product/cleanAll',
+    method: 'delete',
+    params: query
+  })
+}

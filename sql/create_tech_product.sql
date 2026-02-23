@@ -32,34 +32,34 @@ CREATE TABLE tech_product (
   label_info           VARCHAR(200)  DEFAULT NULL              COMMENT '标签（如Ø15蓝色底点）',
 
   -- ========== 准备阶段里程碑（V~AC列）==========
-  transfer_time        VARCHAR(30)   DEFAULT NULL              COMMENT '转移时间',
-  internal_eval_time   VARCHAR(30)   DEFAULT NULL              COMMENT '内评时间',
-  quality_check_time   VARCHAR(30)   DEFAULT NULL              COMMENT '工检清单时间',
-  mold_open_time       VARCHAR(30)   DEFAULT NULL              COMMENT '开模时间',
-  quality_arrival_time VARCHAR(30)   DEFAULT NULL              COMMENT '工检全部到厂时间',
-  sample_wheel_time    VARCHAR(30)   DEFAULT NULL              COMMENT '样轮到厂时间',
-  paint_arrival_time   VARCHAR(30)   DEFAULT NULL              COMMENT '油漆到厂时间',
-  drawing_issue_time   VARCHAR(30)   DEFAULT NULL              COMMENT '图纸文件全部签发时间',
+  transfer_time        VARCHAR(100)  DEFAULT NULL              COMMENT '转移时间',
+  internal_eval_time   VARCHAR(100)  DEFAULT NULL              COMMENT '内评时间',
+  quality_check_time   VARCHAR(100)  DEFAULT NULL              COMMENT '工检清单时间',
+  mold_open_time       VARCHAR(100)  DEFAULT NULL              COMMENT '开模时间',
+  quality_arrival_time VARCHAR(100)  DEFAULT NULL              COMMENT '工检全部到厂时间',
+  sample_wheel_time    VARCHAR(100)  DEFAULT NULL              COMMENT '样轮到厂时间',
+  paint_arrival_time   VARCHAR(100)  DEFAULT NULL              COMMENT '油漆到厂时间',
+  drawing_issue_time   VARCHAR(100)  DEFAULT NULL              COMMENT '图纸文件全部签发时间',
 
   -- ========== 产品开发里程碑 ==========
-  fea_result           VARCHAR(200)  DEFAULT NULL              COMMENT 'FEA分析结果',
-  first_mold_arrival   VARCHAR(30)   DEFAULT NULL              COMMENT '首模到厂时间',
-  first_machine_time   VARCHAR(30)   DEFAULT NULL              COMMENT '首上机时间',
-  sample_submit_time   VARCHAR(30)   DEFAULT NULL              COMMENT '送样时间',
-  sample_pass_time     VARCHAR(30)   DEFAULT NULL              COMMENT '样件合格时间',
+  fea_result           VARCHAR(500)  DEFAULT NULL              COMMENT 'FEA分析结果',
+  first_mold_arrival   VARCHAR(100)  DEFAULT NULL              COMMENT '首模到厂时间',
+  first_machine_time   VARCHAR(100)  DEFAULT NULL              COMMENT '首上机时间',
+  sample_submit_time   VARCHAR(100)  DEFAULT NULL              COMMENT '送样时间',
+  sample_pass_time     VARCHAR(100)  DEFAULT NULL              COMMENT '样件合格时间',
   sample_history       VARCHAR(500)  DEFAULT NULL              COMMENT '送样履历',
-  trial_summary_time   VARCHAR(30)   DEFAULT NULL              COMMENT '试制总结时间',
+  trial_summary_time   VARCHAR(100)  DEFAULT NULL              COMMENT '试制总结时间',
 
   -- ========== 量产阶段里程碑 ==========
   trial_situation      VARCHAR(500)  DEFAULT NULL              COMMENT '试制情况',
-  batch_summary_time   VARCHAR(30)   DEFAULT NULL              COMMENT '小批量总结时间',
+  batch_summary_time   VARCHAR(100)  DEFAULT NULL              COMMENT '小批量总结时间',
   batch_situation      VARCHAR(500)  DEFAULT NULL              COMMENT '小批量情况',
-  impact_delivery_time VARCHAR(30)   DEFAULT NULL              COMMENT '影响交付时间',
+  impact_delivery_time VARCHAR(100)  DEFAULT NULL              COMMENT '影响交付时间',
   impact_delivery_item VARCHAR(500)  DEFAULT NULL              COMMENT '影响交付事项',
-  mass_prod_time       VARCHAR(30)   DEFAULT NULL              COMMENT '量产时间',
+  mass_prod_time       VARCHAR(100)  DEFAULT NULL              COMMENT '量产时间',
 
   -- ========== 持续改进里程碑 ==========
-  latest_change_time   VARCHAR(30)   DEFAULT NULL              COMMENT '最新变更断点关闭时间',
+  latest_change_time   VARCHAR(100)  DEFAULT NULL              COMMENT '最新变更断点关闭时间',
   latest_change_content VARCHAR(500) DEFAULT NULL              COMMENT '最新变更内容',
   control_points       VARCHAR(500)  DEFAULT NULL              COMMENT '控制要点',
 
@@ -74,7 +74,7 @@ CREATE TABLE tech_product (
   KEY idx_wheel_code (wheel_code),
   KEY idx_customer (customer),
   KEY idx_product_status (product_status)
-) ENGINE=InnoDB AUTO_INCREMENT=1 COMMENT='产品清单（完整对应DX-产品清单全部列）';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='产品清单（完整对应DX-产品清单全部列）';
 
 -- 产品清单菜单（如果已执行过上一版SQL，先删除旧菜单再执行）
 -- INSERT INTO sys_menu ...（菜单SQL与上一版相同，此处省略，只需执行一次）
