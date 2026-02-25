@@ -22,6 +22,10 @@ const service = axios.create({
 
 // request拦截器
 service.interceptors.request.use(config => {
+  // FormData 上传时必须去掉 Content-Type，让浏览器自动设置 multipart/form-data; boundary=xxx
+  if (config.data instanceof FormData && config.headers) {
+    delete config.headers['Content-Type']
+  }
   // 是否需要设置 token
   const isToken = (config.headers || {}).isToken === false
   // 是否需要防止数据重复提交

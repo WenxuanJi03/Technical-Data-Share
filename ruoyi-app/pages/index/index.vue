@@ -37,6 +37,11 @@
           <text class="card-title">工单管理</text>
           <text class="card-desc">创建处理工单任务</text>
         </view>
+        <view class="menu-card" @tap="goPage('/pages/trialProcess/index')">
+          <view class="card-icon purple">📈</view>
+          <text class="card-title">试制流程</text>
+          <text class="card-desc">OE试制流程跟踪</text>
+        </view>
       </view>
     </view>
 

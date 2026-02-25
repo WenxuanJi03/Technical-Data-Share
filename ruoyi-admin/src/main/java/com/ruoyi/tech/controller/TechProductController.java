@@ -30,6 +30,7 @@ import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.tech.domain.TechProduct;
 import com.ruoyi.tech.service.ITechProductService;
+import com.ruoyi.tech.service.TechProductImageSearchService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -44,6 +45,9 @@ import com.ruoyi.common.core.page.TableDataInfo;
 public class TechProductController extends BaseController {
     @Autowired
     private ITechProductService techProductService;
+
+    @Autowired
+    private TechProductImageSearchService techProductImageSearchService;
 
     /**
      * 查询产品清单列表
@@ -107,6 +111,22 @@ public class TechProductController extends BaseController {
     @DeleteMapping("/{productIds}")
     public AjaxResult remove(@PathVariable Long[] productIds) {
         return toAjax(techProductService.deleteTechProductByProductIds(productIds));
+    }
+
+    /**
+     * 轮毂识别：上传图片，返回相似产品列表
+     */
+    @PreAuthorize("@ss.hasPermi('tech:product:list')")
+    @PostMapping("/recognize")
+    public AjaxResult recognize(@RequestParam("file") MultipartFile file,
+                                @RequestParam(value = "topK", defaultValue = "5") int topK) {
+        if (file == null || file.isEmpty()) {
+            return error("请上传图片文件");
+        }
+        if (topK <= 0) {
+            topK = 5;
+        }
+        return success(techProductImageSearchService.searchByImage(file, topK));
     }
 
     /**

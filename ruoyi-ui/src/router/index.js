@@ -75,6 +75,19 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/mobile/scan',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/tech/mobile/scan'),
+        name: 'MobileScan',
+        meta: { title: '轮毂识别' }
+      }
+    ]
+  },
+  {
     path: '/user',
     component: Layout,
     hidden: true,

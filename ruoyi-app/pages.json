@@ -48,6 +48,13 @@
       }
     },
     {
+      "path": "pages/trialProcess/index",
+      "style": {
+        "navigationBarTitleText": "试制流程",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/mine/index",
       "style": {
         "navigationBarTitleText": "我的",

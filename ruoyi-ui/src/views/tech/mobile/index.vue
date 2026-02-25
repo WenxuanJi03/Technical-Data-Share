@@ -36,6 +36,13 @@
           <div class="card-title">试制任务</div>
           <div class="card-desc">试制任务处理列表</div>
         </div>
+        <div class="menu-card" @click="goTo('process')">
+          <div class="card-icon purple">
+            <i class="el-icon-s-operation"></i>
+          </div>
+          <div class="card-title">试制流程</div>
+          <div class="card-desc">按阶段跟踪OE试制</div>
+        </div>
         <div class="menu-card" @click="goTo('review')">
           <div class="card-icon green">
             <i class="el-icon-s-check"></i>
@@ -49,6 +56,13 @@
           </div>
           <div class="card-title">文件夹</div>
           <div class="card-desc">项目文件、产品标签</div>
+        </div>
+        <div class="menu-card" @click="goTo('scan')">
+          <div class="card-icon blue">
+            <i class="el-icon-camera"></i>
+          </div>
+          <div class="card-title">轮毂识别</div>
+          <div class="card-desc">拍照识别轮型信息</div>
         </div>
         <div class="menu-card" @click="goTo('workorder')">
           <div class="card-icon blue">
@@ -102,7 +116,9 @@ export default {
         task: '/mobile/task',
         review: '/mobile/task',
         files: '/mobile/task',
-        workorder: '/mobile/task'
+        workorder: '/mobile/task',
+        scan: '/mobile/scan',
+        process: '/trial/process'
       }
       this.$router.push(routes[page] || '/mobile/task')
     },

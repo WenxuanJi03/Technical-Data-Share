@@ -80,7 +80,13 @@
             <if test="moldType != null and moldType != ''"> and mold_type = #{moldType}</if>
             <if test="surfaceStatus != null and surfaceStatus != ''"> and surface_status = #{surfaceStatus}</if>
             <if test="machineType != null and machineType != ''"> and machine_type = #{machineType}</if>
-            <if test="allProcessDone != null and allProcessDone != ''"> and all_process_done = #{allProcessDone}</if>
+            <!-- allProcessDone = '是' 查已完成；= '否' 查未完成（包含空/null） -->
+            <if test="allProcessDone == '是'">
+              and all_process_done = '是'
+            </if>
+            <if test="allProcessDone != null and allProcessDone != '' and allProcessDone != '是'">
+              and (all_process_done is null or all_process_done != '是')
+            </if>
             and del_flag = '0'
         </where>
         order by track_id desc

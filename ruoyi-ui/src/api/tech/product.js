@@ -51,3 +51,12 @@ export function cleanAllProducts(query) {
     params: query
   })
 }
+
+// 轮毂识别：上传图片，返回相似产品列表（FormData 含 file 字段，不要手动设 Content-Type）
+export function recognizeProduct(data) {
+  return request({
+    url: '/tech/product/recognize',
+    method: 'post',
+    data: data
+  })
+}

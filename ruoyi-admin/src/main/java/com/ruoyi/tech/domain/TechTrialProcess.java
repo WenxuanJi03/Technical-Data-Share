@@ -28,6 +28,10 @@ public class TechTrialProcess extends BaseEntity
     @Excel(name = "项目名称")
     private String projectName;
 
+    /** 模号（关联OE试制跟踪的模号） */
+    @Excel(name = "模号")
+    private String moldCode;
+
     /** 发起人 */
     @Excel(name = "发起人")
     private String initiator;
@@ -97,6 +101,9 @@ public class TechTrialProcess extends BaseEntity
 
     public String getProjectName() { return projectName; }
     public void setProjectName(String projectName) { this.projectName = projectName; }
+
+    public String getMoldCode() { return moldCode; }
+    public void setMoldCode(String moldCode) { this.moldCode = moldCode; }
 
     public String getInitiator() { return initiator; }
     public void setInitiator(String initiator) { this.initiator = initiator; }

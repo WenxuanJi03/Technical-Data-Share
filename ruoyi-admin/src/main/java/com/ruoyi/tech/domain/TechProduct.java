@@ -18,6 +18,11 @@ public class TechProduct extends BaseEntity {
     /** 产品ID */
     private Long productId;
 
+    /**
+     * 相似度（仅用于轮毂识别结果展示，不入库）
+     */
+    private Double similarityScore;
+
     // ==================== 基础信息 ====================
 
     /** 序号 */
@@ -220,6 +225,14 @@ public class TechProduct extends BaseEntity {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Double getSimilarityScore() {
+        return similarityScore;
+    }
+
+    public void setSimilarityScore(Double similarityScore) {
+        this.similarityScore = similarityScore;
     }
 
     public Integer getSerialNo() {

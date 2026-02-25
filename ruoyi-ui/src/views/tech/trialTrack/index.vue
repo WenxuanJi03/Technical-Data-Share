@@ -20,9 +20,9 @@
           <el-option label="小批量" value="小批量" /><el-option label="量产" value="量产" />
         </el-select>
       </el-form-item>
-      <el-form-item label="完成状态" prop="allProcessDone">
+      <el-form-item label="状态" prop="allProcessDone">
         <el-select v-model="queryParams.allProcessDone" placeholder="全部" clearable>
-          <el-option label="是" value="是" /><el-option label="否" value="否" />
+          <el-option label="进行中" value="否" /><el-option label="已完成" value="是" />
         </el-select>
       </el-form-item>
       <el-form-item>
