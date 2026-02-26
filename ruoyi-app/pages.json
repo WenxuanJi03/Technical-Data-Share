@@ -60,6 +60,13 @@
         "navigationBarTitleText": "我的",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/scan/index",
+      "style": {
+        "navigationBarTitleText": "轮毂识别",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {

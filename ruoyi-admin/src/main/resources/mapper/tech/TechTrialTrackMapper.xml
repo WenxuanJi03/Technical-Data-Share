@@ -80,11 +80,11 @@
             <if test="moldType != null and moldType != ''"> and mold_type = #{moldType}</if>
             <if test="surfaceStatus != null and surfaceStatus != ''"> and surface_status = #{surfaceStatus}</if>
             <if test="machineType != null and machineType != ''"> and machine_type = #{machineType}</if>
-            <!-- allProcessDone = '是' 查已完成；= '否' 查未完成（包含空/null） -->
-            <if test="allProcessDone == '是'">
+            <!-- allProcessDone=doing 查进行中；=done 查已完成（避免 OGNL 对中文转数字报错） -->
+            <if test="allProcessDone == 'done'">
               and all_process_done = '是'
             </if>
-            <if test="allProcessDone != null and allProcessDone != '' and allProcessDone != '是'">
+            <if test="allProcessDone == 'doing'">
               and (all_process_done is null or all_process_done != '是')
             </if>
             and del_flag = '0'

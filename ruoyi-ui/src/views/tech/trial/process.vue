@@ -3,8 +3,8 @@
     <!-- 顶部操作栏 -->
     <div class="top-toolbar">
       <el-input
-        v-model="queryParams.projectCode"
-        placeholder="输入项目名称、编号..."
+        v-model="queryParams.moldCode"
+        placeholder="输入轮形-模号..."
         prefix-icon="el-icon-search"
         class="search-input"
         clearable
@@ -21,9 +21,10 @@
     <div class="process-list" v-loading="loading">
       <div v-for="item in processList" :key="item.processId" class="process-card">
         <div class="process-header">
-          <span class="process-title">{{ item.projectCode }}</span>
+          <span class="process-title">{{ item.moldCode }}</span>
           <span class="process-initiator">发起人：{{ item.initiator }}</span>
           <span class="process-date">{{ formatDate(item.createTime) }}</span>
+          <span class="process-desc" v-if="item.description">{{ item.description }}</span>
         </div>
         
         <!-- 流程节点 -->
@@ -49,9 +50,8 @@
               <el-tag type="info" size="mini" effect="plain">已完成</el-tag>
             </div>
             <div class="step-actions">
-              <el-button size="mini" type="text" icon="el-icon-upload2" @click="openUpload(item, step, index)">上传</el-button>
+              <el-button size="mini" type="text" icon="el-icon-upload2" @click="openUpload(item, step, index)">录入/上传</el-button>
               <el-button size="mini" type="text" icon="el-icon-edit" @click="openComment(item, step, index)">意见</el-button>
-              <el-button size="mini" type="text" icon="el-icon-edit-outline" @click="openPhaseForm(item, step, index)">阶段表单</el-button>
               <template v-if="step.status !== 'done'">
                 <el-button size="mini" type="text" icon="el-icon-date" @click="setDeadline(item, step, index)">截止</el-button>
                 <el-button size="mini" type="text" icon="el-icon-circle-check" style="color:#67c23a" @click="markStepDone(item, index)">完成</el-button>
@@ -66,7 +66,6 @@
 
         <!-- 操作按钮 -->
         <div class="process-footer">
-          <el-button size="small" type="primary" @click="viewDetail(item)">查看详情</el-button>
           <el-button size="small" @click="handleEdit(item)">编辑</el-button>
           <el-button size="small" type="danger" plain @click="handleDelete(item)">删除</el-button>
         </div>
@@ -81,11 +80,8 @@
     <!-- 发起试制对话框 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="项目编号" prop="projectCode">
-          <el-input v-model="form.projectCode" placeholder="请输入项目编号" />
-        </el-form-item>
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input v-model="form.projectName" placeholder="请输入项目名称" />
+        <el-form-item label="轮形-模号" prop="moldCode">
+          <el-input v-model="form.moldCode" placeholder="请输入轮形-模号，如 07122C26-M3" />
         </el-form-item>
         <el-form-item label="发起人" prop="initiator">
           <el-select v-model="form.initiator" placeholder="请选择发起人" filterable style="width:100%">
@@ -102,9 +98,95 @@
       </div>
     </el-dialog>
 
-    <!-- 上传文件对话框 -->
-    <el-dialog title="上传文件" :visible.sync="uploadVisible" width="700px" append-to-body>
+    <!-- 阶段数据录入 + 文件上传合并对话框 -->
+    <el-dialog :title="currentStep.name + ' — 数据录入与文件上传'" :visible.sync="uploadVisible" width="760px" append-to-body>
       <div class="upload-section">
+        <!-- OE试制跟踪数据录入区 -->
+        <el-alert
+          title="以下数据与 OE试制跟踪 卡片联动，保存后可在跟踪卡片中直接查看"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom:16px"
+        />
+        <el-form :model="oeForm" label-width="120px" size="small">
+          <!-- 基础信息 -->
+          <template v-if="currentPhase === 'base'">
+            <el-form-item label="产品规格"><el-input v-model="oeForm.productSpec" placeholder="请输入产品规格" /></el-form-item>
+            <el-form-item label="上机次数"><el-input-number v-model="oeForm.machineCount" :min="0" style="width:100%" /></el-form-item>
+            <el-form-item label="预计上机"><el-input v-model="oeForm.planMachineTime" placeholder="预计上机时间" /></el-form-item>
+          </template>
+          <!-- 热工阶段 -->
+          <template v-else-if="currentPhase === 'hot'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="热工上机日期"><el-input v-model="oeForm.hotMachineDate" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="机台"><el-input v-model="oeForm.hotMachineStation" /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="保压时间"><el-input v-model="oeForm.roundKeepTime" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="负责人"><el-input v-model="oeForm.hotImprovePerson" /></el-form-item></el-col>
+            </el-row>
+            <el-form-item label="测量数据"><el-input v-model="oeForm.hotCheckMeasureData" /></el-form-item>
+            <el-form-item label="生产情况"><el-input v-model="oeForm.hotProduction" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="改善记录"><el-input v-model="oeForm.improveRecord" type="textarea" :rows="2" /></el-form-item>
+          </template>
+          <!-- 旋压阶段 -->
+          <template v-else-if="currentPhase === 'spin'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="旋压上机日期"><el-input v-model="oeForm.spinMachineDate" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="旋压机台"><el-input v-model="oeForm.spinMachineStation" /></el-form-item></el-col>
+            </el-row>
+            <el-form-item label="负责人"><el-input v-model="oeForm.spinImprovePerson" /></el-form-item>
+            <el-form-item label="生产情况"><el-input v-model="oeForm.spinProduction" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="改模记录"><el-input v-model="oeForm.moldModifyRecord" type="textarea" :rows="2" /></el-form-item>
+          </template>
+          <!-- 粗车阶段 -->
+          <template v-else-if="currentPhase === 'rough'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="粗车上机日期"><el-input v-model="oeForm.roughMachineDate" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="负责人"><el-input v-model="oeForm.roughImprovePerson" /></el-form-item></el-col>
+            </el-row>
+            <el-form-item label="生产情况"><el-input v-model="oeForm.roughProduction" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="改善方案"><el-input v-model="oeForm.improvePlan" type="textarea" :rows="2" /></el-form-item>
+          </template>
+          <!-- 精车/涂装阶段 -->
+          <template v-else-if="currentPhase === 'finePaint'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="精车上机日期"><el-input v-model="oeForm.fineMachineDate" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="涂装上机日期"><el-input v-model="oeForm.paintMachineDate" /></el-form-item></el-col>
+            </el-row>
+            <el-form-item label="精车生产情况"><el-input v-model="oeForm.fineProduction" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="涂装生产情况"><el-input v-model="oeForm.paintProduction" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="涂装负责人"><el-input v-model="oeForm.paintImprovePerson" /></el-form-item>
+          </template>
+          <!-- 实验/总结 -->
+          <template v-else-if="currentPhase === 'test'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="冲击试验日期"><el-input v-model="oeForm.impactTestDate" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="冲击试验结果"><el-input v-model="oeForm.impactTestResult" /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="生产完成日期"><el-input v-model="oeForm.completeDate" /></el-form-item></el-col>
+              <el-col :span="12">
+                <el-form-item label="全序是否完成">
+                  <el-select v-model="oeForm.allProcessDone" style="width:100%">
+                    <el-option label="是" value="是" /><el-option label="否" value="否" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="实验说明"><el-input v-model="oeForm.testDescription" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="实验关闭情况"><el-input v-model="oeForm.testCloseStatus" /></el-form-item>
+            <el-form-item label="失效产品清场"><el-input v-model="oeForm.failProductTrace" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="实验失效分析"><el-input v-model="oeForm.failAnalysis" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="本次生产总结"><el-input v-model="oeForm.productionSummary" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="改善措施简述"><el-input v-model="oeForm.improveMeasures" type="textarea" :rows="2" /></el-form-item>
+            <el-form-item label="经验教训总结"><el-input v-model="oeForm.lessonsLearned" type="textarea" :rows="2" /></el-form-item>
+          </template>
+        </el-form>
+
+        <!-- 附件上传区 -->
+        <el-divider content-position="left"><i class="el-icon-paperclip"></i> 附件上传</el-divider>
         <p class="upload-tip">支持上传 PDF、JPG、PNG、GIF、BMP 等格式文件</p>
         <el-upload
           class="upload-area"
@@ -120,47 +202,31 @@
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         </el-upload>
-        <!-- 历史上传记录 - 图片显示 -->
+        <!-- 历史上传记录 -->
         <div class="history-section" v-if="historyFiles.length > 0">
-          <div class="history-title"><i class="el-icon-folder-opened"></i> 已上传文件历史</div>
+          <div class="history-title"><i class="el-icon-folder-opened"></i> 已上传文件</div>
           <div class="image-gallery">
-            <div v-for="(file, index) in historyFiles" :key="index" class="gallery-item">
-              <!-- 图片文件显示缩略图 -->
+            <div v-for="(file, idx) in historyFiles" :key="idx" class="gallery-item">
               <template v-if="isImageFile(file.name)">
-                <el-image 
-                  :src="file.url" 
-                  :preview-src-list="getPreviewList()"
-                  fit="cover"
-                  class="thumbnail"
-                >
-                  <div slot="error" class="image-error">
-                    <i class="el-icon-picture-outline"></i>
-                  </div>
+                <el-image :src="file.url" :preview-src-list="getPreviewList()" fit="cover" class="thumbnail">
+                  <div slot="error" class="image-error"><i class="el-icon-picture-outline"></i></div>
                 </el-image>
               </template>
-              <!-- 非图片文件显示图标 -->
               <template v-else>
-                <div class="file-icon-box">
-                  <i class="el-icon-document"></i>
-                </div>
+                <div class="file-icon-box"><i class="el-icon-document"></i></div>
               </template>
               <div class="file-info">
                 <span class="file-name" :title="file.name">{{ file.name }}</span>
                 <span class="file-time">{{ formatFileTime(file.time) }}</span>
               </div>
-              <!-- 删除按钮 -->
-              <el-button 
-                type="text" 
-                icon="el-icon-delete" 
-                class="delete-btn"
-                @click="deleteHistoryFile(index)"
-              ></el-button>
+              <el-button type="text" icon="el-icon-delete" class="delete-btn" @click="deleteHistoryFile(idx)"></el-button>
             </div>
           </div>
         </div>
       </div>
       <div slot="footer">
         <el-button @click="uploadVisible = false">关闭</el-button>
+        <el-button type="primary" icon="el-icon-check" @click="submitUploadAndOE" :loading="submitLoading">保存OE跟踪数据</el-button>
       </div>
     </el-dialog>
 
@@ -232,164 +298,6 @@
       </div>
     </el-dialog>
 
-    <!-- OE 试制跟踪阶段表单 -->
-    <el-dialog :title="oeDialogTitle" :visible.sync="oeDialogVisible" width="780px" append-to-body>
-      <el-form :model="oeForm" label-width="110px" size="small">
-        <!-- 基础信息 -->
-        <template v-if="currentPhase === 'base'">
-          <el-divider content-position="left">基础信息</el-divider>
-          <el-form-item label="模号">
-            <el-input v-model="oeForm.moldCode" disabled />
-          </el-form-item>
-          <el-form-item label="产品规格">
-            <el-input v-model="oeForm.productSpec" />
-          </el-form-item>
-          <el-form-item label="模具类型">
-            <el-input v-model="oeForm.moldType" />
-          </el-form-item>
-          <el-form-item label="表面状态">
-            <el-input v-model="oeForm.surfaceStatus" />
-          </el-form-item>
-          <el-form-item label="上机类型">
-            <el-input v-model="oeForm.machineType" />
-          </el-form-item>
-          <el-form-item label="上机次数">
-            <el-input-number v-model="oeForm.machineCount" :min="0" style="width:100%" />
-          </el-form-item>
-          <el-form-item label="预上机时间">
-            <el-input v-model="oeForm.planMachineTime" />
-          </el-form-item>
-        </template>
-
-        <!-- 热工阶段 -->
-        <template v-else-if="currentPhase === 'hot'">
-          <el-divider content-position="left">热工阶段</el-divider>
-          <el-form-item label="热工上机日期">
-            <el-input v-model="oeForm.hotMachineDate" />
-          </el-form-item>
-          <el-form-item label="机台">
-            <el-input v-model="oeForm.hotMachineStation" />
-          </el-form-item>
-          <el-form-item label="保压时间">
-            <el-input v-model="oeForm.roundKeepTime" />
-          </el-form-item>
-          <el-form-item label="生产情况">
-            <el-input v-model="oeForm.hotProduction" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="改善记录">
-            <el-input v-model="oeForm.improveRecord" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="负责人">
-            <el-input v-model="oeForm.hotImprovePerson" />
-          </el-form-item>
-          <el-form-item label="测量数据">
-            <el-input v-model="oeForm.hotCheckMeasureData" />
-          </el-form-item>
-        </template>
-
-        <!-- 旋压阶段 -->
-        <template v-else-if="currentPhase === 'spin'">
-          <el-divider content-position="left">旋压阶段</el-divider>
-          <el-form-item label="旋压上机日期">
-            <el-input v-model="oeForm.spinMachineDate" />
-          </el-form-item>
-          <el-form-item label="旋压机台">
-            <el-input v-model="oeForm.spinMachineStation" />
-          </el-form-item>
-          <el-form-item label="生产情况">
-            <el-input v-model="oeForm.spinProduction" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="改模记录">
-            <el-input v-model="oeForm.moldModifyRecord" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="负责人">
-            <el-input v-model="oeForm.spinImprovePerson" />
-          </el-form-item>
-        </template>
-
-        <!-- 粗车阶段 -->
-        <template v-else-if="currentPhase === 'rough'">
-          <el-divider content-position="left">粗车阶段</el-divider>
-          <el-form-item label="粗车上机日期">
-            <el-input v-model="oeForm.roughMachineDate" />
-          </el-form-item>
-          <el-form-item label="生产情况">
-            <el-input v-model="oeForm.roughProduction" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="负责人">
-            <el-input v-model="oeForm.roughImprovePerson" />
-          </el-form-item>
-          <el-form-item label="改善方案">
-            <el-input v-model="oeForm.improvePlan" type="textarea" :rows="2" />
-          </el-form-item>
-        </template>
-
-        <!-- 精车 / 涂装阶段 -->
-        <template v-else-if="currentPhase === 'finePaint'">
-          <el-divider content-position="left">精车 / 涂装阶段</el-divider>
-          <el-form-item label="精车上机日期">
-            <el-input v-model="oeForm.fineMachineDate" />
-          </el-form-item>
-          <el-form-item label="精车生产情况">
-            <el-input v-model="oeForm.fineProduction" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="涂装上机日期">
-            <el-input v-model="oeForm.paintMachineDate" />
-          </el-form-item>
-          <el-form-item label="涂装生产情况">
-            <el-input v-model="oeForm.paintProduction" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="涂装负责人">
-            <el-input v-model="oeForm.paintImprovePerson" />
-          </el-form-item>
-        </template>
-
-        <!-- 实验 / 总结 -->
-        <template v-else-if="currentPhase === 'test'">
-          <el-divider content-position="left">实验 / 总结</el-divider>
-          <el-form-item label="冲击试验日期">
-            <el-input v-model="oeForm.impactTestDate" />
-          </el-form-item>
-          <el-form-item label="冲击试验结果">
-            <el-input v-model="oeForm.impactTestResult" />
-          </el-form-item>
-          <el-form-item label="实验说明">
-            <el-input v-model="oeForm.testDescription" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="实验关闭情况">
-            <el-input v-model="oeForm.testCloseStatus" />
-          </el-form-item>
-          <el-form-item label="生产完成日期">
-            <el-input v-model="oeForm.completeDate" />
-          </el-form-item>
-          <el-form-item label="失效产品清场">
-            <el-input v-model="oeForm.failProductTrace" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="实验失效分析">
-            <el-input v-model="oeForm.failAnalysis" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="本次生产总结">
-            <el-input v-model="oeForm.productionSummary" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="改善措施简述">
-            <el-input v-model="oeForm.improveMeasures" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="经验教训总结">
-            <el-input v-model="oeForm.lessonsLearned" type="textarea" :rows="2" />
-          </el-form-item>
-          <el-form-item label="全序是否完成">
-            <el-select v-model="oeForm.allProcessDone" style="width:100%">
-              <el-option label="是" value="是" />
-              <el-option label="否" value="否" />
-            </el-select>
-          </el-form-item>
-        </template>
-      </el-form>
-      <div slot="footer">
-        <el-button @click="oeDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitPhaseForm">保 存</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -406,7 +314,7 @@ export default {
       loading: false,
       submitLoading: false,
       queryParams: { 
-        projectCode: '',
+        moldCode: '',
         pageNum: 1,
         pageSize: 100
       },
@@ -415,10 +323,8 @@ export default {
       dialogTitle: '发起试制',
       form: {},
       rules: {
-        projectCode: [{ required: true, message: '请输入项目编号', trigger: 'blur' }],
-        projectName: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
-        moldCode: [{ required: true, message: '请输入模号', trigger: 'blur' }],
-        initiator: [{ required: true, message: '请输入发起人', trigger: 'blur' }]
+        moldCode: [{ required: true, message: '请输入轮形-模号', trigger: 'blur' }],
+        initiator: [{ required: true, message: '请选择发起人', trigger: 'blur' }]
       },
       uploadVisible: false,
       fileList: [],
@@ -438,9 +344,7 @@ export default {
       stepResponsible: '',
       stepNames: ['基础信息', '热工阶段', '旋压阶段', '粗车阶段', '精车/涂装阶段', '实验/总结'],
       userList: [],
-      // OE 试制跟踪阶段表单
-      oeDialogVisible: false,
-      oeDialogTitle: '',
+      // OE 试制跟踪阶段数据（与上传对话框合并）
       oeForm: {},
       currentPhase: ''
     }
@@ -559,8 +463,6 @@ export default {
     handleAdd() {
       this.dialogTitle = '发起试制'
       this.form = {
-        projectCode: '',
-        projectName: '',
         moldCode: '',
         initiator: '',
         description: '',
@@ -611,22 +513,41 @@ export default {
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {})
     },
-    viewDetail(item) {
-      this.$modal.msgInfo('查看详情: ' + item.projectCode)
-    },
     openUpload(process, step, index) {
       this.currentProcess = process
       this.currentStep = step
       this.currentStepIndex = index
+      this.currentPhase = this.getPhaseKeyByIndex(index)
       this.fileList = []
-      // 加载历史上传文件
       const stepKey = `step${index + 1}Files`
       try {
         this.historyFiles = process[stepKey] ? JSON.parse(process[stepKey]) : []
       } catch (e) {
         this.historyFiles = []
       }
-      this.uploadVisible = true
+      // 加载对应的OE试制跟踪数据
+      if (process.moldCode) {
+        listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
+          const rows = res.rows || []
+          this.oeForm = rows.length > 0 ? { ...rows[0] } : { moldCode: process.moldCode, allProcessDone: '否' }
+          this.uploadVisible = true
+        }).catch(() => {
+          this.oeForm = { moldCode: process.moldCode, allProcessDone: '否' }
+          this.uploadVisible = true
+        })
+      } else {
+        this.oeForm = { allProcessDone: '否' }
+        this.uploadVisible = true
+      }
+    },
+    submitUploadAndOE() {
+      const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
+      save(this.oeForm).then(() => {
+        this.$modal.msgSuccess('OE试制跟踪数据已保存')
+        this.uploadVisible = false
+      }).catch(() => {
+        this.$modal.msgError('保存失败，请重试')
+      })
     },
     handleUploadSuccess(response, file) {
       if (response.code === 200) {
@@ -799,36 +720,6 @@ export default {
     getPhaseKeyByIndex(index) {
       const map = ['base', 'hot', 'spin', 'rough', 'finePaint', 'test']
       return map[index] || 'base'
-    },
-    openPhaseForm(process, step, index) {
-      if (!process.moldCode) {
-        this.$modal.msgWarning('请先在试制流程中填写模号，并保证与OE试制跟踪模号一致')
-        return
-      }
-      this.currentProcess = process
-      this.currentStep = step
-      this.currentStepIndex = index
-      this.currentPhase = this.getPhaseKeyByIndex(index)
-      this.oeDialogTitle = step.name + ' - OE试制跟踪'
-      listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
-        const rows = res.rows || []
-        if (rows.length > 0) {
-          this.oeForm = { ...rows[0] }
-        } else {
-          this.oeForm = {
-            moldCode: process.moldCode,
-            allProcessDone: '否'
-          }
-        }
-        this.oeDialogVisible = true
-      })
-    },
-    submitPhaseForm() {
-      const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
-      save(this.oeForm).then(() => {
-        this.$modal.msgSuccess('已保存OE试制跟踪')
-        this.oeDialogVisible = false
-      })
     }
   }
 }
@@ -881,6 +772,7 @@ export default {
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
   
   .process-title {
     font-size: 18px;
@@ -891,6 +783,18 @@ export default {
   .process-initiator, .process-date {
     font-size: 13px;
     color: #909399;
+  }
+
+  .process-desc {
+    font-size: 13px;
+    color: #606266;
+    background: #f0f2f5;
+    border-radius: 4px;
+    padding: 2px 10px;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

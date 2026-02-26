@@ -42,6 +42,11 @@
           <text class="card-title">试制流程</text>
           <text class="card-desc">OE试制流程跟踪</text>
         </view>
+        <view class="menu-card" @tap="goPage('/pages/scan/index')">
+          <view class="card-icon teal">🔍</view>
+          <text class="card-title">轮毂识别</text>
+          <text class="card-desc">拍照识别轮毂型号</text>
+        </view>
       </view>
     </view>
 
@@ -213,6 +218,7 @@ export default {
     &.green { background: linear-gradient(135deg, #52c41a, #73d13d); }
     &.orange { background: linear-gradient(135deg, #fa8c16, #ffa940); }
     &.blue { background: linear-gradient(135deg, #1890ff, #40a9ff); }
+    &.teal { background: linear-gradient(135deg, #00b96b, #36cfc9); }
   }
 
   .card-title {

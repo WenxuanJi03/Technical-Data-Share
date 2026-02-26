@@ -22,7 +22,7 @@
       </el-form-item>
       <el-form-item label="状态" prop="allProcessDone">
         <el-select v-model="queryParams.allProcessDone" placeholder="全部" clearable>
-          <el-option label="进行中" value="否" /><el-option label="已完成" value="是" />
+          <el-option label="进行中" value="doing" /><el-option label="已完成" value="done" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -58,8 +58,14 @@
       <div v-for="item in trackList" :key="item.trackId" class="track-card" @click="showDetail(item)">
         <div class="card-top">
           <span class="mold-code">{{ item.moldCode }}</span>
-          <span class="done-badge" :class="item.allProcessDone==='是'?'done-yes':'done-no'">
-            {{ item.allProcessDone === '是' ? '已完成' : '进行中' }}
+          <span
+            class="done-badge"
+            :class="item.allProcessDone==='是'?'done-yes':'done-no'"
+            style="cursor:pointer"
+            :title="item.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
+            @click.stop="toggleDoneStatus(item)"
+          >
+            {{ item.allProcessDone === '是' ? '✓ 已完成' : '● 进行中' }}
           </span>
         </div>
         <div class="card-tags">
@@ -129,9 +135,15 @@
       <el-table-column label="生产总结" prop="productionSummary" width="140" show-overflow-tooltip />
       <el-table-column label="改善措施" prop="improveMeasures" width="140" show-overflow-tooltip />
       <el-table-column label="经验教训" prop="lessonsLearned" width="140" show-overflow-tooltip />
-      <el-table-column label="全序完成" prop="allProcessDone" width="70" align="center">
+      <el-table-column label="全序完成" prop="allProcessDone" width="80" align="center">
         <template slot-scope="s">
-          <el-tag :type="s.row.allProcessDone==='是'?'success':'info'" size="mini">{{ s.row.allProcessDone || '否' }}</el-tag>
+          <el-tag
+            :type="s.row.allProcessDone==='是'?'success':'info'"
+            size="mini"
+            style="cursor:pointer"
+            :title="s.row.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
+            @click.stop="toggleDoneStatus(s.row)"
+          >{{ s.row.allProcessDone === '是' ? '已完成' : '进行中' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="120" align="center" fixed="right">
@@ -154,8 +166,14 @@
             <el-tag v-if="detail.moldType" effect="dark" size="small" type="warning">{{ detail.moldType }}</el-tag>
             <el-tag v-if="detail.surfaceStatus" effect="dark" size="small" type="success">{{ detail.surfaceStatus }}</el-tag>
             <el-tag v-if="detail.machineType" effect="dark" size="small">{{ detail.machineType }}</el-tag>
-            <el-tag v-if="detail.allProcessDone==='是'" effect="dark" size="small" type="success">全序完成</el-tag>
-            <el-tag v-else effect="dark" size="small" type="info">进行中</el-tag>
+            <el-tag
+              effect="dark"
+              size="small"
+              :type="detail.allProcessDone==='是'?'success':'info'"
+              style="cursor:pointer"
+              :title="detail.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
+              @click="toggleDoneStatus(detail)"
+            >{{ detail.allProcessDone === '是' ? '✓ 全序完成' : '● 进行中' }}</el-tag>
           </div>
         </div>
 
@@ -427,6 +445,19 @@ export default {
       this.uploading = false; this.$refs.importUpload.clearFiles()
       if (res.code === 200) { this.$modal.msgSuccess(res.msg); this.importOpen = false; this.getList() }
       else { this.$modal.msgError(res.msg || "导入失败") }
+    },
+    toggleDoneStatus(row) {
+      const newVal = row.allProcessDone === '是' ? '否' : '是'
+      const label = newVal === '是' ? '已完成' : '进行中'
+      this.$modal.confirm(`确认将 "${row.moldCode}" 标记为【${label}】？`).then(() => {
+        return updateTrialTrack({ trackId: row.trackId, allProcessDone: newVal })
+      }).then(() => {
+        this.$modal.msgSuccess(`已更新为【${label}】`)
+        this.getList()
+        if (this.detailVisible && this.detail.trackId === row.trackId) {
+          this.detail.allProcessDone = newVal
+        }
+      }).catch(() => {})
     },
     handleExport() { this.download('tech/trialTrack/export', { ...this.queryParams }, 'OE试制跟踪.xlsx') },
     openLightbox(imageUrl) {
