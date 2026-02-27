@@ -187,7 +187,7 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" @pagination="getList" />
+    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" :page-sizes="[10, 20, 24, 30, 50]" @pagination="getList" />
 
     <!-- ★ 产品详情抽屉（点击卡片/图片后弹出）★ -->
     <el-drawer :title="detailData.wheelCode || '产品详情'" :visible.sync="detailVisible" size="520px" direction="rtl">
@@ -707,7 +707,7 @@ export default {
 .wheel-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .no-image {

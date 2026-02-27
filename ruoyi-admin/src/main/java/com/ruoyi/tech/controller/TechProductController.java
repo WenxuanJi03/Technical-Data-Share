@@ -119,7 +119,7 @@ public class TechProductController extends BaseController {
     @PreAuthorize("@ss.hasPermi('tech:product:list')")
     @PostMapping("/recognize")
     public AjaxResult recognize(@RequestParam("file") MultipartFile file,
-                                @RequestParam(value = "topK", defaultValue = "5") int topK) {
+            @RequestParam(value = "topK", defaultValue = "5") int topK) {
         if (file == null || file.isEmpty()) {
             return error("请上传图片文件");
         }

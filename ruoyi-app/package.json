@@ -4,20 +4,42 @@
   "description": "技术管理系统微信小程序",
   "main": "main.js",
   "scripts": {
-    "dev:mp-weixin": "uni -p mp-weixin",
-    "build:mp-weixin": "uni build -p mp-weixin"
+    "dev:mp-weixin": "cross-env NODE_ENV=development UNI_PLATFORM=mp-weixin vue-cli-service uni-build --watch",
+    "build:mp-weixin": "cross-env NODE_ENV=production UNI_PLATFORM=mp-weixin vue-cli-service uni-build"
   },
   "dependencies": {
-    "@dcloudio/uni-app": "3.0.0-4010120250128001",
-    "@dcloudio/uni-app-plus": "3.0.0-4010120250128001",
-    "@dcloudio/uni-components": "3.0.0-4010120250128001",
-    "@dcloudio/uni-h5": "3.0.0-4010120250128001",
-    "@dcloudio/uni-mp-weixin": "3.0.0-4010120250128001",
-    "vue": "^2.7.16",
+    "@dcloudio/uni-app-plus": "^2.0.2-4080720251210002",
+    "@dcloudio/uni-h5": "^2.0.2-4080720251210002",
+    "@dcloudio/uni-mp-weixin": "^2.0.2-4080720251210002",
+    "core-js": "^3.8.3",
+    "vue": "^2.6.14",
     "vuex": "^3.6.2"
   },
   "devDependencies": {
-    "@dcloudio/uni-cli-shared": "3.0.0-4010120250128001",
-    "@dcloudio/vite-plugin-uni": "3.0.0-4010120250128001"
+    "@dcloudio/types": "^2.6.0",
+    "@dcloudio/uni-cli-i18n": "^2.0.2-4080720251210002",
+    "@dcloudio/uni-cli-shared": "^2.0.2-4080720251210002",
+    "@dcloudio/uni-helper-json": "*",
+    "@dcloudio/uni-i18n": "^2.0.2-4080720251210002",
+    "@dcloudio/uni-template-compiler": "^2.0.2-4080720251210002",
+    "@dcloudio/vue-cli-plugin-hbuilderx": "^2.0.2-4080720251210002",
+    "@dcloudio/vue-cli-plugin-uni": "^2.0.2-4080720251210002",
+    "@dcloudio/vue-cli-plugin-uni-optimize": "^2.0.2-4080720251210002",
+    "@dcloudio/webpack-uni-mp-loader": "^2.0.2-4080720251210002",
+    "@dcloudio/webpack-uni-pages-loader": "^2.0.2-4080720251210002",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "cross-env": "^7.0.3",
+    "sass": "^1.49.9",
+    "sass-loader": "^10.1.1",
+    "vue-template-compiler": "^2.6.14",
+    "webpack": "^4.46.0"
+  },
+  "browserslist": [
+    "Android >= 4.4",
+    "ios >= 9"
+  ],
+  "uni-app": {
+    "scripts": {}
   }
 }
