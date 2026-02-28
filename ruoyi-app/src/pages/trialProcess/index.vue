@@ -546,7 +546,7 @@
           >
             <view class="comment-card-header">
               <text class="comment-user">👤 {{ c.user }}</text>
-              <text class="comment-time">{{ c.time }}</text>
+              <text class="comment-time">{{ formatChineseDateTime(c.time) }}{{ c.edited ? ' (已编辑)' : '' }}</text>
             </view>
             <view v-if="editCommentIdx === cIdx" class="comment-edit-area">
               <textarea class="comment-textarea" v-model="editCommentText" />
@@ -791,6 +791,19 @@ export default {
     formatDate(date) {
       if (!date) return ''
       return date.substring(0, 10)
+    },
+    formatChineseDateTime(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      const year = d.getFullYear()
+      const month = d.getMonth() + 1
+      const day = d.getDate()
+      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+      const weekDay = weekDays[d.getDay()]
+      const hours = String(d.getHours()).padStart(2, '0')
+      const minutes = String(d.getMinutes()).padStart(2, '0')
+      const seconds = String(d.getSeconds()).padStart(2, '0')
+      return `${year} 年 ${month} 月 ${day} 日，${weekDay}，${hours}:${minutes}:${seconds} 中国标准时间`
     },
     getPhaseKey(index) {
       const map = ['base', 'hot', 'spin', 'rough', 'finePaint', 'test']
@@ -1233,7 +1246,7 @@ export default {
       const key = `step${this.currentStepIndex + 1}Comments`
       const newComment = {
         user: this.$store.state.name || '用户',
-        time: new Date().toLocaleString(),
+        time: new Date().toISOString(),
         content: this.commentText
       }
       const comments = [...this.historyComments, newComment]
@@ -1263,7 +1276,8 @@ export default {
       }
       const key = `step${this.currentStepIndex + 1}Comments`
       this.historyComments[cIdx].content = this.editCommentText
-      this.historyComments[cIdx].time = new Date().toLocaleString() + ' (已编辑)'
+      this.historyComments[cIdx].time = new Date().toISOString()
+      this.historyComments[cIdx].edited = true
       const updateData = {
         processId: this.currentProcess.processId,
         [key]: JSON.stringify(this.historyComments)

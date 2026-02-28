@@ -1,0 +1,28 @@
+diff --git a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/chain-webpack.js b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/chain-webpack.js
+index 851b8c4..4d0651b 100644
+--- a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/chain-webpack.js
++++ b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/chain-webpack.js
+@@ -50,7 +50,7 @@ module.exports = function chainWebpack (platformOptions, vueOptions, api) {
+           .rule(staticType)
+           .use('url-loader')
+           .loader(urlLoader.loader)
+-          .tap(options => Object.assign(options, newOptions))
++          .tap(options => Object.assign(options || {}, newOptions))
+       }
+     })
+     // 条件编译 vue 文件统一直接过滤html,js,css三种类型,单独资源文件引用各自过滤
+diff --git a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/configure-webpack.js b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/configure-webpack.js
+index 5038ba3..5f4330a 100644
+--- a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/configure-webpack.js
++++ b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/configure-webpack.js
+@@ -79,6 +79,10 @@ module.exports = function configureWebpack (platformOptions, manifestPlatformOpt
+   function updateJsLoader (rawRules, fakeFile, checkLoaderRegex, loader) {
+     const matchRule = rawRules.find(createMatcher(fakeFile))
+ 
++    if (!matchRule || !matchRule.use) {
++      return
++    }
++
+     const matchUse = matchRule.use
+ 
+     const matchLoaderUseIndex = matchUse.findIndex(u => {

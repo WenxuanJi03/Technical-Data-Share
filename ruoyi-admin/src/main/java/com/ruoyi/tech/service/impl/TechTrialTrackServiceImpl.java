@@ -56,9 +56,14 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
         if (StringUtils.isNull(trackList) || trackList.size() == 0) {
             throw new ServiceException("导入数据不能为空！");
         }
+        log.info("========== OE试制跟踪导入开始 ==========");
+        log.info("Excel解析数据总行数: {}", trackList.size());
+        log.info("更新模式: {}", isUpdateSupport ? "开启（更新已有记录）" : "关闭（跳过已有记录）");
+        
         int successNum = 0;
         int failureNum = 0;
         int skipNum = 0;
+        int emptyMoldNum = 0;
         StringBuilder successMsg = new StringBuilder();
         StringBuilder failureMsg = new StringBuilder();
         // 记录本批次已处理的模号，避免同一文件内重复模号多次插入
@@ -66,12 +71,14 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
         for (TechTrialTrack track : trackList) {
             try {
                 if (track == null || StringUtils.isEmpty(track.getMoldCode())) {
+                    emptyMoldNum++;
                     continue;
                 }
                 String code = track.getMoldCode().trim();
                 // 同一批次内跳过已处理的模号
                 if (processedCodes.contains(code)) {
                     skipNum++;
+                    log.debug("跳过重复模号: {}", code);
                     continue;
                 }
                 processedCodes.add(code);
@@ -90,16 +97,19 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
                         track.setUpdateTime(DateUtils.getNowDate());
                         techTrialTrackMapper.updateTechTrialTrack(track);
                         successNum++;
+                        log.info("更新成功: 模号 {} (ID: {})", code, exist.getTrackId());
                         successMsg.append("<br/>").append(successNum).append("、模号 ").append(code)
                                 .append(" 更新成功");
                     } else {
                         failureNum++;
+                        log.warn("模号已存在跳过: {}", code);
                         failureMsg.append("<br/>").append(failureNum).append("、模号 ").append(code)
                                 .append(" 已存在");
                     }
                 } else {
                     techTrialTrackMapper.insertTechTrialTrack(track);
                     successNum++;
+                    log.info("新增成功: 模号 {}", code);
                     successMsg.append("<br/>").append(successNum).append("、模号 ").append(code)
                             .append(" 导入成功");
                 }
@@ -107,18 +117,30 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
                 failureNum++;
                 String msg = "<br/>" + failureNum + "、模号 " + (track != null ? track.getMoldCode() : "未知") + " 导入失败：";
                 failureMsg.append(msg).append(e.getMessage());
-                log.error(msg, e);
+                log.error("导入失败: 模号 {} - {}", (track != null ? track.getMoldCode() : "未知"), e.getMessage(), e);
             }
         }
+        log.info("========== OE试制跟踪导入结果统计 ==========");
+        log.info("Excel总行数: {}", trackList.size());
+        log.info("空模号跳过: {} 条", emptyMoldNum);
+        log.info("文件内重复跳过: {} 条", skipNum);
+        log.info("成功处理: {} 条", successNum);
+        log.info("失败/已存在: {} 条", failureNum);
+        log.info("==========================================");
+        
         StringBuilder result = new StringBuilder();
+        result.append("【导入统计】Excel共").append(trackList.size()).append("行数据。");
+        if (emptyMoldNum > 0) {
+            result.append("空模号跳过 ").append(emptyMoldNum).append(" 条。");
+        }
+        if (skipNum > 0) {
+            result.append("文件内重复跳过 ").append(skipNum).append(" 条。");
+        }
         if (successNum > 0) {
             result.append("成功导入 ").append(successNum).append(" 条。");
         }
-        if (skipNum > 0) {
-            result.append("跳过 ").append(skipNum).append(" 条重复行。");
-        }
         if (failureNum > 0) {
-            result.append("失败 ").append(failureNum).append(" 条（已存在）。");
+            result.append("失败/已存在 ").append(failureNum).append(" 条。");
         }
         if (successNum == 0 && failureNum == 0) {
             throw new ServiceException("未找到可导入的数据，请检查Excel表头是否匹配。");
