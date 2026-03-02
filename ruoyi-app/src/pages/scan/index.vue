@@ -42,6 +42,15 @@
 
     <!-- 识别结果 -->
     <view class="result-section" v-if="results.length > 0">
+      <!-- 低置信度警告 -->
+      <view class="confidence-warning" v-if="showLowConfidenceWarning">
+        <text class="warning-icon">⚠️</text>
+        <view class="warning-content">
+          <text class="warning-title">识别置信度较低</text>
+          <text class="warning-tips">建议: 1.调整为正面拍摄 2.确保光线充足 3.清洁轮毂表面 4.避免遮挡</text>
+        </view>
+      </view>
+
       <view class="result-header">
         <text class="result-title">识别结果</text>
         <text class="result-count">共 {{ results.length }} 条候选</text>
@@ -67,7 +76,11 @@
           <view class="result-info">
             <view class="result-top">
               <text class="wheel-code">{{ item.wheelCode }}</text>
-              <text class="score-badge" v-if="item.similarityScore != null">
+              <text 
+                class="score-badge" 
+                :class="getScoreClass(item.similarityScore)"
+                v-if="item.similarityScore != null"
+              >
                 {{ (item.similarityScore * 100).toFixed(1) }}%
               </text>
             </view>
@@ -120,7 +133,20 @@ export default {
       baseUrl: config.baseUrl
     }
   },
+  computed: {
+    showLowConfidenceWarning() {
+      if (!this.results.length) return false
+      const topScore = this.results[0].similarityScore
+      return topScore != null && topScore < 0.40
+    }
+  },
   methods: {
+    getScoreClass(score) {
+      if (score == null) return ''
+      if (score >= 0.60) return 'score-high'
+      if (score >= 0.40) return 'score-medium'
+      return 'score-low'
+    },
     goBack() {
       uni.navigateBack()
     },
@@ -284,6 +310,40 @@ export default {
 .result-section {
   margin: 30rpx 24rpx 0;
 }
+
+/* 低置信度警告 */
+.confidence-warning {
+  display: flex;
+  align-items: flex-start;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #fef0f0, #fde2e2);
+  border: 2rpx solid #f56c6c;
+  border-radius: 16rpx;
+}
+.warning-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+}
+.warning-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.warning-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #f56c6c;
+}
+.warning-tips {
+  font-size: 22rpx;
+  color: #909399;
+  line-height: 1.5;
+}
+
 .result-header {
   display: flex;
   align-items: center;
@@ -349,10 +409,20 @@ export default {
 .score-badge {
   font-size: 22rpx;
   color: #fff;
-  background: #67c23a;
   padding: 4rpx 12rpx;
   border-radius: 20rpx;
+  font-weight: 600;
 }
+.score-high {
+  background: #67c23a;
+}
+.score-medium {
+  background: #e6a23c;
+}
+.score-low {
+  background: #f56c6c;
+}
+
 .result-row {
   display: flex;
   align-items: center;

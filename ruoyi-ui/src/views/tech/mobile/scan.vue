@@ -41,6 +41,15 @@
 
     <!-- 识别结果 -->
     <div class="result-section" v-if="results.length">
+      <!-- 低置信度警告 -->
+      <div class="confidence-warning" v-if="showLowConfidenceWarning">
+        <i class="el-icon-warning"></i>
+        <div class="warning-content">
+          <div class="warning-title">识别置信度较低</div>
+          <div class="warning-tips">建议: 1.调整为正面拍摄 2.确保光线充足 3.清洁轮毂表面 4.避免遮挡</div>
+        </div>
+      </div>
+
       <div class="result-title">
         识别结果
         <span class="sub">共 {{ results.length }} 条候选</span>
@@ -61,7 +70,11 @@
           <div class="result-info">
             <div class="result-top">
               <span class="wheel-code">{{ item.wheelCode }}</span>
-              <span class="score" v-if="item.similarityScore != null">
+              <span 
+                class="score" 
+                :class="getScoreClass(item.similarityScore)"
+                v-if="item.similarityScore != null"
+              >
                 相似度 {{ (item.similarityScore * 100).toFixed(1) }}%
               </span>
             </div>
@@ -100,7 +113,20 @@ export default {
       baseUrl: process.env.VUE_APP_BASE_API
     }
   },
+  computed: {
+    showLowConfidenceWarning() {
+      if (!this.results.length) return false
+      const topScore = this.results[0].similarityScore
+      return topScore != null && topScore < 0.40
+    }
+  },
   methods: {
+    getScoreClass(score) {
+      if (score == null) return ''
+      if (score >= 0.60) return 'score-high'
+      if (score >= 0.40) return 'score-medium'
+      return 'score-low'
+    },
     handleFileChange(file) {
       if (!file || !file.raw) return
       const raw = file.raw
@@ -311,7 +337,54 @@ export default {
 
 .score {
   font-size: 12px;
+  font-weight: 600;
+}
+
+.score-high {
   color: #67c23a;
+}
+
+.score-medium {
+  color: #e6a23c;
+}
+
+.score-low {
+  color: #f56c6c;
+}
+
+.confidence-warning {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fef0f0;
+  border: 1px solid #fde2e2;
+  border-radius: 8px;
+
+  .el-icon-warning {
+    font-size: 18px;
+    color: #f56c6c;
+    margin-right: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .warning-content {
+    flex: 1;
+  }
+
+  .warning-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f56c6c;
+    margin-bottom: 4px;
+  }
+
+  .warning-tips {
+    font-size: 11px;
+    color: #909399;
+    line-height: 1.4;
+  }
 }
 
 .result-row {

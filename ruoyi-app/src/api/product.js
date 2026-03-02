@@ -12,10 +12,11 @@ export function recognizeProduct(filePath) {
   return new Promise((resolve, reject) => {
     const token = getToken()
     const BASE_URL = getBaseUrl()
-    uni.uploadFile({
+    const uploadTask = uni.uploadFile({
       url: BASE_URL + '/tech/product/recognize',
       filePath: filePath,
       name: 'file',
+      timeout: 120000,
       header: {
         Authorization: token ? 'Bearer ' + token : ''
       },

@@ -57,6 +57,7 @@ export function recognizeProduct(data) {
   return request({
     url: '/tech/product/recognize',
     method: 'post',
-    data: data
+    data: data,
+    timeout: 120000
   })
 }
