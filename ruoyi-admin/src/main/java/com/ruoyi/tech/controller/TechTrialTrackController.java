@@ -55,7 +55,7 @@ public class TechTrialTrackController extends BaseController {
         return toAjax(techTrialTrackService.insertTechTrialTrack(techTrialTrack));
     }
 
-    @PreAuthorize("@ss.hasPermi('tech:trialTrack:edit')")
+    @PreAuthorize("@ss.hasPermi('tech:trialTrack:edit') or @ss.hasAnyPermi('tech:trial:phase:base:edit,tech:trial:phase:hot:edit,tech:trial:phase:spin:edit,tech:trial:phase:rough:edit,tech:trial:phase:finePaint:edit,tech:trial:phase:test:edit')")
     @Log(title = "OE试制跟踪", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody TechTrialTrack techTrialTrack) {

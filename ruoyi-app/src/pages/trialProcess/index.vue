@@ -154,7 +154,7 @@
                 <text class="action-btn-icon">📁</text>
                 <text class="action-btn-text">录入/上传</text>
               </view>
-              <view class="action-btn btn-comment" @tap="openComment(item, step, idx)">
+              <view v-if="canEditPhase(idx)" class="action-btn btn-comment" @tap="openComment(item, step, idx)">
                 <text class="action-btn-icon">💬</text>
                 <text class="action-btn-text">
                   意见
@@ -162,25 +162,25 @@
                 </text>
               </view>
               <view
+                v-if="canEditPhase(idx) && step.status !== 'done'"
                 class="action-btn btn-deadline"
                 @tap="openDeadline(item, step, idx)"
-                v-if="step.status !== 'done'"
               >
                 <text class="action-btn-icon">📅</text>
                 <text class="action-btn-text">截止</text>
               </view>
               <view
+                v-if="canEditPhase(idx) && step.status !== 'done'"
                 class="action-btn btn-done"
                 @tap="markStepDone(item, idx)"
-                v-if="step.status !== 'done'"
               >
                 <text class="action-btn-icon">✅</text>
                 <text class="action-btn-text">完成</text>
               </view>
               <view
+                v-if="canEditPhase(idx) && step.status === 'done'"
                 class="action-btn btn-undo"
                 @tap="markStepUndo(item, idx)"
-                v-if="step.status === 'done'"
               >
                 <text class="action-btn-icon">↩</text>
                 <text class="action-btn-text">撤回</text>
@@ -254,7 +254,7 @@
           <text class="fullpage-back-icon">✕</text>
         </view>
         <text class="fullpage-title">{{ currentStep.name }} · 录入/上传</text>
-        <view class="fullpage-save" @tap="submitOE">
+        <view v-if="canEditPhase(currentStepIndex)" class="fullpage-save" @tap="submitOE">
           <text class="fullpage-save-text">{{ oeLoading ? '保存中' : '保存' }}</text>
         </view>
       </view>
@@ -265,6 +265,10 @@
           <text class="oe-tip-icon">ℹ</text>
           <text class="oe-tip-text">以下数据与 OE试制跟踪 联动，保存后可在跟踪卡片中查看</text>
         </view>
+        <view v-if="!canEditPhase(currentStepIndex)" class="oe-tip oe-tip-warn">
+          <text class="oe-tip-icon">⚠</text>
+          <text class="oe-tip-text">您没有此节点的编辑权限，仅可查看</text>
+        </view>
 
         <!-- OE数据录入表单（按阶段显示不同字段）-->
         <view class="oe-form-section">
@@ -274,15 +278,15 @@
           <template v-if="currentPhase === 'base'">
             <view class="oe-form-item">
               <text class="oe-label">产品规格</text>
-              <input class="oe-input" v-model="oeForm.productSpec" placeholder="请输入产品规格" />
+              <input class="oe-input" v-model="oeForm.productSpec" placeholder="请输入产品规格" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">上机次数</text>
-              <input class="oe-input" v-model="oeForm.machineCount" type="number" placeholder="请输入上机次数" />
+              <input class="oe-input" v-model="oeForm.machineCount" type="number" placeholder="请输入上机次数" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">预计上机时间</text>
-              <input class="oe-input" v-model="oeForm.planMachineTime" placeholder="预计上机时间" />
+              <input class="oe-input" v-model="oeForm.planMachineTime" placeholder="预计上机时间" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -291,34 +295,34 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">热工上机日期</text>
-                <input class="oe-input" v-model="oeForm.hotMachineDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.hotMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">机台</text>
-                <input class="oe-input" v-model="oeForm.hotMachineStation" placeholder="机台编号" />
+                <input class="oe-input" v-model="oeForm.hotMachineStation" placeholder="机台编号" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">保压时间</text>
-                <input class="oe-input" v-model="oeForm.roundKeepTime" placeholder="保压时间" />
+                <input class="oe-input" v-model="oeForm.roundKeepTime" placeholder="保压时间" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">负责人</text>
-                <input class="oe-input" v-model="oeForm.hotImprovePerson" placeholder="负责人姓名" />
+                <input class="oe-input" v-model="oeForm.hotImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">测量数据</text>
-              <input class="oe-input" v-model="oeForm.hotCheckMeasureData" placeholder="请输入测量数据" />
+              <input class="oe-input" v-model="oeForm.hotCheckMeasureData" placeholder="请输入测量数据" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.hotProduction" placeholder="请输入生产情况" />
+              <textarea class="oe-textarea" v-model="oeForm.hotProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">改善记录</text>
-              <textarea class="oe-textarea" v-model="oeForm.improveRecord" placeholder="请输入改善记录" />
+              <textarea class="oe-textarea" v-model="oeForm.improveRecord" placeholder="请输入改善记录" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -327,24 +331,24 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">旋压上机日期</text>
-                <input class="oe-input" v-model="oeForm.spinMachineDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.spinMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">旋压机台</text>
-                <input class="oe-input" v-model="oeForm.spinMachineStation" placeholder="机台编号" />
+                <input class="oe-input" v-model="oeForm.spinMachineStation" placeholder="机台编号" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">负责人</text>
-              <input class="oe-input" v-model="oeForm.spinImprovePerson" placeholder="负责人姓名" />
+              <input class="oe-input" v-model="oeForm.spinImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.spinProduction" placeholder="请输入生产情况" />
+              <textarea class="oe-textarea" v-model="oeForm.spinProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">改模记录</text>
-              <textarea class="oe-textarea" v-model="oeForm.moldModifyRecord" placeholder="请输入改模记录" />
+              <textarea class="oe-textarea" v-model="oeForm.moldModifyRecord" placeholder="请输入改模记录" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -353,20 +357,20 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">粗车上机日期</text>
-                <input class="oe-input" v-model="oeForm.roughMachineDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.roughMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">负责人</text>
-                <input class="oe-input" v-model="oeForm.roughImprovePerson" placeholder="负责人姓名" />
+                <input class="oe-input" v-model="oeForm.roughImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.roughProduction" placeholder="请输入生产情况" />
+              <textarea class="oe-textarea" v-model="oeForm.roughProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">改善方案</text>
-              <textarea class="oe-textarea" v-model="oeForm.improvePlan" placeholder="请输入改善方案" />
+              <textarea class="oe-textarea" v-model="oeForm.improvePlan" placeholder="请输入改善方案" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -375,24 +379,24 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">精车上机日期</text>
-                <input class="oe-input" v-model="oeForm.fineMachineDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.fineMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">涂装上机日期</text>
-                <input class="oe-input" v-model="oeForm.paintMachineDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.paintMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">精车生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.fineProduction" placeholder="请输入精车生产情况" />
+              <textarea class="oe-textarea" v-model="oeForm.fineProduction" placeholder="请输入精车生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">涂装生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.paintProduction" placeholder="请输入涂装生产情况" />
+              <textarea class="oe-textarea" v-model="oeForm.paintProduction" placeholder="请输入涂装生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">涂装负责人</text>
-              <input class="oe-input" v-model="oeForm.paintImprovePerson" placeholder="负责人姓名" />
+              <input class="oe-input" v-model="oeForm.paintImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -401,26 +405,26 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验日期</text>
-                <input class="oe-input" v-model="oeForm.impactTestDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.impactTestDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验结果</text>
-                <input class="oe-input" v-model="oeForm.impactTestResult" placeholder="试验结果" />
+                <input class="oe-input" v-model="oeForm.impactTestResult" placeholder="试验结果" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">生产完成日期</text>
-                <input class="oe-input" v-model="oeForm.completeDate" placeholder="YYYY-MM-DD" />
+                <input class="oe-input" v-model="oeForm.completeDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">全序是否完成</text>
                 <view class="radio-group">
-                  <view class="radio-item" @tap="oeForm.allProcessDone = '是'">
+                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.allProcessDone = '是')">
                     <view class="radio-circle" :class="{ 'radio-checked': oeForm.allProcessDone === '是' }"></view>
                     <text class="radio-label">是</text>
                   </view>
-                  <view class="radio-item" @tap="oeForm.allProcessDone = '否'">
+                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.allProcessDone = '否')">
                     <view class="radio-circle" :class="{ 'radio-checked': oeForm.allProcessDone === '否' }"></view>
                     <text class="radio-label">否</text>
                   </view>
@@ -429,31 +433,31 @@
             </view>
             <view class="oe-form-item">
               <text class="oe-label">实验说明</text>
-              <textarea class="oe-textarea" v-model="oeForm.testDescription" placeholder="请输入实验说明" />
+              <textarea class="oe-textarea" v-model="oeForm.testDescription" placeholder="请输入实验说明" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">实验关闭情况</text>
-              <input class="oe-input" v-model="oeForm.testCloseStatus" placeholder="请输入实验关闭情况" />
+              <input class="oe-input" v-model="oeForm.testCloseStatus" placeholder="请输入实验关闭情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">失效产品清场</text>
-              <textarea class="oe-textarea" v-model="oeForm.failProductTrace" placeholder="请输入失效产品清场情况" />
+              <textarea class="oe-textarea" v-model="oeForm.failProductTrace" placeholder="请输入失效产品清场情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">实验失效分析</text>
-              <textarea class="oe-textarea" v-model="oeForm.failAnalysis" placeholder="请输入实验失效分析" />
+              <textarea class="oe-textarea" v-model="oeForm.failAnalysis" placeholder="请输入实验失效分析" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">本次生产总结</text>
-              <textarea class="oe-textarea" v-model="oeForm.productionSummary" placeholder="请输入生产总结" />
+              <textarea class="oe-textarea" v-model="oeForm.productionSummary" placeholder="请输入生产总结" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">改善措施简述</text>
-              <textarea class="oe-textarea" v-model="oeForm.improveMeasures" placeholder="请输入改善措施" />
+              <textarea class="oe-textarea" v-model="oeForm.improveMeasures" placeholder="请输入改善措施" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
               <text class="oe-label">经验教训总结</text>
-              <textarea class="oe-textarea" v-model="oeForm.lessonsLearned" placeholder="请输入经验教训" />
+              <textarea class="oe-textarea" v-model="oeForm.lessonsLearned" placeholder="请输入经验教训" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
         </view>
@@ -462,7 +466,7 @@
         <view class="upload-section">
           <view class="section-divider">
             <text class="section-label">📎 附件上传</text>
-            <view class="add-file-btn" @tap="chooseAndUpload">
+            <view v-if="canEditPhase(currentStepIndex)" class="add-file-btn" @tap="chooseAndUpload">
               <text class="add-file-btn-text">{{ uploadingFile ? '上传中...' : '+ 添加图片/文件' }}</text>
             </view>
           </view>
@@ -494,7 +498,7 @@
                 </view>
               </view>
               <text class="file-thumb-name">{{ shortenName(file.name) }}</text>
-              <view class="file-delete-btn" @tap.stop="deleteFile(fIdx)">
+              <view v-if="canEditPhase(currentStepIndex)" class="file-delete-btn" @tap.stop="deleteFile(fIdx)">
                 <text class="file-delete-icon">✕</text>
               </view>
             </view>
@@ -521,16 +525,21 @@
       <scroll-view scroll-y class="fullpage-body">
         <!-- 发表新意见 -->
         <view class="comment-input-section">
+          <view v-if="!canEditPhase(currentStepIndex)" class="oe-tip oe-tip-warn" style="margin-bottom:12rpx">
+            <text class="oe-tip-icon">⚠</text>
+            <text class="oe-tip-text">您没有此节点的编辑权限，仅可查看</text>
+          </view>
           <text class="section-label">发表意见</text>
           <textarea
             class="comment-textarea"
             v-model="commentText"
             placeholder="请输入您的意见..."
             maxlength="500"
+            :disabled="!canEditPhase(currentStepIndex)"
           />
           <view class="comment-submit-row">
             <text class="comment-char-count">{{ commentText.length }}/500</text>
-            <view class="comment-submit-btn" @tap="submitComment">
+            <view v-if="canEditPhase(currentStepIndex)" class="comment-submit-btn" @tap="submitComment">
               <text class="comment-submit-text">提交意见</text>
             </view>
           </view>
@@ -560,7 +569,7 @@
               </view>
             </view>
             <text v-else class="comment-content">{{ c.content }}</text>
-            <view class="comment-card-actions">
+            <view v-if="canEditPhase(currentStepIndex)" class="comment-card-actions">
               <view class="comment-action-btn" @tap="editComment(cIdx)">
                 <text class="comment-action-text">✏ 编辑</text>
               </view>
@@ -1345,6 +1354,14 @@ export default {
         this.deadlineVisible = false
         this.loadList()
       })
+    },
+
+    /** 判断当前用户是否有某节点的编辑权限（与PC试制流程、OE试制跟踪联动） */
+    canEditPhase(index) {
+      const perms = this.$store.state.permissions || []
+      if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit') || perms.includes('tech:process:edit')) return true
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
+      return index >= 0 && index < 6 && perms.includes(phasePerms[index])
     }
   }
 }
@@ -1805,6 +1822,8 @@ export default {
 }
 .oe-tip-icon { font-size: 28rpx; flex-shrink: 0; }
 .oe-tip-text { font-size: 22rpx; color: #409eff; line-height: 1.6; }
+.oe-tip-warn { background: #fdf6ec; }
+.oe-tip-warn .oe-tip-text { color: #e6a23c; }
 
 .oe-form-section {
   margin: 0 24rpx 20rpx;

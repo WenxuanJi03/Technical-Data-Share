@@ -17,35 +17,40 @@
     <view class="menu-section">
       <view class="section-title">⚙ 菜单</view>
       <view class="menu-grid">
-        <view class="menu-card" @tap="goPage('/pages/task/index')">
+        <view v-if="canSeeMenu.task" class="menu-card" @tap="goPage('/pages/task/index')">
           <view class="card-icon purple">🔬</view>
           <text class="card-title">试制任务</text>
           <text class="card-desc">试制任务处理列表</text>
         </view>
-        <view class="menu-card" @tap="goPage('/pages/review/index')">
+        <view v-if="canSeeMenu.review" class="menu-card" @tap="goPage('/pages/review/index')">
           <view class="card-icon green">✅</view>
           <text class="card-title">新产品评审</text>
           <text class="card-desc">新产品评审任务列表</text>
         </view>
-        <view class="menu-card" @tap="goPage('/pages/files/index')">
+        <view v-if="canSeeMenu.files" class="menu-card" @tap="goPage('/pages/files/index')">
           <view class="card-icon orange">📁</view>
           <text class="card-title">文件夹</text>
           <text class="card-desc">项目文件、产品标签</text>
         </view>
-        <view class="menu-card" @tap="goPage('/pages/workorder/index')">
+        <view v-if="canSeeMenu.workorder" class="menu-card" @tap="goPage('/pages/workorder/index')">
           <view class="card-icon blue">📋</view>
           <text class="card-title">工单管理</text>
           <text class="card-desc">创建处理工单任务</text>
         </view>
-        <view class="menu-card" @tap="goPage('/pages/trialProcess/index')">
+        <view v-if="canSeeMenu.trialProcess" class="menu-card" @tap="goPage('/pages/trialProcess/index')">
           <view class="card-icon purple">📈</view>
           <text class="card-title">试制流程</text>
           <text class="card-desc">OE试制流程跟踪</text>
         </view>
-        <view class="menu-card" @tap="goPage('/pages/scan/index')">
+        <view v-if="canSeeMenu.scan" class="menu-card" @tap="goPage('/pages/scan/index')">
           <view class="card-icon teal">🔍</view>
           <text class="card-title">轮毂识别</text>
           <text class="card-desc">拍照识别轮毂型号</text>
+        </view>
+        <!-- 无任何菜单权限时的提示 -->
+        <view v-if="noMenuVisible" class="no-menu-tip">
+          <text class="no-menu-icon">🔒</text>
+          <text class="no-menu-text">暂无可用功能，请联系管理员分配权限</text>
         </view>
       </view>
     </view>
@@ -87,6 +92,43 @@ export default {
       const info = this.$store.state.userInfo
       if (info && info.dept) return info.dept.deptName || '技术科'
       return '产品开发组'
+    },
+    /**
+     * 移动端首页菜单卡片可见性控制。
+     * 逻辑：
+     *   1. 超管（*:*:*）始终可见全部菜单。
+     *   2. 系统中已启用移动端菜单权限（sys_menu 中有 mobile:*:view 节点 且 管理员已向
+     *      某角色分配了至少一个）时，按各权限字符串控制显示。
+     *   3. 若系统尚未执行 mobile_homepage_menu_permissions.sql（即用户 perms 中完全
+     *      不含任何 mobile:*:view），则默认全部显示（向后兼容旧数据）。
+     */
+    canSeeMenu() {
+      const perms = this.$store.state.permissions || []
+      const isAdmin = perms.includes('*:*:*')
+      if (isAdmin) {
+        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true }
+      }
+      const mobilePerms = [
+        'mobile:task:view', 'mobile:review:view', 'mobile:files:view',
+        'mobile:workorder:view', 'mobile:trialProcess:view', 'mobile:scan:view'
+      ]
+      // SQL 未执行（权限节点不存在）时，用户 perms 不含任何 mobile 权限 → 全部默认显示
+      const controlEnabled = mobilePerms.some(p => perms.includes(p))
+      if (!controlEnabled) {
+        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true }
+      }
+      return {
+        task: perms.includes('mobile:task:view'),
+        review: perms.includes('mobile:review:view'),
+        files: perms.includes('mobile:files:view'),
+        workorder: perms.includes('mobile:workorder:view'),
+        trialProcess: perms.includes('mobile:trialProcess:view'),
+        scan: perms.includes('mobile:scan:view')
+      }
+    },
+    noMenuVisible() {
+      const m = this.canSeeMenu
+      return !m.task && !m.review && !m.files && !m.workorder && !m.trialProcess && !m.scan
     }
   },
   onShow() {
@@ -234,6 +276,16 @@ export default {
     font-size: 22rpx;
     color: #909399;
   }
+}
+
+.no-menu-tip {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0;
+  .no-menu-icon { font-size: 60rpx; margin-bottom: 14rpx; }
+  .no-menu-text { font-size: 24rpx; color: #c0c4cc; text-align: center; line-height: 1.6; }
 }
 
 .stats-section {

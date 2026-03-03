@@ -59,6 +59,7 @@
             <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
               <el-table-column type="selection" width="50" align="center" />
               <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns.userId.visible" />
+              <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns.userName.visible" :show-overflow-tooltip="true" min-width="100" />
               <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" v-if="columns.nickName.visible" :show-overflow-tooltip="true" />
               <el-table-column label="部门" align="center" key="deptName" prop="dept.deptName" v-if="columns.deptName.visible" :show-overflow-tooltip="true" />
               <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns.phonenumber.visible" width="120" />
@@ -98,22 +99,29 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="用户昵称" prop="nickName">
-              <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
+            <el-form-item label="用户名称" prop="userName">
+              <el-input v-model="form.userName" :placeholder="form.userId ? '登录账号（只读）' : '请输入登录账号，不填则使用用户昵称'" maxlength="30" :disabled="!!form.userId" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="归属部门" prop="deptId">
-              <treeselect v-model="form.deptId" :options="enabledDeptOptions" :show-count="true" placeholder="请选择归属部门" />
+            <el-form-item label="用户昵称" prop="nickName">
+              <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
+            <el-form-item label="归属部门" prop="deptId">
+              <treeselect v-model="form.deptId" :options="enabledDeptOptions" :show-count="true" placeholder="请选择归属部门" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="手机号码" prop="phonenumber">
               <el-input v-model="form.phonenumber" placeholder="请输入手机号码" maxlength="11" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
@@ -273,6 +281,7 @@ export default {
       // 列信息
       columns: {
         userId: { label: '用户编号', visible: true },
+        userName: { label: '用户名称', visible: true },
         nickName: { label: '用户昵称', visible: true },
         deptName: { label: '部门', visible: true },
         phonenumber: { label: '手机号码', visible: true },
@@ -487,8 +496,10 @@ export default {
               this.getList()
             })
           } else {
-            // 新增时，用户名自动等于用户昵称
-            this.form.userName = this.form.nickName
+            // 新增时，若未填用户名称则使用用户昵称
+            if (!this.form.userName || !this.form.userName.trim()) {
+              this.form.userName = this.form.nickName
+            }
             addUser(this.form).then(() => {
               this.$modal.msgSuccess("新增成功")
               this.open = false

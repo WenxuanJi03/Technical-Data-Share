@@ -90,7 +90,7 @@ public class TechTrialProcessController extends BaseController {
     /**
      * 修改试制流程记录
      */
-    @PreAuthorize("@ss.hasPermi('tech:process:edit')")
+    @PreAuthorize("@ss.hasPermi('tech:process:edit') or @ss.hasAnyPermi('tech:trial:phase:base:edit,tech:trial:phase:hot:edit,tech:trial:phase:spin:edit,tech:trial:phase:rough:edit,tech:trial:phase:finePaint:edit,tech:trial:phase:test:edit')")
     @Log(title = "试制流程记录", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody TechTrialProcess techTrialProcess) {

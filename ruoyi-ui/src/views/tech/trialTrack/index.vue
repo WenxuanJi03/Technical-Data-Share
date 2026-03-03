@@ -60,10 +60,10 @@
           <span class="mold-code">{{ item.moldCode }}</span>
           <span
             class="done-badge"
-            :class="item.allProcessDone==='是'?'done-yes':'done-no'"
-            style="cursor:pointer"
-            :title="item.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
-            @click.stop="toggleDoneStatus(item)"
+            :class="[item.allProcessDone==='是'?'done-yes':'done-no', { 'done-badge-readonly': !canEditPhase(4) }]"
+            :style="canEditPhase(4) ? 'cursor:pointer' : 'cursor:default'"
+            :title="canEditPhase(4) ? (item.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成') : '无编辑权限'"
+            @click.stop="canEditPhase(4) && toggleDoneStatus(item)"
           >
             {{ item.allProcessDone === '是' ? '✓ 已完成' : '● 进行中' }}
           </span>
@@ -138,12 +138,12 @@
       <el-table-column label="全序完成" prop="allProcessDone" width="80" align="center">
         <template slot-scope="s">
           <el-tag
-            :type="s.row.allProcessDone==='是'?'success':'info'"
-            size="mini"
-            style="cursor:pointer"
-            :title="s.row.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
-            @click.stop="toggleDoneStatus(s.row)"
-          >{{ s.row.allProcessDone === '是' ? '已完成' : '进行中' }}</el-tag>
+              :type="s.row.allProcessDone==='是'?'success':'info'"
+              size="mini"
+              :style="canEditPhase(4) ? 'cursor:pointer' : 'cursor:default'"
+              :title="canEditPhase(4) ? (s.row.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成') : '无编辑权限'"
+              @click.stop="canEditPhase(4) && toggleDoneStatus(s.row)"
+            >{{ s.row.allProcessDone === '是' ? '已完成' : '进行中' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="120" align="center" fixed="right">
@@ -170,9 +170,9 @@
               effect="dark"
               size="small"
               :type="detail.allProcessDone==='是'?'success':'info'"
-              style="cursor:pointer"
-              :title="detail.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成'"
-              @click="toggleDoneStatus(detail)"
+              :style="canEditPhase(4) ? 'cursor:pointer' : 'cursor:default'"
+              :title="canEditPhase(4) ? (detail.allProcessDone==='是'?'点击标记为进行中':'点击标记为已完成') : '无编辑权限'"
+              @click="canEditPhase(4) && toggleDoneStatus(detail)"
             >{{ detail.allProcessDone === '是' ? '✓ 全序完成' : '● 进行中' }}</el-tag>
           </div>
         </div>
@@ -261,7 +261,7 @@
         </div>
 
         <div class="detail-actions">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleUpdate(detail)" v-hasPermi="['tech:trialTrack:edit']">编辑</el-button>
+          <el-button v-if="canEditAnyPhase" type="primary" size="small" icon="el-icon-edit" @click="handleUpdate(detail)">编辑</el-button>
           <el-button type="danger" size="small" icon="el-icon-delete" @click="handleDelete(detail)" v-hasPermi="['tech:trialTrack:remove']">删除</el-button>
         </div>
       </div>
@@ -276,55 +276,56 @@
     <!-- 新增/编辑对话框 -->
     <el-dialog :title="formTitle" :visible.sync="formOpen" width="780px" append-to-body top="3vh">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px" size="small">
+        <el-alert v-if="form.trackId && !canEditPhase(0) && !canEditPhase(1) && !canEditPhase(2) && !canEditPhase(3) && !canEditPhase(4) && !canEditPhase(5)" title="您没有任一阶段编辑权限，仅可查看" type="warning" :closable="false" show-icon style="margin-bottom:12px" />
         <el-divider content-position="left">基础信息</el-divider>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="模号" prop="moldCode"><el-input v-model="form.moldCode" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="产品规格"><el-input v-model="form.productSpec" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="上机次数"><el-input-number v-model="form.machineCount" :min="0" style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="模号" prop="moldCode"><el-input v-model="form.moldCode" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="产品规格"><el-input v-model="form.productSpec" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="上机次数"><el-input-number v-model="form.machineCount" :min="0" style="width:100%" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="模具类型"><el-input v-model="form.moldType" placeholder="首模/改模" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="表面状态"><el-input v-model="form.surfaceStatus" placeholder="精车/全涂" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="上机类型"><el-input v-model="form.machineType" placeholder="小批量/量产" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="模具类型"><el-input v-model="form.moldType" placeholder="首模/改模" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="表面状态"><el-input v-model="form.surfaceStatus" placeholder="精车/全涂" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="上机类型"><el-input v-model="form.machineType" placeholder="小批量/量产" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
         </el-row>
 
         <el-divider content-position="left">热工阶段</el-divider>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="热工上机"><el-input v-model="form.hotMachineDate" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="机台"><el-input v-model="form.hotMachineStation" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="保压时间"><el-input v-model="form.roundKeepTime" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="热工上机"><el-input v-model="form.hotMachineDate" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="机台"><el-input v-model="form.hotMachineStation" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="保压时间"><el-input v-model="form.roundKeepTime" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="负责人"><el-input v-model="form.hotImprovePerson" /></el-form-item></el-col>
-          <el-col :span="16"><el-form-item label="测量数据"><el-input v-model="form.hotCheckMeasureData" placeholder="热工检查站首件测量数据" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="负责人"><el-input v-model="form.hotImprovePerson" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
+          <el-col :span="16"><el-form-item label="测量数据"><el-input v-model="form.hotCheckMeasureData" placeholder="热工检查站首件测量数据" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="测量数据图片"><image-upload v-model="form.hotCheckMeasureImage" :limit="3" /></el-form-item>
-        <el-form-item label="生产情况"><el-input v-model="form.hotProduction" type="textarea" :rows="2" /></el-form-item>
-        <el-form-item label="改善记录"><el-input v-model="form.improveRecord" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="测量数据图片"><image-upload v-model="form.hotCheckMeasureImage" :limit="3" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
+        <el-form-item label="生产情况"><el-input v-model="form.hotProduction" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
+        <el-form-item label="改善记录"><el-input v-model="form.improveRecord" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
 
         <el-divider content-position="left">旋压 / 粗车 / 精车 / 涂装</el-divider>
-        <el-form-item label="旋压前距图片"><image-upload v-model="form.spinFrontDistanceImage" :limit="3" /></el-form-item>
+        <el-form-item label="旋压前距图片"><image-upload v-model="form.spinFrontDistanceImage" :limit="3" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="旋压上机"><el-input v-model="form.spinMachineDate" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="粗车上机"><el-input v-model="form.roughMachineDate" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="精车上机"><el-input v-model="form.fineMachineDate" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="旋压上机"><el-input v-model="form.spinMachineDate" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="粗车上机"><el-input v-model="form.roughMachineDate" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="精车上机"><el-input v-model="form.fineMachineDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="流转单照片"><image-upload v-model="form.paintFlowSheetImage" :limit="3" /></el-form-item>
+        <el-form-item label="流转单照片"><image-upload v-model="form.paintFlowSheetImage" :limit="3" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="涂装上机"><el-input v-model="form.paintMachineDate" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="完成日期"><el-input v-model="form.completeDate" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="涂装上机"><el-input v-model="form.paintMachineDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="完成日期"><el-input v-model="form.completeDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
           <el-col :span="8">
             <el-form-item label="全序完成">
-              <el-select v-model="form.allProcessDone" style="width:100%">
+              <el-select v-model="form.allProcessDone" style="width:100%" :disabled="form.trackId && !canEditPhase(4)">
                 <el-option label="是" value="是" /><el-option label="否" value="否" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(5)" /></el-form-item>
       </el-form>
       <div slot="footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitForm" :disabled="form.trackId && !canEditAnyPhase">确 定</el-button>
         <el-button @click="formOpen = false">取 消</el-button>
       </div>
     </el-dialog>
@@ -387,7 +388,13 @@ export default {
     }
   },
   computed: {
-    importUrl() { return process.env.VUE_APP_BASE_API + "/tech/trialTrack/importData?titleNum=" + this.titleNum }
+    importUrl() { return process.env.VUE_APP_BASE_API + "/tech/trialTrack/importData?titleNum=" + this.titleNum },
+    canEditAnyPhase() {
+      const perms = this.$store.getters.permissions || []
+      if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit')) return true
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
+      return phasePerms.some(p => perms.includes(p))
+    }
   },
   watch: {
     importMode(v) { this.titleNum = v === 'raw' ? 0 : 0 }
@@ -462,12 +469,17 @@ export default {
     handleExport() { this.download('tech/trialTrack/export', { ...this.queryParams }, 'OE试制跟踪.xlsx') },
     openLightbox(imageUrl) {
       if (imageUrl) {
-        // 取第一张图片（多张以逗号分隔）
         this.lightboxImageUrl = imageUrl.split(',')[0]
         this.lightboxVisible = true
       } else {
         this.$modal.msgWarning('暂无图片')
       }
+    },
+    canEditPhase(index) {
+      const perms = this.$store.getters.permissions || []
+      if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit')) return true
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
+      return index >= 0 && index < 6 && perms.includes(phasePerms[index])
     }
   }
 }

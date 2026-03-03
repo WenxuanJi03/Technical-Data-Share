@@ -78,7 +78,7 @@
               <text class="wheel-code">{{ item.wheelCode }}</text>
               <text 
                 class="score-badge" 
-                :class="getScoreClass(item.similarityScore)"
+                :class="{ 'score-high': item.similarityScore >= 0.60, 'score-medium': item.similarityScore >= 0.40 && item.similarityScore < 0.60, 'score-low': item.similarityScore != null && item.similarityScore < 0.40 }"
                 v-if="item.similarityScore != null"
               >
                 {{ (item.similarityScore * 100).toFixed(1) }}%
@@ -141,12 +141,6 @@ export default {
     }
   },
   methods: {
-    getScoreClass(score) {
-      if (score == null) return ''
-      if (score >= 0.60) return 'score-high'
-      if (score >= 0.40) return 'score-medium'
-      return 'score-low'
-    },
     goBack() {
       uni.navigateBack()
     },
