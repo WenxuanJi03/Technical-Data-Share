@@ -75,8 +75,9 @@
         </div>
         <div class="card-meta">
           <div class="meta-row" v-if="item.impactTestResult"><span class="meta-l">实验结果</span><span class="meta-v meta-wrap">{{ item.impactTestResult }}</span></div>
-          <div class="meta-row" v-if="item.hotMachineDate || item.hotMachineStation || item.roundKeepTime"><span class="meta-l">热工信息</span><span class="meta-v meta-wrap">{{ item.hotMachineDate || '-' }} / {{ item.hotMachineStation || '-' }} / {{ item.roundKeepTime || '-' }}</span></div>
-          <div class="meta-row" v-if="item.hotProduction"><span class="meta-l">热工情况</span><span class="meta-v meta-wrap">{{ item.hotProduction }}</span></div>
+          <div class="meta-row" v-if="item.hotMachineDate || item.hotMachineStation || item.roundKeepTime"><span class="meta-l">压铸信息</span><span class="meta-v meta-wrap">{{ item.hotMachineDate || '-' }} / {{ item.hotMachineStation || '-' }} / {{ item.roundKeepTime || '-' }}</span></div>
+          <div class="meta-row" v-if="item.hotProduction"><span class="meta-l">压铸情况</span><span class="meta-v meta-wrap">{{ item.hotProduction }}</span></div>
+          <div class="meta-row" v-if="item.heatReceiveCount || item.heatTransferCount"><span class="meta-l">热处理</span><span class="meta-v meta-wrap">接{{ item.heatReceiveCount || '-' }} / 转{{ item.heatTransferCount || '-' }}</span></div>
           <div class="meta-row" v-if="item.spinMachineStation || item.spinProduction"><span class="meta-l">旋压信息</span><span class="meta-v meta-wrap">{{ item.spinMachineStation || '-' }} / {{ item.spinProduction || '-' }}</span></div>
         </div>
       </div>
@@ -99,13 +100,13 @@
       <el-table-column label="上机类型" prop="machineType" width="80" align="center" />
       <el-table-column label="上机次数" prop="machineCount" width="70" align="center" />
       <el-table-column label="预上机时间" prop="planMachineTime" width="100" align="center" />
-      <!-- 热工阶段 -->
-      <el-table-column label="热工上机" prop="hotMachineDate" width="100" align="center" />
+      <!-- 压铸阶段 -->
+      <el-table-column label="压铸上机" prop="hotMachineDate" width="100" align="center" />
       <el-table-column label="机台" prop="hotMachineStation" width="60" align="center" />
       <el-table-column label="保压" prop="roundKeepTime" width="60" align="center" />
-      <el-table-column label="热工生产情况" prop="hotProduction" width="160" show-overflow-tooltip />
+      <el-table-column label="压铸生产情况" prop="hotProduction" width="160" show-overflow-tooltip />
       <el-table-column label="改善记录" prop="improveRecord" width="140" show-overflow-tooltip />
-      <el-table-column label="热工负责人" prop="hotImprovePerson" width="90" align="center" />
+      <el-table-column label="压铸负责人" prop="hotImprovePerson" width="90" align="center" />
       <!-- 旋压阶段 -->
       <el-table-column label="旋压上机" prop="spinMachineDate" width="100" align="center" />
       <el-table-column label="旋压机台" prop="spinMachineStation" width="80" align="center" />
@@ -113,14 +114,20 @@
       <el-table-column label="改模记录" prop="moldModifyRecord" width="120" show-overflow-tooltip />
       <el-table-column label="旋压负责人" prop="spinImprovePerson" width="90" align="center" />
       <el-table-column label="改善情况" prop="spinImproveStatus" width="120" show-overflow-tooltip />
+      <!-- 热处理阶段 -->
+      <el-table-column label="热处理接收" prop="heatReceiveCount" width="80" align="center" />
+      <el-table-column label="热处理转下" prop="heatTransferCount" width="80" align="center" />
+      <el-table-column label="下转时间" prop="heatTransferTime" width="100" align="center" />
       <!-- 粗车阶段 -->
       <el-table-column label="粗车上机" prop="roughMachineDate" width="100" align="center" />
       <el-table-column label="粗车生产情况" prop="roughProduction" width="140" show-overflow-tooltip />
       <el-table-column label="粗车负责人" prop="roughImprovePerson" width="100" align="center" />
       <el-table-column label="改善方案" prop="improvePlan" width="140" show-overflow-tooltip />
-      <!-- 精车/涂装阶段 -->
+      <!-- 精车阶段 -->
       <el-table-column label="精车上机" prop="fineMachineDate" width="100" align="center" />
       <el-table-column label="精车情况" prop="fineProduction" width="120" show-overflow-tooltip />
+      <el-table-column label="精车负责人" prop="fineImprovePerson" width="90" align="center" />
+      <!-- 涂装阶段 -->
       <el-table-column label="涂装上机" prop="paintMachineDate" width="100" align="center" />
       <el-table-column label="涂装情况" prop="paintProduction" width="120" show-overflow-tooltip />
       <el-table-column label="涂装负责人" prop="paintImprovePerson" width="90" align="center" />
@@ -187,9 +194,9 @@
           </el-descriptions>
         </div>
 
-        <!-- 热工阶段 -->
+        <!-- 压铸阶段 -->
         <div class="detail-section">
-          <div class="section-title">热工阶段</div>
+          <div class="section-title">压铸阶段</div>
           <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="上机日期">{{ detail.hotMachineDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="机台">{{ detail.hotMachineStation || '-' }}</el-descriptions-item>
@@ -220,6 +227,20 @@
           </el-descriptions>
         </div>
 
+        <!-- 热处理阶段 -->
+        <div class="detail-section">
+          <div class="section-title">热处理阶段</div>
+          <el-descriptions :column="2" size="small" border>
+            <el-descriptions-item label="下转时间">{{ detail.heatTransferTime || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="接收数量">{{ detail.heatReceiveCount != null ? detail.heatReceiveCount : '-' }}</el-descriptions-item>
+            <el-descriptions-item label="转下数量">{{ detail.heatTransferCount != null ? detail.heatTransferCount : '-' }}</el-descriptions-item>
+            <el-descriptions-item label="流转单照片">
+              <el-link v-if="detail.heatFlowSheetImage" type="primary" :underline="false" @click="openLightbox(detail.heatFlowSheetImage)">查看照片</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+
         <!-- 粗车阶段 -->
         <div class="detail-section">
           <div class="section-title">粗车阶段</div>
@@ -231,12 +252,20 @@
           </el-descriptions>
         </div>
 
-        <!-- 精车+涂装 -->
+        <!-- 精车阶段 -->
         <div class="detail-section">
-          <div class="section-title">精车 / 涂装阶段</div>
+          <div class="section-title">精车阶段</div>
           <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="精车上机">{{ detail.fineMachineDate || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="精车情况">{{ detail.fineProduction || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="精车负责人">{{ detail.fineImprovePerson || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="精车情况" :span="2">{{ detail.fineProduction || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- 涂装阶段 -->
+        <div class="detail-section">
+          <div class="section-title">涂装阶段</div>
+          <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="涂装上机">{{ detail.paintMachineDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="涂装情况">{{ detail.paintProduction || '-' }}</el-descriptions-item>
             <el-descriptions-item label="涂装负责人">{{ detail.paintImprovePerson || '-' }}</el-descriptions-item>
@@ -289,9 +318,9 @@
           <el-col :span="8"><el-form-item label="上机类型"><el-input v-model="form.machineType" placeholder="小批量/量产" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
         </el-row>
 
-        <el-divider content-position="left">热工阶段</el-divider>
+        <el-divider content-position="left">压铸阶段</el-divider>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="热工上机"><el-input v-model="form.hotMachineDate" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="压铸上机"><el-date-picker v-model="form.hotMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="机台"><el-input v-model="form.hotMachineStation" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="保压时间"><el-input v-model="form.roundKeepTime" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
         </el-row>
@@ -303,17 +332,29 @@
         <el-form-item label="生产情况"><el-input v-model="form.hotProduction" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
         <el-form-item label="改善记录"><el-input v-model="form.improveRecord" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
 
+        <el-divider content-position="left">热处理阶段</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="8"><el-form-item label="下转时间"><el-date-picker v-model="form.heatTransferTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="接收数量"><el-input v-model="form.heatReceiveCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="转下数量"><el-input v-model="form.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+        </el-row>
+        <el-form-item label="流转单照片"><image-upload v-model="form.heatFlowSheetImage" :limit="3" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item>
+
         <el-divider content-position="left">旋压 / 粗车 / 精车 / 涂装</el-divider>
         <el-form-item label="旋压前距图片"><image-upload v-model="form.spinFrontDistanceImage" :limit="3" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="旋压上机"><el-input v-model="form.spinMachineDate" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="粗车上机"><el-input v-model="form.roughMachineDate" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="精车上机"><el-input v-model="form.fineMachineDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="旋压上机"><el-date-picker v-model="form.spinMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="粗车上机"><el-date-picker v-model="form.roughMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="精车上机"><el-date-picker v-model="form.fineMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(5)" /></el-form-item></el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8"><el-form-item label="精车负责人"><el-input v-model="form.fineImprovePerson" :disabled="form.trackId && !canEditPhase(5)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="涂装上机"><el-date-picker v-model="form.paintMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(6)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="涂装负责人"><el-input v-model="form.paintImprovePerson" :disabled="form.trackId && !canEditPhase(6)" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="流转单照片"><image-upload v-model="form.paintFlowSheetImage" :limit="3" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="涂装上机"><el-input v-model="form.paintMachineDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="完成日期"><el-input v-model="form.completeDate" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="完成日期"><el-date-picker v-model="form.completeDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(7)" /></el-form-item></el-col>
           <el-col :span="8">
             <el-form-item label="全序完成">
               <el-select v-model="form.allProcessDone" style="width:100%" :disabled="form.trackId && !canEditPhase(4)">
@@ -392,7 +433,7 @@ export default {
     canEditAnyPhase() {
       const perms = this.$store.getters.permissions || []
       if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit')) return true
-      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:heat:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:fine:edit', 'tech:trial:phase:paint:edit', 'tech:trial:phase:test:edit']
       return phasePerms.some(p => perms.includes(p))
     }
   },
@@ -478,8 +519,8 @@ export default {
     canEditPhase(index) {
       const perms = this.$store.getters.permissions || []
       if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit')) return true
-      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
-      return index >= 0 && index < 6 && perms.includes(phasePerms[index])
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:heat:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:fine:edit', 'tech:trial:phase:paint:edit', 'tech:trial:phase:test:edit']
+      return index >= 0 && index < 8 && perms.includes(phasePerms[index])
     }
   }
 }

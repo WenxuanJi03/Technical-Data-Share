@@ -60,7 +60,7 @@
                 <el-button size="mini" type="text" icon="el-icon-refresh-left" style="color:#e6a23c" @click="markStepUndo(item, index)">撤回</el-button>
               </template>
             </div>
-            <div class="step-line" v-if="index < 5" :class="{ 'line-done': step.status === 'done' }"></div>
+            <div class="step-line" v-if="index < 7" :class="{ 'line-done': step.status === 'done' }"></div>
           </div>
         </div>
 
@@ -113,14 +113,23 @@
           <el-alert v-if="!canEditPhase(currentStepIndex)" title="您没有此节点的编辑权限，仅可查看" type="warning" :closable="false" show-icon style="margin-bottom:12px" />
           <!-- 基础信息 -->
           <template v-if="currentPhase === 'base'">
-            <el-form-item label="产品规格"><el-input v-model="oeForm.productSpec" placeholder="请输入产品规格" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="上机次数"><el-input-number v-model="oeForm.machineCount" :min="0" style="width:100%" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="预计上机"><el-input v-model="oeForm.planMachineTime" placeholder="预计上机时间" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="产品规格"><el-input v-model="oeForm.productSpec" placeholder="请输入产品规格" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="上机次数"><el-input-number v-model="oeForm.machineCount" :min="0" style="width:100%" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="模具类型"><el-input v-model="oeForm.moldType" placeholder="首模/改模等" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="表面状态"><el-input v-model="oeForm.surfaceStatus" placeholder="精车/全涂等" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+            </el-row>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="上机类型"><el-input v-model="oeForm.machineType" placeholder="小批量/量产等" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="预计上机"><el-date-picker v-model="oeForm.planMachineTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
+            </el-row>
           </template>
-          <!-- 热工阶段 -->
+          <!-- 压铸阶段 -->
           <template v-else-if="currentPhase === 'hot'">
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="热工上机日期"><el-input v-model="oeForm.hotMachineDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="压铸上机日期"><el-date-picker v-model="oeForm.hotMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="机台"><el-input v-model="oeForm.hotMachineStation" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
             <el-row :gutter="16">
@@ -134,40 +143,55 @@
           <!-- 旋压阶段 -->
           <template v-else-if="currentPhase === 'spin'">
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="旋压上机日期"><el-input v-model="oeForm.spinMachineDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="旋压上机日期"><el-date-picker v-model="oeForm.spinMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="旋压机台"><el-input v-model="oeForm.spinMachineStation" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
             <el-form-item label="负责人"><el-input v-model="oeForm.spinImprovePerson" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
             <el-form-item label="生产情况"><el-input v-model="oeForm.spinProduction" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
             <el-form-item label="改模记录"><el-input v-model="oeForm.moldModifyRecord" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
           </template>
+          <!-- 热处理阶段 -->
+          <template v-else-if="currentPhase === 'heat'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="下转时间"><el-date-picker v-model="oeForm.heatTransferTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="接收数量"><el-input v-model="oeForm.heatReceiveCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+            </el-row>
+            <el-form-item label="转下数量"><el-input v-model="oeForm.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" style="width:50%" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
+            <el-alert title="请在下方附件区上传流转单照片" type="info" :closable="false" style="margin-bottom:15px"/>
+          </template>
           <!-- 粗车阶段 -->
           <template v-else-if="currentPhase === 'rough'">
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="粗车上机日期"><el-input v-model="oeForm.roughMachineDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="粗车上机日期"><el-date-picker v-model="oeForm.roughMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="负责人"><el-input v-model="oeForm.roughImprovePerson" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
             <el-form-item label="生产情况"><el-input v-model="oeForm.roughProduction" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
             <el-form-item label="改善方案"><el-input v-model="oeForm.improvePlan" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
           </template>
-          <!-- 精车/涂装阶段 -->
-          <template v-else-if="currentPhase === 'finePaint'">
+          <!-- 精车阶段 -->
+          <template v-else-if="currentPhase === 'fine'">
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="精车上机日期"><el-input v-model="oeForm.fineMachineDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
-              <el-col :span="12"><el-form-item label="涂装上机日期"><el-input v-model="oeForm.paintMachineDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="精车上机日期"><el-date-picker v-model="oeForm.fineMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="精车负责人"><el-input v-model="oeForm.fineImprovePerson" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
             <el-form-item label="精车生产情况"><el-input v-model="oeForm.fineProduction" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
+          </template>
+          <!-- 涂装阶段 -->
+          <template v-else-if="currentPhase === 'paint'">
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="涂装上机日期"><el-date-picker v-model="oeForm.paintMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="涂装负责人"><el-input v-model="oeForm.paintImprovePerson" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+            </el-row>
             <el-form-item label="涂装生产情况"><el-input v-model="oeForm.paintProduction" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="涂装负责人"><el-input v-model="oeForm.paintImprovePerson" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
           </template>
           <!-- 实验/总结 -->
           <template v-else-if="currentPhase === 'test'">
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="冲击试验日期"><el-input v-model="oeForm.impactTestDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="冲击试验日期"><el-date-picker v-model="oeForm.impactTestDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="冲击试验结果"><el-input v-model="oeForm.impactTestResult" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
             <el-row :gutter="16">
-              <el-col :span="12"><el-form-item label="生产完成日期"><el-input v-model="oeForm.completeDate" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="生产完成日期"><el-date-picker v-model="oeForm.completeDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12">
                 <el-form-item label="全序是否完成">
                   <el-select v-model="oeForm.allProcessDone" style="width:100%" :disabled="!canEditPhase(currentStepIndex)">
@@ -346,7 +370,7 @@ export default {
       deadlineVisible: false,
       deadlineDate: null,
       stepResponsible: '',
-      stepNames: ['基础信息', '热工阶段', '旋压阶段', '粗车阶段', '精车/涂装阶段', '实验/总结'],
+      stepNames: ['基础信息', '压铸阶段', '旋压阶段', '热处理阶段', '粗车阶段', '精车阶段', '涂装阶段', '实验/总结'],
       userList: [],
       // OE 试制跟踪阶段数据（与上传对话框合并）
       oeForm: {},
@@ -378,12 +402,14 @@ export default {
     },
     getSteps(item) {
       return [
-        { name: '基础信息',      status: item.step1Status, deadline: this.formatDate(item.step1Deadline), responsible: item.step1Responsible },
-        { name: '热工阶段',      status: item.step2Status, deadline: this.formatDate(item.step2Deadline), responsible: item.step2Responsible },
-        { name: '旋压阶段',      status: item.step3Status, deadline: this.formatDate(item.step3Deadline), responsible: item.step3Responsible },
-        { name: '粗车阶段',      status: item.step4Status, deadline: this.formatDate(item.step4Deadline), responsible: item.step4Responsible },
-        { name: '精车/涂装阶段',  status: item.step5Status, deadline: this.formatDate(item.step5Deadline), responsible: item.step5Responsible },
-        { name: '实验/总结',      status: item.step6Status, deadline: this.formatDate(item.step6Deadline), responsible: item.step6Responsible }
+        { name: '基础信息',    status: item.step1Status, deadline: this.formatDate(item.step1Deadline), responsible: item.step1Responsible },
+        { name: '压铸阶段',    status: item.step2Status, deadline: this.formatDate(item.step2Deadline), responsible: item.step2Responsible },
+        { name: '旋压阶段',    status: item.step3Status, deadline: this.formatDate(item.step3Deadline), responsible: item.step3Responsible },
+        { name: '热处理阶段',  status: item.step4Status, deadline: this.formatDate(item.step4Deadline), responsible: item.step4Responsible },
+        { name: '粗车阶段',    status: item.step5Status, deadline: this.formatDate(item.step5Deadline), responsible: item.step5Responsible },
+        { name: '精车阶段',    status: item.step6Status, deadline: this.formatDate(item.step6Deadline), responsible: item.step6Responsible },
+        { name: '涂装阶段',    status: item.step7Status, deadline: this.formatDate(item.step7Deadline), responsible: item.step7Responsible },
+        { name: '实验/总结',   status: item.step8Status, deadline: this.formatDate(item.step8Deadline), responsible: item.step8Responsible }
       ]
     },
     handleQuery() {
@@ -423,7 +449,7 @@ export default {
         const updateData = { processId: item.processId }
         updateData[`step${stepNum}Status`] = 'done'
         // 自动激活下一个步骤
-        if (stepNum < 6) {
+        if (stepNum < 8) {
           const nextKey = `step${stepNum + 1}Status`
           if (!item[nextKey] || item[nextKey] === 'pending') {
             updateData[nextKey] = 'active'
@@ -452,10 +478,12 @@ export default {
     getStepIcon(name) {
       const icons = {
         '基础信息': 'el-icon-document',
-        '热工阶段': 'el-icon-s-opportunity',
+        '压铸阶段': 'el-icon-s-opportunity',
         '旋压阶段': 'el-icon-s-operation',
+        '热处理阶段': 'el-icon-sunny',
         '粗车阶段': 'el-icon-truck',
-        '精车/涂装阶段': 'el-icon-brush',
+        '精车阶段': 'el-icon-setting',
+        '涂装阶段': 'el-icon-brush',
         '实验/总结': 'el-icon-notebook-2'
       }
       return icons[name] || 'el-icon-more'
@@ -476,7 +504,9 @@ export default {
         step3Status: 'pending',
         step4Status: 'pending',
         step5Status: 'pending',
-        step6Status: 'pending'
+        step6Status: 'pending',
+        step7Status: 'pending',
+        step8Status: 'pending'
       }
       this.dialogVisible = true
     },
@@ -545,6 +575,15 @@ export default {
       }
     },
     submitUploadAndOE() {
+      // 自动同步附件照片到OE相应的图片字段
+      const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',');
+      if (imageUrls) {
+        if (this.currentPhase === 'hot') this.oeForm.hotCheckMeasureImage = imageUrls;
+        else if (this.currentPhase === 'spin') this.oeForm.spinFrontDistanceImage = imageUrls;
+        else if (this.currentPhase === 'heat') this.oeForm.heatFlowSheetImage = imageUrls;
+        else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
+      }
+
       const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
       save(this.oeForm).then(() => {
         this.$modal.msgSuccess('OE试制跟踪数据已保存')
@@ -722,15 +761,15 @@ export default {
       }
     },
     getPhaseKeyByIndex(index) {
-      const map = ['base', 'hot', 'spin', 'rough', 'finePaint', 'test']
+      const map = ['base', 'hot', 'spin', 'heat', 'rough', 'fine', 'paint', 'test']
       return map[index] || 'base'
     },
-    /** 判断当前用户是否有某节点的编辑权限（与OE试制跟踪、移动端联动，角色分配后三端同步生效） */
+    /** 判断当前用户是否有某节点的编辑权限 */
     canEditPhase(index) {
       const perms = this.$store.getters.permissions || []
       if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit') || perms.includes('tech:process:edit')) return true
-      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
-      return index >= 0 && index < 6 && perms.includes(phasePerms[index])
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:heat:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:fine:edit', 'tech:trial:phase:paint:edit', 'tech:trial:phase:test:edit']
+      return index >= 0 && index < 8 && perms.includes(phasePerms[index])
     }
   }
 }

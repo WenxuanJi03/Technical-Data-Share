@@ -2,6 +2,7 @@ package com.ruoyi.tech.mapper;
 
 import java.util.List;
 import com.ruoyi.tech.domain.TechTrialProcess;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -10,12 +11,13 @@ import org.apache.ibatis.annotations.Param;
  * @author ruoyi
  * @date 2026-02-02
  */
-public interface TechTrialProcessMapper 
-{
+@Mapper
+public interface TechTrialProcessMapper {
     /**
      * 检查用户是否有逾期任务（截止日期 <= 今天 且 步骤未完成）
      */
     public int checkUserOverdue(@Param("userName") String userName);
+
     /**
      * 查询试制流程记录
      * 
@@ -31,6 +33,14 @@ public interface TechTrialProcessMapper
      * @return 试制流程记录集合
      */
     public List<TechTrialProcess> selectTechTrialProcessList(TechTrialProcess techTrialProcess);
+
+    /**
+     * 按模号精确查询试制流程记录（仅返回一条）
+     *
+     * @param moldCode 模号
+     * @return 试制流程记录
+     */
+    public TechTrialProcess selectTechTrialProcessByMoldCode(String moldCode);
 
     /**
      * 新增试制流程记录

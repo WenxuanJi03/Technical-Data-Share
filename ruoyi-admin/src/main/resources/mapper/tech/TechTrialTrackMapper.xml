@@ -26,12 +26,17 @@
         <result property="spinImprovePerson"  column="spin_improve_person"  />
         <result property="spinFrontDistanceImage" column="spin_front_distance_image" />
         <result property="spinImproveStatus" column="spin_improve_status" />
+        <result property="heatReceiveCount"  column="heat_receive_count"  />
+        <result property="heatTransferCount" column="heat_transfer_count" />
+        <result property="heatTransferTime"  column="heat_transfer_time"  />
+        <result property="heatFlowSheetImage" column="heat_flow_sheet_image" />
         <result property="roughMachineDate"   column="rough_machine_date"   />
         <result property="roughProduction"    column="rough_production"     />
         <result property="roughImprovePerson" column="rough_improve_person" />
         <result property="improvePlan"        column="improve_plan"         />
         <result property="fineMachineDate"    column="fine_machine_date"    />
         <result property="fineProduction"     column="fine_production"      />
+        <result property="fineImprovePerson"  column="fine_improve_person"  />
         <result property="paintMachineDate"   column="paint_machine_date"   />
         <result property="paintProduction"    column="paint_production"     />
         <result property="paintImprovePerson" column="paint_improve_person" />
@@ -63,8 +68,9 @@
                spin_machine_date, spin_machine_station, spin_production, mold_modify_record, spin_improve_person,
                spin_front_distance_image,
                spin_improve_status,
+               heat_receive_count, heat_transfer_count, heat_transfer_time, heat_flow_sheet_image,
                rough_machine_date, rough_production, rough_improve_person, improve_plan,
-               fine_machine_date, fine_production, paint_machine_date, paint_production, paint_improve_person,
+               fine_machine_date, fine_production, fine_improve_person, paint_machine_date, paint_production, paint_improve_person,
                paint_flow_sheet_image,
                impact_test_date, impact_test_result, test_description, test_close_status,
                complete_date, fail_product_trace, fail_analysis,
@@ -96,6 +102,13 @@
         <include refid="selectVo"/> where track_id = #{trackId}
     </select>
 
+    <select id="selectTechTrialTrackByMoldCode" parameterType="String" resultMap="TechTrialTrackResult">
+        <include refid="selectVo"/>
+        where mold_code = #{moldCode} and del_flag = '0'
+        order by track_id desc
+        limit 1
+    </select>
+
     <insert id="insertTechTrialTrack" parameterType="TechTrialTrack" useGeneratedKeys="true" keyProperty="trackId">
         insert into tech_trial_track
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -121,12 +134,17 @@
             <if test="spinImprovePerson != null">spin_improve_person,</if>
             <if test="spinFrontDistanceImage != null">spin_front_distance_image,</if>
             <if test="spinImproveStatus != null">spin_improve_status,</if>
+            <if test="heatReceiveCount != null">heat_receive_count,</if>
+            <if test="heatTransferCount != null">heat_transfer_count,</if>
+            <if test="heatTransferTime != null">heat_transfer_time,</if>
+            <if test="heatFlowSheetImage != null">heat_flow_sheet_image,</if>
             <if test="roughMachineDate != null">rough_machine_date,</if>
             <if test="roughProduction != null">rough_production,</if>
             <if test="roughImprovePerson != null">rough_improve_person,</if>
             <if test="improvePlan != null">improve_plan,</if>
             <if test="fineMachineDate != null">fine_machine_date,</if>
             <if test="fineProduction != null">fine_production,</if>
+            <if test="fineImprovePerson != null">fine_improve_person,</if>
             <if test="paintMachineDate != null">paint_machine_date,</if>
             <if test="paintProduction != null">paint_production,</if>
             <if test="paintImprovePerson != null">paint_improve_person,</if>
@@ -169,12 +187,17 @@
             <if test="spinImprovePerson != null">#{spinImprovePerson},</if>
             <if test="spinFrontDistanceImage != null">#{spinFrontDistanceImage},</if>
             <if test="spinImproveStatus != null">#{spinImproveStatus},</if>
+            <if test="heatReceiveCount != null">#{heatReceiveCount},</if>
+            <if test="heatTransferCount != null">#{heatTransferCount},</if>
+            <if test="heatTransferTime != null">#{heatTransferTime},</if>
+            <if test="heatFlowSheetImage != null">#{heatFlowSheetImage},</if>
             <if test="roughMachineDate != null">#{roughMachineDate},</if>
             <if test="roughProduction != null">#{roughProduction},</if>
             <if test="roughImprovePerson != null">#{roughImprovePerson},</if>
             <if test="improvePlan != null">#{improvePlan},</if>
             <if test="fineMachineDate != null">#{fineMachineDate},</if>
             <if test="fineProduction != null">#{fineProduction},</if>
+            <if test="fineImprovePerson != null">#{fineImprovePerson},</if>
             <if test="paintMachineDate != null">#{paintMachineDate},</if>
             <if test="paintProduction != null">#{paintProduction},</if>
             <if test="paintImprovePerson != null">#{paintImprovePerson},</if>
@@ -221,12 +244,17 @@
             <if test="spinImprovePerson != null">spin_improve_person = #{spinImprovePerson},</if>
             <if test="spinFrontDistanceImage != null">spin_front_distance_image = #{spinFrontDistanceImage},</if>
             <if test="spinImproveStatus != null">spin_improve_status = #{spinImproveStatus},</if>
+            <if test="heatReceiveCount != null">heat_receive_count = #{heatReceiveCount},</if>
+            <if test="heatTransferCount != null">heat_transfer_count = #{heatTransferCount},</if>
+            <if test="heatTransferTime != null">heat_transfer_time = #{heatTransferTime},</if>
+            <if test="heatFlowSheetImage != null">heat_flow_sheet_image = #{heatFlowSheetImage},</if>
             <if test="roughMachineDate != null">rough_machine_date = #{roughMachineDate},</if>
             <if test="roughProduction != null">rough_production = #{roughProduction},</if>
             <if test="roughImprovePerson != null">rough_improve_person = #{roughImprovePerson},</if>
             <if test="improvePlan != null">improve_plan = #{improvePlan},</if>
             <if test="fineMachineDate != null">fine_machine_date = #{fineMachineDate},</if>
             <if test="fineProduction != null">fine_production = #{fineProduction},</if>
+            <if test="fineImprovePerson != null">fine_improve_person = #{fineImprovePerson},</if>
             <if test="paintMachineDate != null">paint_machine_date = #{paintMachineDate},</if>
             <if test="paintProduction != null">paint_production = #{paintProduction},</if>
             <if test="paintImprovePerson != null">paint_improve_person = #{paintImprovePerson},</if>

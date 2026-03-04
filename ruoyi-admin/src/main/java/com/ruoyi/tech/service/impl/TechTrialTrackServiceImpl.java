@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.ruoyi.tech.domain.TechTrialProcess;
+import com.ruoyi.tech.mapper.TechTrialProcessMapper;
 import com.ruoyi.tech.mapper.TechTrialTrackMapper;
 import com.ruoyi.tech.domain.TechTrialTrack;
 import com.ruoyi.tech.service.ITechTrialTrackService;
@@ -15,9 +18,17 @@ import com.ruoyi.tech.service.ITechTrialTrackService;
 @Service
 public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
     private static final Logger log = LoggerFactory.getLogger(TechTrialTrackServiceImpl.class);
+    private static final String TRACK_DONE = "是";
+    private static final String PROCESS_DONE = "done";
+    private static final String PROCESS_ACTIVE = "active";
+    private static final String PROCESS_PENDING = "pending";
+    private static final String SYNC_DESCRIPTION = "由OE试制跟踪自动同步创建";
 
     @Autowired
     private TechTrialTrackMapper techTrialTrackMapper;
+
+    @Autowired
+    private TechTrialProcessMapper techTrialProcessMapper;
 
     @Override
     public TechTrialTrack selectTechTrialTrackByTrackId(Long trackId) {
@@ -30,15 +41,35 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int insertTechTrialTrack(TechTrialTrack t) {
+        normalizeMoldCode(t);
         t.setCreateTime(DateUtils.getNowDate());
-        return techTrialTrackMapper.insertTechTrialTrack(t);
+        int rows = techTrialTrackMapper.insertTechTrialTrack(t);
+        if (rows > 0) {
+            syncTrialProcess(t, null);
+        }
+        return rows;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int updateTechTrialTrack(TechTrialTrack t) {
+        TechTrialTrack beforeUpdate = null;
+        if (t.getTrackId() != null) {
+            beforeUpdate = techTrialTrackMapper.selectTechTrialTrackByTrackId(t.getTrackId());
+        }
+        normalizeMoldCode(t);
         t.setUpdateTime(DateUtils.getNowDate());
-        return techTrialTrackMapper.updateTechTrialTrack(t);
+        int rows = techTrialTrackMapper.updateTechTrialTrack(t);
+        if (rows > 0 && t.getTrackId() != null) {
+            TechTrialTrack latest = techTrialTrackMapper.selectTechTrialTrackByTrackId(t.getTrackId());
+            if (latest != null) {
+                String oldMoldCode = beforeUpdate == null ? null : beforeUpdate.getMoldCode();
+                syncTrialProcess(latest, oldMoldCode);
+            }
+        }
+        return rows;
     }
 
     @Override
@@ -96,6 +127,7 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
                         track.setUpdateBy(operName);
                         track.setUpdateTime(DateUtils.getNowDate());
                         techTrialTrackMapper.updateTechTrialTrack(track);
+                        syncTrialProcess(track, exist.getMoldCode());
                         successNum++;
                         log.info("更新成功: 模号 {} (ID: {})", code, exist.getTrackId());
                         successMsg.append("<br/>").append(successNum).append("、模号 ").append(code)
@@ -108,6 +140,7 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
                     }
                 } else {
                     techTrialTrackMapper.insertTechTrialTrack(track);
+                    syncTrialProcess(track, null);
                     successNum++;
                     log.info("新增成功: 模号 {}", code);
                     successMsg.append("<br/>").append(successNum).append("、模号 ").append(code)
@@ -159,5 +192,104 @@ public class TechTrialTrackServiceImpl implements ITechTrialTrackService {
         }
         Long[] ids = list.stream().map(TechTrialTrack::getTrackId).toArray(Long[]::new);
         return techTrialTrackMapper.deleteTechTrialTrackByTrackIds(ids);
+    }
+
+    private void normalizeMoldCode(TechTrialTrack techTrialTrack) {
+        if (techTrialTrack == null || techTrialTrack.getMoldCode() == null) {
+            return;
+        }
+        techTrialTrack.setMoldCode(techTrialTrack.getMoldCode().trim());
+    }
+
+    private void syncTrialProcess(TechTrialTrack techTrialTrack, String oldMoldCode) {
+        String moldCode = StringUtils.trimToNull(techTrialTrack.getMoldCode());
+        if (moldCode == null) {
+            return;
+        }
+
+        TechTrialProcess existed = techTrialProcessMapper.selectTechTrialProcessByMoldCode(moldCode);
+        if (existed == null) {
+            String oldCode = StringUtils.trimToNull(oldMoldCode);
+            if (oldCode != null && !StringUtils.equals(oldCode, moldCode)) {
+                existed = techTrialProcessMapper.selectTechTrialProcessByMoldCode(oldCode);
+            }
+        }
+
+        if (existed == null) {
+            TechTrialProcess createData = new TechTrialProcess();
+            createData.setMoldCode(moldCode);
+            createData.setInitiator(resolveOperator(techTrialTrack));
+            createData.setDescription(SYNC_DESCRIPTION);
+            applyDefaultStatus(createData);
+            if (isTrackDone(techTrialTrack)) {
+                applyDoneStatus(createData);
+            }
+            createData.setCreateBy(resolveOperator(techTrialTrack));
+            createData.setCreateTime(DateUtils.getNowDate());
+            techTrialProcessMapper.insertTechTrialProcess(createData);
+            return;
+        }
+
+        TechTrialProcess updateData = new TechTrialProcess();
+        updateData.setProcessId(existed.getProcessId());
+        updateData.setMoldCode(moldCode);
+        updateData.setUpdateBy(resolveOperator(techTrialTrack));
+        updateData.setUpdateTime(DateUtils.getNowDate());
+        if (isTrackDone(techTrialTrack) && !isProcessDone(existed)) {
+            applyDoneStatus(updateData);
+        }
+        techTrialProcessMapper.updateTechTrialProcess(updateData);
+    }
+
+    private boolean isTrackDone(TechTrialTrack techTrialTrack) {
+        return StringUtils.equals(TRACK_DONE, StringUtils.trimToEmpty(techTrialTrack.getAllProcessDone()));
+    }
+
+    private boolean isProcessDone(TechTrialProcess techTrialProcess) {
+        return isDoneStatus(techTrialProcess.getStep1Status())
+                && isDoneStatus(techTrialProcess.getStep2Status())
+                && isDoneStatus(techTrialProcess.getStep3Status())
+                && isDoneStatus(techTrialProcess.getStep4Status())
+                && isDoneStatus(techTrialProcess.getStep5Status())
+                && isDoneStatus(techTrialProcess.getStep6Status())
+                && isDoneStatus(techTrialProcess.getStep7Status())
+                && isDoneStatus(techTrialProcess.getStep8Status());
+    }
+
+    private boolean isDoneStatus(String status) {
+        return StringUtils.equalsIgnoreCase(PROCESS_DONE, StringUtils.trimToEmpty(status));
+    }
+
+    private void applyDefaultStatus(TechTrialProcess techTrialProcess) {
+        techTrialProcess.setStatus(PROCESS_ACTIVE);
+        techTrialProcess.setStep1Status(PROCESS_ACTIVE);
+        techTrialProcess.setStep2Status(PROCESS_PENDING);
+        techTrialProcess.setStep3Status(PROCESS_PENDING);
+        techTrialProcess.setStep4Status(PROCESS_PENDING);
+        techTrialProcess.setStep5Status(PROCESS_PENDING);
+        techTrialProcess.setStep6Status(PROCESS_PENDING);
+        techTrialProcess.setStep7Status(PROCESS_PENDING);
+        techTrialProcess.setStep8Status(PROCESS_PENDING);
+    }
+
+    private void applyDoneStatus(TechTrialProcess techTrialProcess) {
+        techTrialProcess.setStatus(PROCESS_DONE);
+        techTrialProcess.setStep1Status(PROCESS_DONE);
+        techTrialProcess.setStep2Status(PROCESS_DONE);
+        techTrialProcess.setStep3Status(PROCESS_DONE);
+        techTrialProcess.setStep4Status(PROCESS_DONE);
+        techTrialProcess.setStep5Status(PROCESS_DONE);
+        techTrialProcess.setStep6Status(PROCESS_DONE);
+        techTrialProcess.setStep7Status(PROCESS_DONE);
+        techTrialProcess.setStep8Status(PROCESS_DONE);
+    }
+
+    private String resolveOperator(TechTrialTrack techTrialTrack) {
+        String operator = StringUtils.trimToNull(techTrialTrack.getUpdateBy());
+        if (operator != null) {
+            return operator;
+        }
+        operator = StringUtils.trimToNull(techTrialTrack.getCreateBy());
+        return operator == null ? "system" : operator;
     }
 }

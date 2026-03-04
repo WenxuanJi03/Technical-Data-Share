@@ -285,8 +285,24 @@
               <input class="oe-input" v-model="oeForm.machineCount" type="number" placeholder="请输入上机次数" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
+              <text class="oe-label">模具类型</text>
+              <input class="oe-input" v-model="oeForm.moldType" placeholder="首模/改模等" :disabled="!canEditPhase(currentStepIndex)" />
+            </view>
+            <view class="oe-form-item">
+              <text class="oe-label">表面状态</text>
+              <input class="oe-input" v-model="oeForm.surfaceStatus" placeholder="精车/全涂等" :disabled="!canEditPhase(currentStepIndex)" />
+            </view>
+            <view class="oe-form-item">
+              <text class="oe-label">上机类型</text>
+              <input class="oe-input" v-model="oeForm.machineType" placeholder="小批量/量产等" :disabled="!canEditPhase(currentStepIndex)" />
+            </view>
+            <view class="oe-form-item">
               <text class="oe-label">预计上机时间</text>
-              <input class="oe-input" v-model="oeForm.planMachineTime" placeholder="预计上机时间" :disabled="!canEditPhase(currentStepIndex)" />
+              <picker mode="date" :value="oeForm.planMachineTime || ''" @change="$set(oeForm, 'planMachineTime', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                  <text :style="{ color: oeForm.planMachineTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.planMachineTime || 'YYYY-MM-DD' }}</text>
+                </view>
+              </picker>
             </view>
           </template>
 
@@ -294,8 +310,12 @@
           <template v-else-if="currentPhase === 'hot'">
             <view class="oe-form-row">
               <view class="oe-form-item half">
-                <text class="oe-label">热工上机日期</text>
-                <input class="oe-input" v-model="oeForm.hotMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <text class="oe-label">压铸上机日期</text>
+                <picker mode="date" :value="oeForm.hotMachineDate || ''" @change="$set(oeForm, 'hotMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.hotMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.hotMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">机台</text>
@@ -331,7 +351,11 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">旋压上机日期</text>
-                <input class="oe-input" v-model="oeForm.spinMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.spinMachineDate || ''" @change="$set(oeForm, 'spinMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.spinMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.spinMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">旋压机台</text>
@@ -357,7 +381,11 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">粗车上机日期</text>
-                <input class="oe-input" v-model="oeForm.roughMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.roughMachineDate || ''" @change="$set(oeForm, 'roughMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.roughMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.roughMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">负责人</text>
@@ -379,11 +407,19 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">精车上机日期</text>
-                <input class="oe-input" v-model="oeForm.fineMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.fineMachineDate || ''" @change="$set(oeForm, 'fineMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.fineMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.fineMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">涂装上机日期</text>
-                <input class="oe-input" v-model="oeForm.paintMachineDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.paintMachineDate || ''" @change="$set(oeForm, 'paintMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.paintMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.paintMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
             </view>
             <view class="oe-form-item">
@@ -405,7 +441,11 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验日期</text>
-                <input class="oe-input" v-model="oeForm.impactTestDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.impactTestDate || ''" @change="$set(oeForm, 'impactTestDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.impactTestDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.impactTestDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验结果</text>
@@ -415,7 +455,11 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">生产完成日期</text>
-                <input class="oe-input" v-model="oeForm.completeDate" placeholder="YYYY-MM-DD" :disabled="!canEditPhase(currentStepIndex)" />
+                <picker mode="date" :value="oeForm.completeDate || ''" @change="$set(oeForm, 'completeDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.completeDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.completeDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">全序是否完成</text>
@@ -961,6 +1005,16 @@ export default {
     submitOE() {
       if (this.oeLoading) return
       this.oeLoading = true
+
+      // 自定同步图片到OE轨道字段
+      const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',');
+      if (imageUrls) {
+        if (this.currentPhase === 'hot') this.oeForm.hotCheckMeasureImage = imageUrls;
+        else if (this.currentPhase === 'spin') this.oeForm.spinFrontDistanceImage = imageUrls;
+        else if (this.currentPhase === 'heat') this.oeForm.heatFlowSheetImage = imageUrls;
+        else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
+      }
+
       const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
       save(this.oeForm).then(() => {
         uni.showToast({ title: 'OE数据已保存', icon: 'success' })

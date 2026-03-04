@@ -34,29 +34,29 @@ public class TechTrialTrack extends BaseEntity {
     @Excel(name = "预上机时间", dateFormat = "yyyy-MM-dd")
     private String planMachineTime;
 
-    // ========== 热工阶段 ==========
-    @Excel(name = "热工上机日期", dateFormat = "yyyy-MM-dd")
+    // ========== 压铸阶段（原热工） ==========
+    @Excel(name = "压铸上机日期", dateFormat = "yyyy-MM-dd")
     private String hotMachineDate;
 
     @Excel(name = "保压")
     private String roundKeepTime;
 
-    @Excel(name = "热工生产情况")
+    @Excel(name = "压铸生产情况")
     private String hotProduction;
 
     @Excel(name = "改善记录")
     private String improveRecord;
 
-    @Excel(name = "热工改善负责人")
+    @Excel(name = "压铸改善负责人")
     private String hotImprovePerson;
 
     @Excel(name = "机台")
     private String hotMachineStation;
 
-    @Excel(name = "热工检查站首件测量数据")
+    @Excel(name = "压铸检查站首件测量数据")
     private String hotCheckMeasureData;
 
-    @Excel(name = "热工检查站首件测量数据图片")
+    @Excel(name = "压铸检查站首件测量数据图片")
     private String hotCheckMeasureImage;
 
     // ========== 旋压阶段 ==========
@@ -81,6 +81,19 @@ public class TechTrialTrack extends BaseEntity {
     @Excel(name = "改善情况")
     private String spinImproveStatus;
 
+    // ========== 热处理阶段（新增，位于旋压与粗车之间） ==========
+    @Excel(name = "热处理-接收数量")
+    private Integer heatReceiveCount;
+
+    @Excel(name = "热处理-转下数量")
+    private Integer heatTransferCount;
+
+    @Excel(name = "热处理-下转时间", dateFormat = "yyyy-MM-dd")
+    private String heatTransferTime;
+
+    @Excel(name = "热处理-流转单照片")
+    private String heatFlowSheetImage;
+
     // ========== 粗车阶段 ==========
     @Excel(name = "粗车上机日期", dateFormat = "yyyy-MM-dd")
     private String roughMachineDate;
@@ -94,13 +107,17 @@ public class TechTrialTrack extends BaseEntity {
     @Excel(name = "改善方案及改善情况")
     private String improvePlan;
 
-    // ========== 精车+涂装阶段 ==========
+    // ========== 精车阶段 ==========
     @Excel(name = "精车上机日期", dateFormat = "yyyy-MM-dd")
     private String fineMachineDate;
 
     @Excel(name = "精车生产情况")
     private String fineProduction;
 
+    @Excel(name = "精车负责人")
+    private String fineImprovePerson;
+
+    // ========== 涂装阶段 ==========
     @Excel(name = "涂装上机日期", dateFormat = "yyyy-MM-dd")
     private String paintMachineDate;
 
@@ -492,6 +509,46 @@ public class TechTrialTrack extends BaseEntity {
 
     public void setSpinImproveStatus(String spinImproveStatus) {
         this.spinImproveStatus = spinImproveStatus;
+    }
+
+    public Integer getHeatReceiveCount() {
+        return heatReceiveCount;
+    }
+
+    public void setHeatReceiveCount(Integer heatReceiveCount) {
+        this.heatReceiveCount = heatReceiveCount;
+    }
+
+    public Integer getHeatTransferCount() {
+        return heatTransferCount;
+    }
+
+    public void setHeatTransferCount(Integer heatTransferCount) {
+        this.heatTransferCount = heatTransferCount;
+    }
+
+    public String getHeatTransferTime() {
+        return heatTransferTime;
+    }
+
+    public void setHeatTransferTime(String heatTransferTime) {
+        this.heatTransferTime = heatTransferTime;
+    }
+
+    public String getHeatFlowSheetImage() {
+        return heatFlowSheetImage;
+    }
+
+    public void setHeatFlowSheetImage(String heatFlowSheetImage) {
+        this.heatFlowSheetImage = heatFlowSheetImage;
+    }
+
+    public String getFineImprovePerson() {
+        return fineImprovePerson;
+    }
+
+    public void setFineImprovePerson(String fineImprovePerson) {
+        this.fineImprovePerson = fineImprovePerson;
     }
 
     public String getTestDescription() {
