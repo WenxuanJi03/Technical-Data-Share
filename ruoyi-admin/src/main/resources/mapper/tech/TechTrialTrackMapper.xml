@@ -11,6 +11,7 @@
         <result property="machineType"        column="machine_type"         />
         <result property="machineCount"       column="machine_count"        />
         <result property="planMachineTime"    column="plan_machine_time"    />
+        <result property="baseImage"          column="base_image"           />
         <result property="hotMachineDate"     column="hot_machine_date"     />
         <result property="roundKeepTime"      column="round_keep_time"      />
         <result property="hotProduction"      column="hot_production"       />
@@ -34,9 +35,11 @@
         <result property="roughProduction"    column="rough_production"     />
         <result property="roughImprovePerson" column="rough_improve_person" />
         <result property="improvePlan"        column="improve_plan"         />
+        <result property="roughImage"         column="rough_image"          />
         <result property="fineMachineDate"    column="fine_machine_date"    />
         <result property="fineProduction"     column="fine_production"      />
         <result property="fineImprovePerson"  column="fine_improve_person"  />
+        <result property="fineImage"          column="fine_image"           />
         <result property="paintMachineDate"   column="paint_machine_date"   />
         <result property="paintProduction"    column="paint_production"     />
         <result property="paintImprovePerson" column="paint_improve_person" />
@@ -52,6 +55,7 @@
         <result property="improveMeasures"    column="improve_measures"     />
         <result property="lessonsLearned"     column="lessons_learned"      />
         <result property="allProcessDone"     column="all_process_done"     />
+        <result property="testImage"          column="test_image"           />
         <result property="createBy"           column="create_by"            />
         <result property="createTime"         column="create_time"          />
         <result property="updateBy"           column="update_by"            />
@@ -62,19 +66,19 @@
 
     <sql id="selectVo">
         select track_id, mold_code, product_spec, mold_type, surface_status, machine_type,
-               machine_count, plan_machine_time, hot_machine_date, round_keep_time,
+               machine_count, plan_machine_time, base_image, hot_machine_date, round_keep_time,
                hot_production, improve_record, hot_improve_person,
                hot_machine_station, hot_check_measure_data, hot_check_measure_image,
                spin_machine_date, spin_machine_station, spin_production, mold_modify_record, spin_improve_person,
                spin_front_distance_image,
                spin_improve_status,
                heat_receive_count, heat_transfer_count, heat_transfer_time, heat_flow_sheet_image,
-               rough_machine_date, rough_production, rough_improve_person, improve_plan,
-               fine_machine_date, fine_production, fine_improve_person, paint_machine_date, paint_production, paint_improve_person,
+               rough_machine_date, rough_production, rough_improve_person, improve_plan, rough_image,
+               fine_machine_date, fine_production, fine_improve_person, fine_image, paint_machine_date, paint_production, paint_improve_person,
                paint_flow_sheet_image,
                impact_test_date, impact_test_result, test_description, test_close_status,
                complete_date, fail_product_trace, fail_analysis,
-               production_summary, improve_measures, lessons_learned, all_process_done,
+               production_summary, improve_measures, lessons_learned, all_process_done, test_image,
                create_by, create_time, update_by, update_time, del_flag, remark
         from tech_trial_track
     </sql>
@@ -119,6 +123,7 @@
             <if test="machineType != null">machine_type,</if>
             <if test="machineCount != null">machine_count,</if>
             <if test="planMachineTime != null">plan_machine_time,</if>
+            <if test="baseImage != null">base_image,</if>
             <if test="hotMachineDate != null">hot_machine_date,</if>
             <if test="roundKeepTime != null">round_keep_time,</if>
             <if test="hotProduction != null">hot_production,</if>
@@ -142,9 +147,11 @@
             <if test="roughProduction != null">rough_production,</if>
             <if test="roughImprovePerson != null">rough_improve_person,</if>
             <if test="improvePlan != null">improve_plan,</if>
+            <if test="roughImage != null">rough_image,</if>
             <if test="fineMachineDate != null">fine_machine_date,</if>
             <if test="fineProduction != null">fine_production,</if>
             <if test="fineImprovePerson != null">fine_improve_person,</if>
+            <if test="fineImage != null">fine_image,</if>
             <if test="paintMachineDate != null">paint_machine_date,</if>
             <if test="paintProduction != null">paint_production,</if>
             <if test="paintImprovePerson != null">paint_improve_person,</if>
@@ -160,6 +167,7 @@
             <if test="improveMeasures != null">improve_measures,</if>
             <if test="lessonsLearned != null">lessons_learned,</if>
             <if test="allProcessDone != null">all_process_done,</if>
+            <if test="testImage != null">test_image,</if>
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
             <if test="remark != null">remark,</if>
@@ -172,6 +180,7 @@
             <if test="machineType != null">#{machineType},</if>
             <if test="machineCount != null">#{machineCount},</if>
             <if test="planMachineTime != null">#{planMachineTime},</if>
+            <if test="baseImage != null">#{baseImage},</if>
             <if test="hotMachineDate != null">#{hotMachineDate},</if>
             <if test="roundKeepTime != null">#{roundKeepTime},</if>
             <if test="hotProduction != null">#{hotProduction},</if>
@@ -195,9 +204,11 @@
             <if test="roughProduction != null">#{roughProduction},</if>
             <if test="roughImprovePerson != null">#{roughImprovePerson},</if>
             <if test="improvePlan != null">#{improvePlan},</if>
+            <if test="roughImage != null">#{roughImage},</if>
             <if test="fineMachineDate != null">#{fineMachineDate},</if>
             <if test="fineProduction != null">#{fineProduction},</if>
             <if test="fineImprovePerson != null">#{fineImprovePerson},</if>
+            <if test="fineImage != null">#{fineImage},</if>
             <if test="paintMachineDate != null">#{paintMachineDate},</if>
             <if test="paintProduction != null">#{paintProduction},</if>
             <if test="paintImprovePerson != null">#{paintImprovePerson},</if>
@@ -213,6 +224,7 @@
             <if test="improveMeasures != null">#{improveMeasures},</if>
             <if test="lessonsLearned != null">#{lessonsLearned},</if>
             <if test="allProcessDone != null">#{allProcessDone},</if>
+            <if test="testImage != null">#{testImage},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
             <if test="remark != null">#{remark},</if>
@@ -229,6 +241,7 @@
             <if test="machineType != null">machine_type = #{machineType},</if>
             <if test="machineCount != null">machine_count = #{machineCount},</if>
             <if test="planMachineTime != null">plan_machine_time = #{planMachineTime},</if>
+            <if test="baseImage != null">base_image = #{baseImage},</if>
             <if test="hotMachineDate != null">hot_machine_date = #{hotMachineDate},</if>
             <if test="roundKeepTime != null">round_keep_time = #{roundKeepTime},</if>
             <if test="hotProduction != null">hot_production = #{hotProduction},</if>
@@ -252,9 +265,11 @@
             <if test="roughProduction != null">rough_production = #{roughProduction},</if>
             <if test="roughImprovePerson != null">rough_improve_person = #{roughImprovePerson},</if>
             <if test="improvePlan != null">improve_plan = #{improvePlan},</if>
+            <if test="roughImage != null">rough_image = #{roughImage},</if>
             <if test="fineMachineDate != null">fine_machine_date = #{fineMachineDate},</if>
             <if test="fineProduction != null">fine_production = #{fineProduction},</if>
             <if test="fineImprovePerson != null">fine_improve_person = #{fineImprovePerson},</if>
+            <if test="fineImage != null">fine_image = #{fineImage},</if>
             <if test="paintMachineDate != null">paint_machine_date = #{paintMachineDate},</if>
             <if test="paintProduction != null">paint_production = #{paintProduction},</if>
             <if test="paintImprovePerson != null">paint_improve_person = #{paintImprovePerson},</if>
@@ -270,6 +285,7 @@
             <if test="improveMeasures != null">improve_measures = #{improveMeasures},</if>
             <if test="lessonsLearned != null">lessons_learned = #{lessonsLearned},</if>
             <if test="allProcessDone != null">all_process_done = #{allProcessDone},</if>
+            <if test="testImage != null">test_image = #{testImage},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
             <if test="remark != null">remark = #{remark},</if>

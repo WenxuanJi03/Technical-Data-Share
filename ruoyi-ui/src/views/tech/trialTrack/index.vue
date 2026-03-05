@@ -191,6 +191,10 @@
             <el-descriptions-item label="产品规格">{{ detail.productSpec || '-' }}</el-descriptions-item>
             <el-descriptions-item label="上机次数">{{ detail.machineCount || '-' }}</el-descriptions-item>
             <el-descriptions-item label="预计上机">{{ detail.planMachineTime || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="阶段图片">
+              <el-link v-if="detail.baseImage" type="primary" :underline="false" @click="openGallery(detail.baseImage)">查看图片 ({{ countImages(detail.baseImage) }}张)</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -202,14 +206,19 @@
             <el-descriptions-item label="机台">{{ detail.hotMachineStation || '-' }}</el-descriptions-item>
             <el-descriptions-item label="保压时间">{{ detail.roundKeepTime || '-' }}</el-descriptions-item>
             <el-descriptions-item label="检查站测量数据">
-              <el-link v-if="detail.hotCheckMeasureData" type="primary" :underline="false" @click="openLightbox(detail.hotCheckMeasureImage)">{{ detail.hotCheckMeasureData }}</el-link>
+              <el-link v-if="detail.hotCheckMeasureData" type="primary" :underline="false" @click="openGallery(detail.hotCheckMeasureImage)">{{ detail.hotCheckMeasureData }}</el-link>
               <span v-else>-</span>
             </el-descriptions-item>
             <el-descriptions-item label="生产情况" :span="2">{{ detail.hotProduction || '-' }}</el-descriptions-item>
             <el-descriptions-item label="改善记录" :span="2">{{ detail.improveRecord || '-' }}</el-descriptions-item>
             <el-descriptions-item label="负责人">{{ detail.hotImprovePerson || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="阶段图片" :span="2">
+              <el-link v-if="detail.hotCheckMeasureImage" type="primary" :underline="false" @click="openGallery(detail.hotCheckMeasureImage)">查看图片 ({{ countImages(detail.hotCheckMeasureImage) }}张)</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
           </el-descriptions>
         </div>
+
 
         <!-- 旋压阶段 -->
         <div class="detail-section">
@@ -218,7 +227,7 @@
             <el-descriptions-item label="上机日期">{{ detail.spinMachineDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="旋压机台">{{ detail.spinMachineStation || '-' }}</el-descriptions-item>
             <el-descriptions-item label="前距图片">
-              <el-link v-if="detail.spinFrontDistanceImage" type="primary" :underline="false" @click="openLightbox(detail.spinFrontDistanceImage)">查看图片</el-link>
+              <el-link v-if="detail.spinFrontDistanceImage" type="primary" :underline="false" @click="openGallery(detail.spinFrontDistanceImage)">查看图片 ({{ countImages(detail.spinFrontDistanceImage) }}张)</el-link>
               <span v-else>-</span>
             </el-descriptions-item>
             <el-descriptions-item label="生产情况" :span="2">{{ detail.spinProduction || '-' }}</el-descriptions-item>
@@ -235,7 +244,7 @@
             <el-descriptions-item label="接收数量">{{ detail.heatReceiveCount != null ? detail.heatReceiveCount : '-' }}</el-descriptions-item>
             <el-descriptions-item label="转下数量">{{ detail.heatTransferCount != null ? detail.heatTransferCount : '-' }}</el-descriptions-item>
             <el-descriptions-item label="流转单照片">
-              <el-link v-if="detail.heatFlowSheetImage" type="primary" :underline="false" @click="openLightbox(detail.heatFlowSheetImage)">查看照片</el-link>
+              <el-link v-if="detail.heatFlowSheetImage" type="primary" :underline="false" @click="openGallery(detail.heatFlowSheetImage)">查看照片 ({{ countImages(detail.heatFlowSheetImage) }}张)</el-link>
               <span v-else>-</span>
             </el-descriptions-item>
           </el-descriptions>
@@ -249,6 +258,10 @@
             <el-descriptions-item label="负责人">{{ detail.roughImprovePerson || '-' }}</el-descriptions-item>
             <el-descriptions-item label="生产情况" :span="2">{{ detail.roughProduction || '-' }}</el-descriptions-item>
             <el-descriptions-item label="改善方案" :span="2">{{ detail.improvePlan || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="阶段图片" :span="2">
+              <el-link v-if="detail.roughImage" type="primary" :underline="false" @click="openGallery(detail.roughImage)">查看图片 ({{ countImages(detail.roughImage) }}张)</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -259,6 +272,10 @@
             <el-descriptions-item label="精车上机">{{ detail.fineMachineDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="精车负责人">{{ detail.fineImprovePerson || '-' }}</el-descriptions-item>
             <el-descriptions-item label="精车情况" :span="2">{{ detail.fineProduction || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="阶段图片" :span="2">
+              <el-link v-if="detail.fineImage" type="primary" :underline="false" @click="openGallery(detail.fineImage)">查看图片 ({{ countImages(detail.fineImage) }}张)</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -270,7 +287,7 @@
             <el-descriptions-item label="涂装情况">{{ detail.paintProduction || '-' }}</el-descriptions-item>
             <el-descriptions-item label="涂装负责人">{{ detail.paintImprovePerson || '-' }}</el-descriptions-item>
             <el-descriptions-item label="流转单照片">
-              <el-link v-if="detail.paintFlowSheetImage" type="primary" :underline="false" @click="openLightbox(detail.paintFlowSheetImage)">查看照片</el-link>
+              <el-link v-if="detail.paintFlowSheetImage" type="primary" :underline="false" @click="openGallery(detail.paintFlowSheetImage)">查看照片 ({{ countImages(detail.paintFlowSheetImage) }}张)</el-link>
               <span v-else>-</span>
             </el-descriptions-item>
           </el-descriptions>
@@ -286,6 +303,10 @@
             <el-descriptions-item label="全序完成">{{ detail.allProcessDone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="失效分析" :span="2">{{ detail.failAnalysis || '-' }}</el-descriptions-item>
             <el-descriptions-item label="经验教训" :span="2">{{ detail.lessonsLearned || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="阶段图片" :span="2">
+              <el-link v-if="detail.testImage" type="primary" :underline="false" @click="openGallery(detail.testImage)">查看图片 ({{ countImages(detail.testImage) }}张)</el-link>
+              <span v-else>-</span>
+            </el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -296,9 +317,28 @@
       </div>
     </el-drawer>
 
-    <!-- Lightbox 图片预览 -->
-    <el-dialog :visible.sync="lightboxVisible" width="66vw" append-to-body :show-close="true" custom-class="lightbox-dialog" @close="lightboxVisible=false">
-      <img v-if="lightboxImageUrl" :src="baseUrl + lightboxImageUrl" style="width:100%;display:block;" />
+    <!-- 多图预览 Gallery -->
+    <el-dialog :visible.sync="lightboxVisible" width="720px" append-to-body :show-close="true" custom-class="gallery-dialog" @close="lightboxVisible=false" title="图片预览">
+      <div v-if="galleryImages.length" class="gallery-container">
+        <!-- 大图预览区 -->
+        <div class="gallery-main">
+          <img :src="baseUrl + galleryImages[galleryIndex]" class="gallery-main-img" />
+          <div class="gallery-counter">{{ galleryIndex + 1 }} / {{ galleryImages.length }}</div>
+          <el-button v-if="galleryImages.length > 1" class="gallery-prev" icon="el-icon-arrow-left" circle @click="galleryIndex = (galleryIndex - 1 + galleryImages.length) % galleryImages.length" />
+          <el-button v-if="galleryImages.length > 1" class="gallery-next" icon="el-icon-arrow-right" circle @click="galleryIndex = (galleryIndex + 1) % galleryImages.length" />
+        </div>
+        <!-- 缩略图列表 -->
+        <div class="gallery-thumbs" v-if="galleryImages.length > 1">
+          <img
+            v-for="(url, i) in galleryImages"
+            :key="i"
+            :src="baseUrl + url"
+            class="gallery-thumb"
+            :class="{ 'gallery-thumb-active': i === galleryIndex }"
+            @click="galleryIndex = i"
+          />
+        </div>
+      </div>
       <div v-else style="text-align:center;padding:40px;color:#909399">暂无图片</div>
     </el-dialog>
 
@@ -317,6 +357,7 @@
           <el-col :span="8"><el-form-item label="表面状态"><el-input v-model="form.surfaceStatus" placeholder="精车/全涂" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="上机类型"><el-input v-model="form.machineType" placeholder="小批量/量产" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item></el-col>
         </el-row>
+        <el-form-item label="基础阶段图片"><image-upload v-model="form.baseImage" :limit="9" :disabled="form.trackId && !canEditPhase(0)" /></el-form-item>
 
         <el-divider content-position="left">压铸阶段</el-divider>
         <el-row :gutter="20">
@@ -328,7 +369,7 @@
           <el-col :span="8"><el-form-item label="负责人"><el-input v-model="form.hotImprovePerson" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
           <el-col :span="16"><el-form-item label="测量数据"><el-input v-model="form.hotCheckMeasureData" placeholder="热工检查站首件测量数据" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="测量数据图片"><image-upload v-model="form.hotCheckMeasureImage" :limit="3" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
+        <el-form-item label="测量数据图片"><image-upload v-model="form.hotCheckMeasureImage" :limit="9" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
         <el-form-item label="生产情况"><el-input v-model="form.hotProduction" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
         <el-form-item label="改善记录"><el-input v-model="form.improveRecord" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(1)" /></el-form-item>
 
@@ -338,10 +379,10 @@
           <el-col :span="8"><el-form-item label="接收数量"><el-input v-model="form.heatReceiveCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="转下数量"><el-input v-model="form.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="流转单照片"><image-upload v-model="form.heatFlowSheetImage" :limit="3" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item>
+        <el-form-item label="流转单照片"><image-upload v-model="form.heatFlowSheetImage" :limit="9" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item>
 
         <el-divider content-position="left">旋压 / 粗车 / 精车 / 涂装</el-divider>
-        <el-form-item label="旋压前距图片"><image-upload v-model="form.spinFrontDistanceImage" :limit="3" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item>
+        <el-form-item label="旋压前距图片"><image-upload v-model="form.spinFrontDistanceImage" :limit="9" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item>
         <el-row :gutter="20">
           <el-col :span="8"><el-form-item label="旋压上机"><el-date-picker v-model="form.spinMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(2)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="粗车上机"><el-date-picker v-model="form.roughMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item></el-col>
@@ -352,7 +393,9 @@
           <el-col :span="8"><el-form-item label="涂装上机"><el-date-picker v-model="form.paintMachineDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(6)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="涂装负责人"><el-input v-model="form.paintImprovePerson" :disabled="form.trackId && !canEditPhase(6)" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="流转单照片"><image-upload v-model="form.paintFlowSheetImage" :limit="3" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item>
+        <el-form-item label="粗车阶段图片"><image-upload v-model="form.roughImage" :limit="9" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item>
+        <el-form-item label="精车阶段图片"><image-upload v-model="form.fineImage" :limit="9" :disabled="form.trackId && !canEditPhase(5)" /></el-form-item>
+        <el-form-item label="涂装流转单照片"><image-upload v-model="form.paintFlowSheetImage" :limit="9" :disabled="form.trackId && !canEditPhase(4)" /></el-form-item>
         <el-row :gutter="20">
           <el-col :span="8"><el-form-item label="完成日期"><el-date-picker v-model="form.completeDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(7)" /></el-form-item></el-col>
           <el-col :span="8">
@@ -363,6 +406,7 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-form-item label="实验阶段图片"><image-upload v-model="form.testImage" :limit="9" :disabled="form.trackId && !canEditPhase(7)" /></el-form-item>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" :disabled="form.trackId && !canEditPhase(5)" /></el-form-item>
       </el-form>
       <div slot="footer">
@@ -422,10 +466,11 @@ export default {
       // 导入
       importOpen: false, uploading: false, updateSupport: false, importMode: "raw", titleNum: 0,
       headers: { Authorization: "Bearer " + getToken() },
-      // Lightbox 图片预览
+      // Gallery 多图预览
       baseUrl: process.env.VUE_APP_BASE_API,
       lightboxVisible: false,
-      lightboxImageUrl: '',
+      galleryImages: [],
+      galleryIndex: 0,
     }
   },
   computed: {
@@ -508,13 +553,18 @@ export default {
       }).catch(() => {})
     },
     handleExport() { this.download('tech/trialTrack/export', { ...this.queryParams }, 'OE试制跟踪.xlsx') },
-    openLightbox(imageUrl) {
+    openGallery(imageUrl) {
       if (imageUrl) {
-        this.lightboxImageUrl = imageUrl.split(',')[0]
+        this.galleryImages = imageUrl.split(',').map(u => u.trim()).filter(Boolean)
+        this.galleryIndex = 0
         this.lightboxVisible = true
       } else {
         this.$modal.msgWarning('暂无图片')
       }
+    },
+    countImages(imageUrl) {
+      if (!imageUrl) return 0
+      return imageUrl.split(',').filter(u => u.trim()).length
     },
     canEditPhase(index) {
       const perms = this.$store.getters.permissions || []
@@ -572,6 +622,72 @@ export default {
 .section-title { font-size: 14px; font-weight: 600; color: #303133; margin-bottom: 8px; padding-left: 10px; border-left: 3px solid #409EFF; }
 .detail-actions { text-align: center; padding: 16px 0; border-top: 1px solid #ebeef5; margin-top: 8px; }
 .meta-wrap { word-break: break-all; white-space: normal; }
-::v-deep .lightbox-dialog .el-dialog__body { padding: 0; }
-::v-deep .lightbox-dialog .el-dialog__header { position: absolute; right: 0; z-index: 1; }
+
+/* ===== Gallery 多图预览 ===== */
+::v-deep .gallery-dialog .el-dialog__body { padding: 12px 16px; }
+.gallery-container { display: flex; flex-direction: column; gap: 10px; }
+.gallery-main {
+  position: relative;
+  text-align: center;
+  background: #000;
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gallery-main-img {
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+.gallery-counter {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.gallery-prev {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.75;
+  &:hover { opacity: 1; }
+}
+.gallery-next {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.75;
+  &:hover { opacity: 1; }
+}
+.gallery-thumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 4px 0;
+}
+.gallery-thumb {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  &:hover { border-color: #409EFF; }
+}
+.gallery-thumb-active {
+  border-color: #409EFF !important;
+}
 </style>

@@ -42,7 +42,9 @@
                 item.step3Status === 'done' &&
                 item.step4Status === 'done' &&
                 item.step5Status === 'done' &&
-                item.step6Status === 'done'
+                item.step6Status === 'done' &&
+                item.step7Status === 'done' &&
+                item.step8Status === 'done'
                   ? 'badge-done'
                   : (
                     item.step1Status !== 'done' &&
@@ -50,7 +52,9 @@
                     item.step3Status !== 'done' &&
                     item.step4Status !== 'done' &&
                     item.step5Status !== 'done' &&
-                    item.step6Status !== 'done'
+                    item.step6Status !== 'done' &&
+                    item.step7Status !== 'done' &&
+                    item.step8Status !== 'done'
                       ? 'badge-pending'
                       : 'badge-active'
                   )
@@ -71,26 +75,25 @@
           <text class="desc-text">{{ item.description }}</text>
         </view>
 
-        <!-- 水平进度指示器 -->
-        <view class="steps-progress">
+        <!-- 水平进度指示器与标签 -->
+        <view class="steps-progress-container">
           <view
             v-for="(step, idx) in getSteps(item)"
             :key="idx"
-            class="progress-dot-wrap"
+            class="step-col"
           >
+            <!-- 连接线 -->
+            <view class="progress-line-container" v-if="idx < 7">
+              <view class="progress-line" :class="{ 'line-done': step.status === 'done' }"></view>
+            </view>
+            <!-- 圆点 -->
             <view
               class="progress-dot"
               :class="step.status === 'done' ? 'dot-done' : (step.status === 'active' ? 'dot-active' : 'dot-pending')"
             >
               <text class="dot-icon">{{ step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : '○') }}</text>
             </view>
-            <view class="progress-line" v-if="idx < 5" :class="{ 'line-done': step.status === 'done' }"></view>
-          </view>
-        </view>
-
-        <!-- 步骤标签 -->
-        <view class="progress-labels">
-          <view v-for="(step, idx) in getSteps(item)" :key="idx" class="label-item">
+            <!-- 标签 -->
             <text
               class="label-text"
               :class="step.status === 'done' ? 'l-done' : (step.status === 'active' ? 'l-active' : '')"
@@ -298,9 +301,9 @@
             </view>
             <view class="oe-form-item">
               <text class="oe-label">预计上机时间</text>
-              <picker mode="date" :value="formatPickerDate(oeForm.planMachineTime)" @change="$set(oeForm, 'planMachineTime', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+              <picker mode="date" :value="formatPickerDate(oeForm.planMachineTime)" @change="onOEDateChange('planMachineTime', $event)" :disabled="!canEditPhase(currentStepIndex)">
                 <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                  <text :style="{ color: formatPickerDate(oeForm.planMachineTime) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.planMachineTime) || 'YYYY-MM-DD' }}</text>
+                  <text :style="{ color: oeForm.planMachineTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.planMachineTime || 'YYYY-MM-DD' }}</text>
                 </view>
               </picker>
             </view>
@@ -311,9 +314,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">压铸上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.hotMachineDate)" @change="$set(oeForm, 'hotMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.hotMachineDate)" @change="onOEDateChange('hotMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.hotMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.hotMachineDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.hotMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.hotMachineDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -351,9 +354,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">旋压上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.spinMachineDate)" @change="$set(oeForm, 'spinMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.spinMachineDate)" @change="onOEDateChange('spinMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.spinMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.spinMachineDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.spinMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.spinMachineDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -376,14 +379,36 @@
             </view>
           </template>
 
+          <!-- 热处理阶段 -->
+          <template v-else-if="currentPhase === 'heat'">
+            <view class="oe-form-row">
+              <view class="oe-form-item half">
+                <text class="oe-label">下转时间</text>
+                <picker mode="date" :value="formatPickerDate(oeForm.heatTransferTime)" @change="onOEDateChange('heatTransferTime', $event)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.heatTransferTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.heatTransferTime || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="oe-form-item half">
+                <text class="oe-label">接收数量</text>
+                <input class="oe-input" type="number" v-model="oeForm.heatReceiveCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
+              </view>
+            </view>
+            <view class="oe-form-item">
+              <text class="oe-label">转下数量</text>
+              <input class="oe-input" type="number" v-model="oeForm.heatTransferCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
+            </view>
+          </template>
+
           <!-- 粗车阶段 -->
           <template v-else-if="currentPhase === 'rough'">
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">粗车上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.roughMachineDate)" @change="$set(oeForm, 'roughMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.roughMachineDate)" @change="onOEDateChange('roughMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.roughMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.roughMachineDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.roughMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.roughMachineDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -402,37 +427,47 @@
             </view>
           </template>
 
-          <!-- 精车/涂装 -->
-          <template v-else-if="currentPhase === 'finePaint'">
+          <!-- 精车阶段 -->
+          <template v-else-if="currentPhase === 'fine'">
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">精车上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.fineMachineDate)" @change="$set(oeForm, 'fineMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.fineMachineDate)" @change="onOEDateChange('fineMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.fineMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.fineMachineDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.fineMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.fineMachineDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
               <view class="oe-form-item half">
-                <text class="oe-label">涂装上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.paintMachineDate)" @change="$set(oeForm, 'paintMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.paintMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.paintMachineDate) || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
+                <text class="oe-label">精车负责人</text>
+                <input class="oe-input" v-model="oeForm.fineImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">精车生产情况</text>
               <textarea class="oe-textarea" v-model="oeForm.fineProduction" placeholder="请输入精车生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
+          </template>
+
+          <!-- 涂装阶段 -->
+          <template v-else-if="currentPhase === 'paint'">
+            <view class="oe-form-row">
+              <view class="oe-form-item half">
+                <text class="oe-label">涂装上机日期</text>
+                <picker mode="date" :value="formatPickerDate(oeForm.paintMachineDate)" @change="onOEDateChange('paintMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
+                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
+                    <text :style="{ color: oeForm.paintMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.paintMachineDate || 'YYYY-MM-DD' }}</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="oe-form-item half">
+                <text class="oe-label">涂装负责人</text>
+                <input class="oe-input" v-model="oeForm.paintImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
+              </view>
+            </view>
             <view class="oe-form-item">
               <text class="oe-label">涂装生产情况</text>
               <textarea class="oe-textarea" v-model="oeForm.paintProduction" placeholder="请输入涂装生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">涂装负责人</text>
-              <input class="oe-input" v-model="oeForm.paintImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
 
@@ -441,9 +476,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.impactTestDate)" @change="$set(oeForm, 'impactTestDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.impactTestDate)" @change="onOEDateChange('impactTestDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.impactTestDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.impactTestDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.impactTestDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.impactTestDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -455,9 +490,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">生产完成日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.completeDate)" @change="$set(oeForm, 'completeDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.completeDate)" @change="onOEDateChange('completeDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: formatPickerDate(oeForm.completeDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.completeDate) || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: oeForm.completeDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.completeDate || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -704,7 +739,19 @@ export default {
       // 录入/上传弹窗
       uploadVisible: false,
       oeLoading: false,
-      oeForm: {},
+      oeForm: {
+        // Pre-initialize all date fields
+        planMachineTime: '',
+        hotMachineDate: '',
+        spinMachineDate: '',
+        heatTransferTime: '',
+        roughMachineDate: '',
+        fineMachineDate: '',
+        paintMachineDate: '',
+        impactTestDate: '',
+        completeDate: '',
+        allProcessDone: '否' // Also initialize this field
+      },
       currentPhase: 'base',
       historyFiles: [],
       uploadingFile: false,
@@ -798,24 +845,26 @@ export default {
     getSteps(item) {
       return [
         { name: '基础信息', shortName: '基础', status: item.step1Status, deadline: item.step1Deadline, responsible: item.step1Responsible },
-        { name: '热工阶段', shortName: '热工', status: item.step2Status, deadline: item.step2Deadline, responsible: item.step2Responsible },
+        { name: '压铸阶段', shortName: '压铸', status: item.step2Status, deadline: item.step2Deadline, responsible: item.step2Responsible },
         { name: '旋压阶段', shortName: '旋压', status: item.step3Status, deadline: item.step3Deadline, responsible: item.step3Responsible },
-        { name: '粗车阶段', shortName: '粗车', status: item.step4Status, deadline: item.step4Deadline, responsible: item.step4Responsible },
-        { name: '精车/涂装', shortName: '精车', status: item.step5Status, deadline: item.step5Deadline, responsible: item.step5Responsible },
-        { name: '实验/总结', shortName: '实验', status: item.step6Status, deadline: item.step6Deadline, responsible: item.step6Responsible }
+        { name: '热处理阶段', shortName: '热处理', status: item.step4Status, deadline: item.step4Deadline, responsible: item.step4Responsible },
+        { name: '粗车阶段', shortName: '粗车', status: item.step5Status, deadline: item.step5Deadline, responsible: item.step5Responsible },
+        { name: '精车阶段', shortName: '精车', status: item.step6Status, deadline: item.step6Deadline, responsible: item.step6Deadline },
+        { name: '涂装阶段', shortName: '涂装', status: item.step7Status, deadline: item.step7Deadline, responsible: item.step7Responsible },
+        { name: '实验/总结', shortName: '实验', status: item.step8Status, deadline: item.step8Deadline, responsible: item.step8Responsible }
       ]
     },
     getCardStatus(item) {
       const steps = this.getSteps(item)
       const doneCount = steps.filter(s => s.status === 'done').length
-      if (doneCount === 6) return '已完成'
+      if (doneCount === 8) return '已完成'
       if (doneCount === 0) return '未开始'
-      return `${doneCount}/6`
+      return `${doneCount}/8`
     },
     getCardStatusClass(item) {
       const steps = this.getSteps(item)
       const doneCount = steps.filter(s => s.status === 'done').length
-      if (doneCount === 6) return 'badge-done'
+      if (doneCount === 8) return 'badge-done'
       if (doneCount === 0) return 'badge-pending'
       return 'badge-active'
     },
@@ -878,8 +927,14 @@ export default {
       return `${year} 年 ${month} 月 ${day} 日，${weekDay}，${hours}:${minutes}:${seconds} 中国标准时间`
     },
     getPhaseKey(index) {
-      const map = ['base', 'hot', 'spin', 'rough', 'finePaint', 'test']
+      const map = ['base', 'hot', 'spin', 'heat', 'rough', 'fine', 'paint', 'test']
       return map[index] || 'base'
+    },
+
+    // 日期选择器变更处理（通过命名方法而非内联 $set，确保微信小程序响应式更新）
+    onOEDateChange(field, e) {
+      const val = (e && e.detail && e.detail.value) ? e.detail.value.substring(0, 10) : ''
+      this.$set(this.oeForm, field, val)
     },
 
     // =================== 标记完成/撤回 ===================
@@ -895,7 +950,7 @@ export default {
             const stepNum = index + 1
             const updateData = { processId: item.processId }
             updateData[`step${stepNum}Status`] = 'done'
-            if (stepNum < 6) {
+            if (stepNum < 8) {
               updateData[`step${stepNum + 1}Status`] = 'active'
             }
             updateTrialProcess(updateData).then(() => {
@@ -944,7 +999,9 @@ export default {
         step3Status: 'pending',
         step4Status: 'pending',
         step5Status: 'pending',
-        step6Status: 'pending'
+        step6Status: 'pending',
+        step7Status: 'pending',
+        step8Status: 'pending'
       }
       this.dialogVisible = true
     },
@@ -1009,34 +1066,52 @@ export default {
       // 微信小程序：HTTP 图片无法直接显示，需先 downloadFile 转本地路径
       this.imageLocalPaths = {}
       this.prefetchImagesForDisplay()
-      // 加载OE跟踪数据
-      this.oeForm = { moldCode: process.moldCode, allProcessDone: '否' }
+      // 先加载OE跟踪数据，加载完成后再打开弹窗（避免日期字段的竞态条件）
+      // 预初始化所有日期字段，确保 Vue 响应式系统能正确追踪变更
+      const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+        'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+      const baseOeForm = {
+        moldCode: process.moldCode,
+        allProcessDone: '否',
+        planMachineTime: '', hotMachineDate: '', spinMachineDate: '', heatTransferTime: '',
+        roughMachineDate: '', fineMachineDate: '', paintMachineDate: '', impactTestDate: '', completeDate: ''
+      }
       if (process.moldCode) {
         listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
           const rows = res.rows || []
           if (rows.length > 0) {
-            const loaded = { ...rows[0] }
-            // 格式化日期字段，避免 对象显示 [object Object]
-            const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
-              'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+            const loaded = { ...baseOeForm, ...rows[0] }
+            // 格式化日期字段，避免 [object Object]
             dateFields.forEach(f => { if (loaded[f]) { loaded[f] = this.formatPickerDate(loaded[f]) } })
             this.oeForm = loaded
+          } else {
+            this.oeForm = { ...baseOeForm }
           }
-        }).catch(() => {})
+          this.uploadVisible = true
+        }).catch(() => {
+          this.oeForm = { ...baseOeForm }
+          this.uploadVisible = true
+        })
+      } else {
+        this.oeForm = { ...baseOeForm }
+        this.uploadVisible = true
       }
-      this.uploadVisible = true
     },
     submitOE() {
       if (this.oeLoading) return
       this.oeLoading = true
 
-      // 自定同步图片到OE轨道字段
-      const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',');
+      // 将当前阶段上传的图片同步到OE跟踪对应字段（支持多张图片，逗号分隔）
+      const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',')
       if (imageUrls) {
-        if (this.currentPhase === 'hot') this.oeForm.hotCheckMeasureImage = imageUrls;
-        else if (this.currentPhase === 'spin') this.oeForm.spinFrontDistanceImage = imageUrls;
-        else if (this.currentPhase === 'heat') this.oeForm.heatFlowSheetImage = imageUrls;
-        else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
+        if (this.currentPhase === 'base') this.$set(this.oeForm, 'baseImage', imageUrls)
+        else if (this.currentPhase === 'hot') this.$set(this.oeForm, 'hotCheckMeasureImage', imageUrls)
+        else if (this.currentPhase === 'spin') this.$set(this.oeForm, 'spinFrontDistanceImage', imageUrls)
+        else if (this.currentPhase === 'heat') this.$set(this.oeForm, 'heatFlowSheetImage', imageUrls)
+        else if (this.currentPhase === 'rough') this.$set(this.oeForm, 'roughImage', imageUrls)
+        else if (this.currentPhase === 'fine') this.$set(this.oeForm, 'fineImage', imageUrls)
+        else if (this.currentPhase === 'paint') this.$set(this.oeForm, 'paintFlowSheetImage', imageUrls)
+        else if (this.currentPhase === 'test') this.$set(this.oeForm, 'testImage', imageUrls)
       }
 
       const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
@@ -1051,7 +1126,32 @@ export default {
       save(payload).then(() => {
         uni.showToast({ title: 'OE数据已保存', icon: 'success' })
         this.uploadVisible = false
-        this.loadList()
+
+        // 将OE关键日期同步到试制流程步骤的 deadline，使步骤卡片显示最新日期
+        const dateMap = {
+          base:      { field: 'planMachineTime', step: 1 },
+          hot:       { field: 'hotMachineDate',  step: 2 },
+          spin:      { field: 'spinMachineDate', step: 3 },
+          heat:      { field: 'heatTransferTime', step: 4 },
+          rough:     { field: 'roughMachineDate', step: 5 },
+          fine:      { field: 'fineMachineDate',  step: 6 },
+          paint:     { field: 'paintMachineDate', step: 7 },
+          test:      { field: 'impactTestDate',   step: 8 }
+        }
+        const mapping = dateMap[this.currentPhase]
+        if (mapping && payload[mapping.field] && this.currentProcess) {
+          const stepUpdate = {
+            processId: this.currentProcess.processId,
+            [`step${mapping.step}Deadline`]: payload[mapping.field]
+          }
+          updateTrialProcess(stepUpdate).then(() => {
+            this.loadList()
+          }).catch(() => {
+            this.loadList()
+          })
+        } else {
+          this.loadList()
+        }
       }).catch(() => {
         uni.showToast({ title: '保存失败', icon: 'none' })
       }).finally(() => {
@@ -1132,11 +1232,14 @@ export default {
           this.historyFiles.push(newFile)
           this.prefetchImagesForDisplay()
           const filesKey = `step${this.currentStepIndex + 1}Files`
+          const updatedJson = JSON.stringify(this.historyFiles)
           const updateData = {
             processId: this.currentProcess.processId,
-            [filesKey]: JSON.stringify(this.historyFiles)
+            [filesKey]: updatedJson
           }
           updateTrialProcess(updateData).then(() => {
+            // 同步 currentProcess 缓存，避免后续操作读到旧数据
+            this.$set(this.currentProcess, filesKey, updatedJson)
             uploadNext(i + 1)
           })
         }).catch(() => {
@@ -1153,12 +1256,15 @@ export default {
           if (res.confirm) {
             this.historyFiles.splice(fIdx, 1)
             const filesKey = `step${this.currentStepIndex + 1}Files`
+            const updatedJson = JSON.stringify(this.historyFiles)
             const updateData = {
               processId: this.currentProcess.processId,
-              [filesKey]: JSON.stringify(this.historyFiles)
+              [filesKey]: updatedJson
             }
             updateTrialProcess(updateData).then(() => {
               uni.showToast({ title: '已删除', icon: 'success' })
+              // 同步 currentProcess 缓存，避免刷新后读到旧数据
+              this.$set(this.currentProcess, filesKey, updatedJson)
               this.loadList()
             })
           }
@@ -1446,8 +1552,8 @@ export default {
     canEditPhase(index) {
       const perms = this.$store.state.permissions || []
       if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit') || perms.includes('tech:process:edit')) return true
-      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:finePaint:edit', 'tech:trial:phase:test:edit']
-      return index >= 0 && index < 6 && perms.includes(phasePerms[index])
+      const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:heat:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:fine:edit', 'tech:trial:phase:paint:edit', 'tech:trial:phase:test:edit']
+      return index >= 0 && index < 8 && perms.includes(phasePerms[index])
     }
   }
 }
@@ -1586,17 +1692,32 @@ export default {
 .desc-label { font-size: 22rpx; color: #909399; flex-shrink: 0; }
 .desc-text { font-size: 22rpx; color: #606266; flex: 1; }
 
-/* 水平进度条 */
-.steps-progress {
+/* 水平进度条与标签 */
+.steps-progress-container {
   display: flex;
-  align-items: center;
-  margin-bottom: 8rpx;
+  margin-bottom: 24rpx;
 }
-.progress-dot-wrap {
-  display: flex;
-  align-items: center;
+.step-col {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
+.progress-line-container {
+  position: absolute;
+  top: 20rpx; /* 40rpx圆点的一半高度，使其垂直居中于圆点 */
+  left: 50%;
+  width: 100%;
+  height: 3rpx;
+  z-index: 1;
+}
+.progress-line {
+  width: 100%;
+  height: 100%;
+  background: #e0e0e0;
+}
+.progress-line.line-done { background: #c0c4cc; }
 .progress-dot {
   width: 40rpx;
   height: 40rpx;
@@ -1604,7 +1725,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 8rpx;
 }
 .dot-done { background: #c0c4cc; }
 .dot-done .dot-icon { color: #fff; font-size: 20rpx; }
@@ -1612,20 +1735,7 @@ export default {
 .dot-active .dot-icon { color: #fff; font-size: 18rpx; }
 .dot-pending { background: #e0e0e0; }
 .dot-pending .dot-icon { color: #c0c4cc; font-size: 18rpx; }
-.progress-line {
-  flex: 1;
-  height: 3rpx;
-  background: #e0e0e0;
-}
-.progress-line.line-done { background: #c0c4cc; }
-
-/* 进度标签 */
-.progress-labels {
-  display: flex;
-  margin-bottom: 24rpx;
-}
-.label-item { flex: 1; text-align: center; }
-.label-text { font-size: 18rpx; color: #909399; }
+.label-text { font-size: 18rpx; color: #909399; text-align: center; }
 .l-done { color: #c0c4cc; }
 .l-active { color: #6c5bb3; font-weight: 600; }
 

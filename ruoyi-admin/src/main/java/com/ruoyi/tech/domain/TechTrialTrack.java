@@ -34,6 +34,9 @@ public class TechTrialTrack extends BaseEntity {
     @Excel(name = "预上机时间", dateFormat = "yyyy-MM-dd")
     private String planMachineTime;
 
+    @Excel(name = "基础信息-上传图片")
+    private String baseImage;
+
     // ========== 压铸阶段（原热工） ==========
     @Excel(name = "压铸上机日期", dateFormat = "yyyy-MM-dd")
     private String hotMachineDate;
@@ -107,6 +110,9 @@ public class TechTrialTrack extends BaseEntity {
     @Excel(name = "改善方案及改善情况")
     private String improvePlan;
 
+    @Excel(name = "粗车阶段-上传图片")
+    private String roughImage;
+
     // ========== 精车阶段 ==========
     @Excel(name = "精车上机日期", dateFormat = "yyyy-MM-dd")
     private String fineMachineDate;
@@ -116,6 +122,9 @@ public class TechTrialTrack extends BaseEntity {
 
     @Excel(name = "精车负责人")
     private String fineImprovePerson;
+
+    @Excel(name = "精车阶段-上传图片")
+    private String fineImage;
 
     // ========== 涂装阶段 ==========
     @Excel(name = "涂装上机日期", dateFormat = "yyyy-MM-dd")
@@ -163,6 +172,9 @@ public class TechTrialTrack extends BaseEntity {
 
     @Excel(name = "全序是否完成")
     private String allProcessDone;
+
+    @Excel(name = "实验阶段-上传图片")
+    private String testImage;
 
     private String delFlag;
 
@@ -493,6 +505,38 @@ public class TechTrialTrack extends BaseEntity {
 
     public void setAllProcessDone(String allProcessDone) {
         this.allProcessDone = allProcessDone;
+    }
+
+    public String getBaseImage() {
+        return baseImage;
+    }
+
+    public void setBaseImage(String baseImage) {
+        this.baseImage = baseImage;
+    }
+
+    public String getRoughImage() {
+        return roughImage;
+    }
+
+    public void setRoughImage(String roughImage) {
+        this.roughImage = roughImage;
+    }
+
+    public String getFineImage() {
+        return fineImage;
+    }
+
+    public void setFineImage(String fineImage) {
+        this.fineImage = fineImage;
+    }
+
+    public String getTestImage() {
+        return testImage;
+    }
+
+    public void setTestImage(String testImage) {
+        this.testImage = testImage;
     }
 
     public String getDelFlag() {

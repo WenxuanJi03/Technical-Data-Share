@@ -14,6 +14,7 @@
       "postcss": true
     },
     "usingComponents": true,
+    "lazyCodeLoading": "requiredComponents",
     "permission": {},
     "optimization": {
       "subPackages": true

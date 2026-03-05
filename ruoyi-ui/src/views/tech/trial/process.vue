@@ -583,44 +583,78 @@ export default {
       }
     },
     submitUploadAndOE() {
-      // 自动同步附件照片到OE相应的图片字段
+      // 自动同步附件照片到OE相应的图片字段（所有阶段）
       const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',');
       if (imageUrls) {
-        if (this.currentPhase === 'hot') this.oeForm.hotCheckMeasureImage = imageUrls;
+        if (this.currentPhase === 'base') this.oeForm.baseImage = imageUrls;
+        else if (this.currentPhase === 'hot') this.oeForm.hotCheckMeasureImage = imageUrls;
         else if (this.currentPhase === 'spin') this.oeForm.spinFrontDistanceImage = imageUrls;
         else if (this.currentPhase === 'heat') this.oeForm.heatFlowSheetImage = imageUrls;
+        else if (this.currentPhase === 'rough') this.oeForm.roughImage = imageUrls;
+        else if (this.currentPhase === 'fine') this.oeForm.fineImage = imageUrls;
         else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
+        else if (this.currentPhase === 'test') this.oeForm.testImage = imageUrls;
       }
 
       // 提交前把所有日期字段转成字符串，避免 Jackson 反序列化失败
       const payload = this.normalizeOeFormDates({ ...this.oeForm })
       const save = payload.trackId ? updateTrialTrack : addTrialTrack
+      this.submitLoading = true
       save(payload).then(() => {
         this.$modal.msgSuccess('OE试制跟踪数据已保存')
         this.uploadVisible = false
+
+        // 将OE关键日期同步到试制流程步骤的 deadline，使步骤卡片显示最新日期
+        const dateMap = {
+          base: { field: 'planMachineTime', step: 1 },
+          hot:  { field: 'hotMachineDate',  step: 2 },
+          spin: { field: 'spinMachineDate', step: 3 },
+          heat: { field: 'heatTransferTime', step: 4 },
+          rough:{ field: 'roughMachineDate', step: 5 },
+          fine: { field: 'fineMachineDate',  step: 6 },
+          paint:{ field: 'paintMachineDate', step: 7 },
+          test: { field: 'impactTestDate',   step: 8 }
+        }
+        const mapping = dateMap[this.currentPhase]
+        if (mapping && payload[mapping.field] && this.currentProcess) {
+          const stepUpdate = {
+            processId: this.currentProcess.processId,
+            [`step${mapping.step}Deadline`]: payload[mapping.field]
+          }
+          updateTrialProcess(stepUpdate).then(() => {
+            this.getList()
+          }).catch(() => {
+            this.getList()
+          })
+        } else {
+          this.getList()
+        }
       }).catch(() => {
         this.$modal.msgError('保存失败，请重试')
+      }).finally(() => {
+        this.submitLoading = false
       })
     },
     handleUploadSuccess(response, file) {
       if (response.code === 200) {
-        // 上传成功，保存文件信息到数据库
+        // 上传成功，基于当前 historyFiles（而非 currentProcess 缓存数据）追加新文件
         const stepKey = `step${this.currentStepIndex + 1}Files`
-        const existingFiles = this.currentProcess[stepKey] ? JSON.parse(this.currentProcess[stepKey]) : []
         const newFile = {
           name: file.name,
           url: response.url || response.fileName,
           time: new Date().toISOString()
         }
+        this.historyFiles.push(newFile)
+        const updatedJson = JSON.stringify(this.historyFiles)
         const updateData = {
           processId: this.currentProcess.processId,
-          [stepKey]: JSON.stringify([...existingFiles, newFile])
+          [stepKey]: updatedJson
         }
         updateTrialProcess(updateData).then(() => {
           this.$modal.msgSuccess(`${file.name} 上传成功`)
+          // 同步 currentProcess 缓存，避免下次上传或删除时读到旧数据
+          this.$set(this.currentProcess, stepKey, updatedJson)
           this.getList()
-          // 刷新历史文件列表
-          this.historyFiles = [...existingFiles, newFile]
         })
       } else {
         this.$modal.msgError(response.msg || '上传失败')
@@ -663,12 +697,15 @@ export default {
       this.$modal.confirm('确认删除此文件？').then(() => {
         const stepKey = `step${this.currentStepIndex + 1}Files`
         this.historyFiles.splice(fileIndex, 1)
+        const updatedJson = JSON.stringify(this.historyFiles)
         const updateData = {
           processId: this.currentProcess.processId,
-          [stepKey]: JSON.stringify(this.historyFiles)
+          [stepKey]: updatedJson
         }
         updateTrialProcess(updateData).then(() => {
           this.$modal.msgSuccess('删除成功')
+          // 同步 currentProcess 缓存，避免刷新后读到旧数据
+          this.$set(this.currentProcess, stepKey, updatedJson)
           this.getList()
         })
       }).catch(() => {})
