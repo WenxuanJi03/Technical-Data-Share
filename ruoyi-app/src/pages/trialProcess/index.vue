@@ -298,9 +298,9 @@
             </view>
             <view class="oe-form-item">
               <text class="oe-label">预计上机时间</text>
-              <picker mode="date" :value="oeForm.planMachineTime || ''" @change="$set(oeForm, 'planMachineTime', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+              <picker mode="date" :value="formatPickerDate(oeForm.planMachineTime)" @change="$set(oeForm, 'planMachineTime', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                 <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                  <text :style="{ color: oeForm.planMachineTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.planMachineTime || 'YYYY-MM-DD' }}</text>
+                  <text :style="{ color: formatPickerDate(oeForm.planMachineTime) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.planMachineTime) || 'YYYY-MM-DD' }}</text>
                 </view>
               </picker>
             </view>
@@ -311,9 +311,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">压铸上机日期</text>
-                <picker mode="date" :value="oeForm.hotMachineDate || ''" @change="$set(oeForm, 'hotMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.hotMachineDate)" @change="$set(oeForm, 'hotMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.hotMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.hotMachineDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.hotMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.hotMachineDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -351,9 +351,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">旋压上机日期</text>
-                <picker mode="date" :value="oeForm.spinMachineDate || ''" @change="$set(oeForm, 'spinMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.spinMachineDate)" @change="$set(oeForm, 'spinMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.spinMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.spinMachineDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.spinMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.spinMachineDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -381,9 +381,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">粗车上机日期</text>
-                <picker mode="date" :value="oeForm.roughMachineDate || ''" @change="$set(oeForm, 'roughMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.roughMachineDate)" @change="$set(oeForm, 'roughMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.roughMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.roughMachineDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.roughMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.roughMachineDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -407,17 +407,17 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">精车上机日期</text>
-                <picker mode="date" :value="oeForm.fineMachineDate || ''" @change="$set(oeForm, 'fineMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.fineMachineDate)" @change="$set(oeForm, 'fineMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.fineMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.fineMachineDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.fineMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.fineMachineDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
               <view class="oe-form-item half">
                 <text class="oe-label">涂装上机日期</text>
-                <picker mode="date" :value="oeForm.paintMachineDate || ''" @change="$set(oeForm, 'paintMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.paintMachineDate)" @change="$set(oeForm, 'paintMachineDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.paintMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.paintMachineDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.paintMachineDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.paintMachineDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -441,9 +441,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">冲击试验日期</text>
-                <picker mode="date" :value="oeForm.impactTestDate || ''" @change="$set(oeForm, 'impactTestDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.impactTestDate)" @change="$set(oeForm, 'impactTestDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.impactTestDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.impactTestDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.impactTestDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.impactTestDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -455,9 +455,9 @@
             <view class="oe-form-row">
               <view class="oe-form-item half">
                 <text class="oe-label">生产完成日期</text>
-                <picker mode="date" :value="oeForm.completeDate || ''" @change="$set(oeForm, 'completeDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
+                <picker mode="date" :value="formatPickerDate(oeForm.completeDate)" @change="$set(oeForm, 'completeDate', $event.detail.value)" :disabled="!canEditPhase(currentStepIndex)">
                   <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.completeDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.completeDate || 'YYYY-MM-DD' }}</text>
+                    <text :style="{ color: formatPickerDate(oeForm.completeDate) ? '#303133' : '#999', fontSize: '26rpx' }">{{ formatPickerDate(oeForm.completeDate) || 'YYYY-MM-DD' }}</text>
                   </view>
                 </picker>
               </view>
@@ -845,6 +845,24 @@ export default {
       if (!date) return ''
       return date.substring(0, 10)
     },
+    // \u65e5\u671f\u5b57\u6bb5\u8f6c\u6362\u4e3a YYYY-MM-DD \u5b57\u7b26\u4e32\uff08\u9632\u6b62 [object Object]\uff09
+    formatPickerDate(val) {
+      if (!val) return ''
+      if (typeof val === 'string') return val.substring(0, 10)
+      if (val instanceof Date) {
+        const y = val.getFullYear()
+        const m = String(val.getMonth() + 1).padStart(2, '0')
+        const d = String(val.getDate()).padStart(2, '0')
+        return `${y}-${m}-${d}`
+      }
+      // \u5bf9\u8c61 (\u5982 {year, month, day}\uff09
+      if (typeof val === 'object') {
+        const s = String(val)
+        if (s.length >= 10) return s.substring(0, 10)
+        return ''
+      }
+      return String(val).substring(0, 10)
+    },
     formatChineseDateTime(date) {
       if (!date) return ''
       const d = new Date(date)
@@ -996,7 +1014,12 @@ export default {
         listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
           const rows = res.rows || []
           if (rows.length > 0) {
-            this.oeForm = { ...rows[0] }
+            const loaded = { ...rows[0] }
+            // 格式化日期字段，避免 对象显示 [object Object]
+            const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+              'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+            dateFields.forEach(f => { if (loaded[f]) { loaded[f] = this.formatPickerDate(loaded[f]) } })
+            this.oeForm = loaded
           }
         }).catch(() => {})
       }

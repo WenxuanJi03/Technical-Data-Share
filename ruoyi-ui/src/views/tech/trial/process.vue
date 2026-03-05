@@ -563,7 +563,15 @@ export default {
       if (process.moldCode) {
         listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
           const rows = res.rows || []
-          this.oeForm = rows.length > 0 ? { ...rows[0] } : { moldCode: process.moldCode, allProcessDone: '否' }
+          if (rows.length > 0) {
+            const loaded = { ...rows[0] }
+            const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+              'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+            dateFields.forEach(f => { if (loaded[f] && typeof loaded[f] !== 'string') { loaded[f] = new Date(loaded[f]).toISOString().substring(0, 10) } })
+            this.oeForm = loaded
+          } else {
+            this.oeForm = { moldCode: process.moldCode, allProcessDone: '否' }
+          }
           this.uploadVisible = true
         }).catch(() => {
           this.oeForm = { moldCode: process.moldCode, allProcessDone: '否' }
