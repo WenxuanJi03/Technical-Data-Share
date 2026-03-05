@@ -592,8 +592,10 @@ export default {
         else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
       }
 
-      const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
-      save(this.oeForm).then(() => {
+      // 提交前把所有日期字段转成字符串，避免 Jackson 反序列化失败
+      const payload = this.normalizeOeFormDates({ ...this.oeForm })
+      const save = payload.trackId ? updateTrialTrack : addTrialTrack
+      save(payload).then(() => {
         this.$modal.msgSuccess('OE试制跟踪数据已保存')
         this.uploadVisible = false
       }).catch(() => {
@@ -631,6 +633,17 @@ export default {
       if (!filename) return false
       const ext = filename.toLowerCase().split('.').pop()
       return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)
+    },
+    // 提交前将所有日期字段转为 YYYY-MM-DD 字符串，避免 Jackson 报错
+    normalizeOeFormDates(form) {
+      const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+        'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+      dateFields.forEach(f => {
+        if (form[f] === null || form[f] === undefined || form[f] === '') return
+        if (typeof form[f] === 'string') { form[f] = form[f].substring(0, 10); return }
+        try { form[f] = new Date(form[f]).toISOString().substring(0, 10) } catch(e) { form[f] = null }
+      })
+      return form
     },
     getPreviewList() {
       return this.historyFiles

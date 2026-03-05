@@ -845,9 +845,13 @@ export default {
       if (!date) return ''
       return date.substring(0, 10)
     },
-    // \u65e5\u671f\u5b57\u6bb5\u8f6c\u6362\u4e3a YYYY-MM-DD \u5b57\u7b26\u4e32\uff08\u9632\u6b62 [object Object]\uff09
+    // 日期字段转换为 YYYY-MM-DD 字符串（防止 [object Object]）
     formatPickerDate(val) {
       if (!val) return ''
+      if (typeof val === 'number') {
+        // Unix 时间戳（毫秒）
+        try { return new Date(val).toISOString().substring(0, 10) } catch(e) { return '' }
+      }
       if (typeof val === 'string') return val.substring(0, 10)
       if (val instanceof Date) {
         const y = val.getFullYear()
@@ -855,13 +859,10 @@ export default {
         const d = String(val.getDate()).padStart(2, '0')
         return `${y}-${m}-${d}`
       }
-      // \u5bf9\u8c61 (\u5982 {year, month, day}\uff09
       if (typeof val === 'object') {
-        const s = String(val)
-        if (s.length >= 10) return s.substring(0, 10)
-        return ''
+        try { return new Date(val).toISOString().substring(0, 10) } catch(e) { return '' }
       }
-      return String(val).substring(0, 10)
+      return ''
     },
     formatChineseDateTime(date) {
       if (!date) return ''
@@ -1038,8 +1039,16 @@ export default {
         else if (this.currentPhase === 'paint') this.oeForm.paintFlowSheetImage = imageUrls;
       }
 
-      const save = this.oeForm.trackId ? updateTrialTrack : addTrialTrack
-      save(this.oeForm).then(() => {
+      const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+        'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+      const payload = { ...this.oeForm }
+      dateFields.forEach(f => {
+        if (!payload[f]) return
+        if (typeof payload[f] === 'string') { payload[f] = payload[f].substring(0, 10); return }
+        try { payload[f] = new Date(payload[f]).toISOString().substring(0, 10) } catch(e) { payload[f] = null }
+      })
+      const save = payload.trackId ? updateTrialTrack : addTrialTrack
+      save(payload).then(() => {
         uni.showToast({ title: 'OE数据已保存', icon: 'success' })
         this.uploadVisible = false
         this.loadList()
