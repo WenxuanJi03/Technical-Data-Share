@@ -77,7 +77,7 @@
           <div class="meta-row" v-if="item.impactTestResult"><span class="meta-l">实验结果</span><span class="meta-v meta-wrap">{{ item.impactTestResult }}</span></div>
           <div class="meta-row" v-if="item.hotMachineDate || item.hotMachineStation || item.roundKeepTime"><span class="meta-l">压铸信息</span><span class="meta-v meta-wrap">{{ item.hotMachineDate || '-' }} / {{ item.hotMachineStation || '-' }} / {{ item.roundKeepTime || '-' }}</span></div>
           <div class="meta-row" v-if="item.hotProduction"><span class="meta-l">压铸情况</span><span class="meta-v meta-wrap">{{ item.hotProduction }}</span></div>
-          <div class="meta-row" v-if="item.heatReceiveCount || item.heatTransferCount"><span class="meta-l">热处理</span><span class="meta-v meta-wrap">接{{ item.heatReceiveCount || '-' }} / 转{{ item.heatTransferCount || '-' }}</span></div>
+          <div class="meta-row" v-if="item.heatReceiveCount || item.heatTransferCount"><span class="meta-l">热处理</span><span class="meta-v meta-wrap">接{{ item.heatReceiveCount || '-' }} / 下转{{ item.heatTransferCount || '-' }}</span></div>
           <div class="meta-row" v-if="item.spinMachineStation || item.spinProduction"><span class="meta-l">旋压信息</span><span class="meta-v meta-wrap">{{ item.spinMachineStation || '-' }} / {{ item.spinProduction || '-' }}</span></div>
         </div>
       </div>
@@ -116,8 +116,9 @@
       <el-table-column label="改善情况" prop="spinImproveStatus" width="120" show-overflow-tooltip />
       <!-- 热处理阶段 -->
       <el-table-column label="热处理接收" prop="heatReceiveCount" width="80" align="center" />
-      <el-table-column label="热处理转下" prop="heatTransferCount" width="80" align="center" />
+      <el-table-column label="热处理下转" prop="heatTransferCount" width="80" align="center" />
       <el-table-column label="下转时间" prop="heatTransferTime" width="100" align="center" />
+      <el-table-column label="热处理负责人" prop="heatImprovePerson" width="100" align="center" />
       <!-- 粗车阶段 -->
       <el-table-column label="粗车上机" prop="roughMachineDate" width="100" align="center" />
       <el-table-column label="粗车生产情况" prop="roughProduction" width="140" show-overflow-tooltip />
@@ -137,11 +138,9 @@
       <el-table-column label="实验说明" prop="testDescription" width="120" show-overflow-tooltip />
       <el-table-column label="实验关闭" prop="testCloseStatus" width="100" show-overflow-tooltip />
       <el-table-column label="完成日期" prop="completeDate" width="100" align="center" />
-      <el-table-column label="失效清场" prop="failProductTrace" width="120" show-overflow-tooltip />
       <el-table-column label="失效分析" prop="failAnalysis" width="120" show-overflow-tooltip />
       <el-table-column label="生产总结" prop="productionSummary" width="140" show-overflow-tooltip />
       <el-table-column label="改善措施" prop="improveMeasures" width="140" show-overflow-tooltip />
-      <el-table-column label="经验教训" prop="lessonsLearned" width="140" show-overflow-tooltip />
       <el-table-column label="全序完成" prop="allProcessDone" width="80" align="center">
         <template slot-scope="s">
           <el-tag
@@ -242,7 +241,8 @@
           <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="下转时间">{{ detail.heatTransferTime || '-' }}</el-descriptions-item>
             <el-descriptions-item label="接收数量">{{ detail.heatReceiveCount != null ? detail.heatReceiveCount : '-' }}</el-descriptions-item>
-            <el-descriptions-item label="转下数量">{{ detail.heatTransferCount != null ? detail.heatTransferCount : '-' }}</el-descriptions-item>
+            <el-descriptions-item label="下转数量">{{ detail.heatTransferCount != null ? detail.heatTransferCount : '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人">{{ detail.heatImprovePerson || '-' }}</el-descriptions-item>
             <el-descriptions-item label="流转单照片">
               <el-link v-if="detail.heatFlowSheetImage" type="primary" :underline="false" @click="openGallery(detail.heatFlowSheetImage)">查看照片 ({{ countImages(detail.heatFlowSheetImage) }}张)</el-link>
               <span v-else>-</span>
@@ -302,7 +302,6 @@
             <el-descriptions-item label="完成日期">{{ detail.completeDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="全序完成">{{ detail.allProcessDone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="失效分析" :span="2">{{ detail.failAnalysis || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="经验教训" :span="2">{{ detail.lessonsLearned || '-' }}</el-descriptions-item>
             <el-descriptions-item label="阶段图片" :span="2">
               <el-link v-if="detail.testImage" type="primary" :underline="false" @click="openGallery(detail.testImage)">查看图片 ({{ countImages(detail.testImage) }}张)</el-link>
               <span v-else>-</span>
@@ -377,7 +376,10 @@
         <el-row :gutter="20">
           <el-col :span="8"><el-form-item label="下转时间"><el-date-picker v-model="form.heatTransferTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:100%" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="接收数量"><el-input v-model="form.heatReceiveCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="转下数量"><el-input v-model="form.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="下转数量"><el-input v-model="form.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8"><el-form-item label="负责人"><el-input v-model="form.heatImprovePerson" placeholder="负责人姓名" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="流转单照片"><image-upload v-model="form.heatFlowSheetImage" :limit="9" :disabled="form.trackId && !canEditPhase(3)" /></el-form-item>
 

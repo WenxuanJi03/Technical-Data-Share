@@ -156,7 +156,10 @@
               <el-col :span="12"><el-form-item label="下转时间"><el-date-picker v-model="oeForm.heatTransferTime" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" :disabled="!canEditPhase(currentStepIndex)" style="width:100%" /></el-form-item></el-col>
               <el-col :span="12"><el-form-item label="接收数量"><el-input v-model="oeForm.heatReceiveCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
             </el-row>
-            <el-form-item label="转下数量"><el-input v-model="oeForm.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" style="width:50%" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
+            <el-row :gutter="16">
+              <el-col :span="12"><el-form-item label="下转数量"><el-input v-model="oeForm.heatTransferCount" type="number" oninput="if(value.length>10)value=value.slice(0,10)" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+              <el-col :span="12"><el-form-item label="负责人"><el-input v-model="oeForm.heatImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item></el-col>
+            </el-row>
             <el-alert title="请在下方附件区上传流转单照片" type="info" :closable="false" style="margin-bottom:15px"/>
           </template>
           <!-- 粗车阶段 -->
@@ -201,18 +204,24 @@
               </el-col>
             </el-row>
             <el-form-item label="实验说明"><el-input v-model="oeForm.testDescription" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="实验关闭情况"><el-input v-model="oeForm.testCloseStatus" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="失效产品清场"><el-input v-model="oeForm.failProductTrace" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
+            <el-form-item label="实验关闭情况">
+              <el-select v-model="oeForm.testCloseStatus" style="width:100%" :disabled="!canEditPhase(currentStepIndex)">
+                <el-option label="是" value="是" /><el-option label="否" value="否" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="实验失效分析"><el-input v-model="oeForm.failAnalysis" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
             <el-form-item label="本次生产总结"><el-input v-model="oeForm.productionSummary" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
             <el-form-item label="改善措施简述"><el-input v-model="oeForm.improveMeasures" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
-            <el-form-item label="经验教训总结"><el-input v-model="oeForm.lessonsLearned" type="textarea" :rows="2" :disabled="!canEditPhase(currentStepIndex)" /></el-form-item>
           </template>
         </el-form>
 
         <!-- 附件上传区 -->
-        <el-divider content-position="left"><i class="el-icon-paperclip"></i> 附件上传</el-divider>
+        <el-divider content-position="left"><i class="el-icon-paperclip"></i> {{ currentStep.name }}流转单照片上传</el-divider>
         <p class="upload-tip">支持上传 PDF、JPG、PNG、GIF、BMP 等格式文件</p>
+        <el-alert v-if="currentPhase === 'hot'" title="备注：首件测量尺寸、前距数据" type="warning" :closable="false" style="margin-bottom:12px" />
+        <el-alert v-else-if="currentPhase === 'spin'" title="备注：首件切样及旋压前距数据照片" type="warning" :closable="false" style="margin-bottom:12px" />
+        <el-alert v-else-if="currentPhase === 'rough'" title="备注：粗车前距数据照片、首件尺寸单照片" type="warning" :closable="false" style="margin-bottom:12px" />
+        <el-alert v-else-if="currentPhase === 'test'" title="备注：失效清场照片、实验失效照片" type="warning" :closable="false" style="margin-bottom:12px" />
         <el-upload
           v-show="canEditPhase(currentStepIndex)"
           class="upload-area"

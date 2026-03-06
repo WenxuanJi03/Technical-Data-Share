@@ -36,29 +36,7 @@
             <text class="mold-code">{{ item.moldCode }}</text>
             <view
               class="status-badge"
-              :class="
-                item.step1Status === 'done' &&
-                item.step2Status === 'done' &&
-                item.step3Status === 'done' &&
-                item.step4Status === 'done' &&
-                item.step5Status === 'done' &&
-                item.step6Status === 'done' &&
-                item.step7Status === 'done' &&
-                item.step8Status === 'done'
-                  ? 'badge-done'
-                  : (
-                    item.step1Status !== 'done' &&
-                    item.step2Status !== 'done' &&
-                    item.step3Status !== 'done' &&
-                    item.step4Status !== 'done' &&
-                    item.step5Status !== 'done' &&
-                    item.step6Status !== 'done' &&
-                    item.step7Status !== 'done' &&
-                    item.step8Status !== 'done'
-                      ? 'badge-pending'
-                      : 'badge-active'
-                  )
-              "
+              :class="item._badgeClass"
             >
               <text class="status-text">{{ getCardStatus(item) }}</text>
             </view>
@@ -251,7 +229,8 @@
     </view>
 
     <!-- ===== 全屏弹窗：录入/上传 ===== -->
-    <view class="fullpage-modal" v-if="uploadVisible">
+    <!-- catchTouchMove 防止弹窗内 touchmove 冒泡到页面，避免干扰 vConsole 悬浮按钮 -->
+    <view class="fullpage-modal" v-if="uploadVisible" @touchmove.stop="noop">
       <view class="fullpage-nav" :style="navBarStyle">
         <view class="fullpage-back" @tap="uploadVisible = false">
           <text class="fullpage-back-icon">✕</text>
@@ -395,9 +374,15 @@
                 <input class="oe-input" type="number" v-model="oeForm.heatReceiveCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
               </view>
             </view>
-            <view class="oe-form-item">
-              <text class="oe-label">转下数量</text>
-              <input class="oe-input" type="number" v-model="oeForm.heatTransferCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
+            <view class="oe-form-row">
+              <view class="oe-form-item half">
+                <text class="oe-label">下转数量</text>
+                <input class="oe-input" type="number" v-model="oeForm.heatTransferCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
+              </view>
+              <view class="oe-form-item half">
+                <text class="oe-label">负责人</text>
+                <input class="oe-input" v-model="oeForm.heatImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
+              </view>
             </view>
           </template>
 
@@ -514,13 +499,22 @@
               <text class="oe-label">实验说明</text>
               <textarea class="oe-textarea" v-model="oeForm.testDescription" placeholder="请输入实验说明" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
-            <view class="oe-form-item">
-              <text class="oe-label">实验关闭情况</text>
-              <input class="oe-input" v-model="oeForm.testCloseStatus" placeholder="请输入实验关闭情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">失效产品清场</text>
-              <textarea class="oe-textarea" v-model="oeForm.failProductTrace" placeholder="请输入失效产品清场情况" :disabled="!canEditPhase(currentStepIndex)" />
+            <view class="oe-form-row">
+              <view class="oe-form-item" style="flex:1">
+                <text class="oe-label">实验关闭情况</text>
+              </view>
+              <view class="oe-form-item" style="flex:0 0 auto">
+                <view class="radio-group">
+                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.testCloseStatus = '是')">
+                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.testCloseStatus === '是' }"></view>
+                    <text class="radio-label">是</text>
+                  </view>
+                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.testCloseStatus = '否')">
+                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.testCloseStatus === '否' }"></view>
+                    <text class="radio-label">否</text>
+                  </view>
+                </view>
+              </view>
             </view>
             <view class="oe-form-item">
               <text class="oe-label">实验失效分析</text>
@@ -534,22 +528,22 @@
               <text class="oe-label">改善措施简述</text>
               <textarea class="oe-textarea" v-model="oeForm.improveMeasures" placeholder="请输入改善措施" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
-            <view class="oe-form-item">
-              <text class="oe-label">经验教训总结</text>
-              <textarea class="oe-textarea" v-model="oeForm.lessonsLearned" placeholder="请输入经验教训" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
           </template>
         </view>
 
         <!-- 附件上传区 -->
         <view class="upload-section">
           <view class="section-divider">
-            <text class="section-label">📎 附件上传</text>
+            <text class="section-label">📎 {{ currentStep.name }}流转单照片上传</text>
             <view v-if="canEditPhase(currentStepIndex)" class="add-file-btn" @tap="chooseAndUpload">
               <text class="add-file-btn-text">{{ uploadingFile ? '上传中...' : '+ 添加图片/文件' }}</text>
             </view>
           </view>
           <text class="upload-tip-text">支持图片（JPG、JPEG、PNG、GIF、BMP、WEBP）及 PDF 文件</text>
+          <text v-if="currentPhase === 'hot'" class="upload-remark-text">备注：首件测量尺寸、前距数据</text>
+          <text v-else-if="currentPhase === 'spin'" class="upload-remark-text">备注：首件切样及旋压前距数据照片</text>
+          <text v-else-if="currentPhase === 'rough'" class="upload-remark-text">备注：粗车前距数据照片、首件尺寸单照片</text>
+          <text v-else-if="currentPhase === 'test'" class="upload-remark-text">备注：失效清场照片、实验失效照片</text>
 
           <!-- 已上传文件列表 -->
           <view class="file-grid" v-if="historyFiles.length > 0">
@@ -559,9 +553,12 @@
               class="file-thumb-item"
             >
               <view class="file-thumb" @tap="previewFile(file, fIdx)" @longpress="showFileInfo(file)">
+                <!-- 图片文件：正常显示（无错误时） -->
+                <!-- :data-idx 将循环索引传入事件回调，兼容微信小程序 -->
                 <image
-                  v-if="isImageFile(file.name)"
+                  v-if="isImageFile(file.name) && !getImgError(fIdx)"
                   :src="getImageSrc(file, fIdx)"
+                  :data-idx="fIdx"
                   class="file-thumb-img"
                   mode="aspectFill"
                   lazy-load
@@ -569,11 +566,18 @@
                   @error="onImageError"
                   @load="onImageLoad"
                 />
-                <view v-else class="file-thumb-doc">
-                  <text class="file-doc-icon">📄</text>
+                <!-- 图片文件：下载/加载失败时显示错误占位 -->
+                <view v-if="isImageFile(file.name) && getImgError(fIdx)" class="file-thumb-error">
+                  <text class="file-error-icon">⚠️</text>
+                  <text class="file-error-text">加载失败</text>
                 </view>
-                <view v-if="isImageFile(file.name)" class="file-loading-placeholder">
+                <!-- 图片文件：尚未完成加载时的占位（不覆盖已加载图片）-->
+                <view v-if="isImageFile(file.name) && !getImgLoaded(fIdx) && !getImgError(fIdx)" class="file-loading-placeholder">
                   <text class="loading-text">🖼️</text>
+                </view>
+                <!-- 非图片文件 -->
+                <view v-if="!isImageFile(file.name)" class="file-thumb-doc">
+                  <text class="file-doc-icon">📄</text>
                 </view>
               </view>
               <text class="file-thumb-name">{{ shortenName(file.name) }}</text>
@@ -592,7 +596,7 @@
     </view>
 
     <!-- ===== 全屏弹窗：意见 ===== -->
-    <view class="fullpage-modal" v-if="commentVisible">
+    <view class="fullpage-modal" v-if="commentVisible" @touchmove.stop="noop">
       <view class="fullpage-nav" :style="navBarStyle">
         <view class="fullpage-back" @tap="commentVisible = false">
           <text class="fullpage-back-icon">✕</text>
@@ -718,7 +722,7 @@
 <script>
 import { listTrialProcess, addTrialProcess, updateTrialProcess, delTrialProcess } from '@/api/trialProcess'
 import { listTrialTrack, addTrialTrack, updateTrialTrack } from '@/api/trialTrack'
-import { uploadFile, BASE_URL } from '@/api/product'
+import { uploadFile, getProductBaseUrl } from '@/api/product'
 import { getAllUsers } from '@/api/common'
 
 export default {
@@ -755,9 +759,13 @@ export default {
       currentPhase: 'base',
       historyFiles: [],
       uploadingFile: false,
-      baseUrl: BASE_URL,
+      baseUrl: '',
       // 微信小程序 HTTP 图片无法直接显示，需先 downloadFile 转本地路径
       imageLocalPaths: {},
+      // 追踪图片加载状态，避免已加载图片被占位符遮挡
+      imageLoaded: {},
+      // 追踪下载失败的图片，用于显示错误占位符
+      imageLoadErrors: {},
       // 意见弹窗
       commentVisible: false,
       commentText: '',
@@ -818,6 +826,8 @@ export default {
     }
   },
   onShow() {
+    // 每次显示时动态读取最新 baseUrl，确保登录后切换服务器地址能生效
+    this.baseUrl = getProductBaseUrl()
     this.loadList()
     this.loadUserList()
   },
@@ -828,7 +838,11 @@ export default {
     loadList() {
       this.loading = true
       listTrialProcess({ pageNum: 1, pageSize: 100 }).then(res => {
-        this.list = res.rows || []
+        const rows = res.rows || []
+        rows.forEach(item => {
+          item._badgeClass = this.getCardStatusClass(item)
+        })
+        this.list = rows
       }).finally(() => {
         this.loading = false
       })
@@ -858,14 +872,17 @@ export default {
       const steps = this.getSteps(item)
       const doneCount = steps.filter(s => s.status === 'done').length
       if (doneCount === 8) return '已完成'
-      if (doneCount === 0) return '未开始'
-      return `${doneCount}/8`
+      // 只要有任意步骤为 active，即视为"进行中"
+      const hasActive = steps.some(s => s.status === 'active')
+      if (doneCount === 0 && !hasActive) return '未开始'
+      return '进行中'
     },
     getCardStatusClass(item) {
       const steps = this.getSteps(item)
       const doneCount = steps.filter(s => s.status === 'done').length
       if (doneCount === 8) return 'badge-done'
-      if (doneCount === 0) return 'badge-pending'
+      const hasActive = steps.some(s => s.status === 'active')
+      if (doneCount === 0 && !hasActive) return 'badge-pending'
       return 'badge-active'
     },
     getStepIcon(step) {
@@ -1063,8 +1080,10 @@ export default {
       } catch (e) {
         this.historyFiles = []
       }
-      // 微信小程序：HTTP 图片无法直接显示，需先 downloadFile 转本地路径
+      // 每次打开上传弹窗时清空图片状态，避免上一个步骤的缓存干扰
       this.imageLocalPaths = {}
+      this.imageLoaded = {}
+      this.imageLoadErrors = {}
       this.prefetchImagesForDisplay()
       // 先加载OE跟踪数据，加载完成后再打开弹窗（避免日期字段的竞态条件）
       // 预初始化所有日期字段，确保 Vue 响应式系统能正确追踪变更
@@ -1327,20 +1346,28 @@ export default {
     },
     /**
      * 预下载图片到本地（仅微信小程序，解决 HTTP 图片无法直接显示）
-     * 使用索引作为 key，避免长 URL 导致微信 setData 序列化异常
+     * 使用索引作为 key，避免长 URL 导致微信 setData 序列化异常。
+     * 注意：无论 HTTP 还是 HTTPS，均尝试下载，确保真机上图片能正常显示。
+     * 若域名未加入微信小程序合法域名列表，downloadFile 会失败，此时
+     * 标记 imageLoadErrors 让界面显示错误占位符，告知用户图片加载失败。
      */
     prefetchImagesForDisplay() {
       // #ifdef MP-WEIXIN
       this.historyFiles.forEach((file, fIdx) => {
         if (!this.isImageFile(file.name)) return
         const fullUrl = this.getFileUrl(file.url)
-        if (!fullUrl || fullUrl.startsWith('https://')) return
+        if (!fullUrl) return
         const key = 'i' + fIdx
-        if (this.imageLocalPaths[key]) return
+        // 已有本地路径或已标记错误则跳过
+        if (this.imageLocalPaths[key] || this.imageLoadErrors[key]) return
         uni.downloadFile({
           url: fullUrl,
+          timeout: 30000,
           success: (res) => {
-            if (res.statusCode !== 200 || !res.tempFilePath) return
+            if (res.statusCode !== 200 || !res.tempFilePath) {
+              this.$set(this.imageLoadErrors, key, true)
+              return
+            }
             this.$nextTick(() => {
               if (!this.uploadVisible || fIdx >= this.historyFiles.length) return
               try {
@@ -1348,32 +1375,50 @@ export default {
               } catch (e) {}
             })
           },
-          fail: () => {}
+          fail: () => {
+            // downloadFile 失败（如域名不在合法列表）：标记错误状态，界面显示占位符
+            this.$set(this.imageLoadErrors, key, true)
+          }
         })
       })
       // #endif
     },
     previewFile(file, fIdx) {
       if (this.isImageFile(file.name)) {
-        const imageUrls = this.historyFiles
-          .map((f, i) => this.isImageFile(f.name) ? this.getImageSrc(f, i) : null)
-          .filter(Boolean)
-        const currentUrl = this.getImageSrc(file, fIdx)
-        
-        // 检查URL是否有效
-        if (!currentUrl) {
-          uni.showToast({ title: '图片地址无效', icon: 'none' })
-          return
-        }
-        
-        uni.previewImage({
-          urls: imageUrls,
-          current: currentUrl,
-          fail: (err) => {
-            console.error('预览失败:', err)
-            uni.showToast({ title: '图片预览失败', icon: 'none' })
+        // #ifdef MP-WEIXIN
+        // 真机上优先使用本地路径预览，若本地路径尚未下载则先下载再预览
+        const key = 'i' + fIdx
+        if (this.imageLocalPaths[key]) {
+          this.doPreviewImages(fIdx)
+        } else {
+          const fullUrl = this.getFileUrl(file.url)
+          if (!fullUrl) {
+            uni.showToast({ title: '图片地址无效', icon: 'none' })
+            return
           }
-        })
+          uni.showLoading({ title: '加载图片...' })
+          uni.downloadFile({
+            url: fullUrl,
+            timeout: 30000,
+            success: (res) => {
+              uni.hideLoading()
+              if (res.statusCode === 200 && res.tempFilePath) {
+                this.$set(this.imageLocalPaths, key, res.tempFilePath)
+                this.doPreviewImages(fIdx)
+              } else {
+                uni.showToast({ title: '图片加载失败', icon: 'none' })
+              }
+            },
+            fail: () => {
+              uni.hideLoading()
+              this.doPreviewImages(fIdx)
+            }
+          })
+        }
+        // #endif
+        // #ifndef MP-WEIXIN
+        this.doPreviewImages(fIdx)
+        // #endif
       } else {
         const fileUrl = this.getFileUrl(file.url)
         if (!fileUrl) {
@@ -1413,15 +1458,88 @@ export default {
         // #endif
       }
     },
+    /**
+     * 执行图片预览（确保使用本地路径或有效URL）
+     */
+    doPreviewImages(fIdx) {
+      const imageUrls = this.historyFiles
+        .map((f, i) => this.isImageFile(f.name) ? this.getImageSrc(f, i) : null)
+        .filter(Boolean)
+      const targetFile = this.historyFiles[fIdx]
+      if (!targetFile) return
+      const currentUrl = this.getImageSrc(targetFile, fIdx)
+      if (!currentUrl) {
+        uni.showToast({ title: '图片地址无效', icon: 'none' })
+        return
+      }
+      uni.previewImage({
+        urls: imageUrls,
+        current: currentUrl,
+        fail: () => {
+          uni.showToast({ title: '图片预览失败', icon: 'none' })
+        }
+      })
+    },
     shortenName(name) {
       if (!name) return '文件'
       return name.length > 8 ? name.substring(0, 8) + '...' : name
     },
-    onImageError() {
-      // 静默处理：微信小程序 HTTP 图片会先失败，等 downloadFile 完成后会重新渲染
-      // 避免频繁 toast 和打印大对象导致卡顿
+    /**
+     * 图片组件加载失败回调：
+     * 真机上 image 组件尝试直接加载 URL 失败时，触发 downloadFile 补救下载。
+     * @param {Event} e  uni 事件对象
+     * @param {number} fIdx  图片在 historyFiles 中的索引
+     */
+    onImageError(e) {
+      // #ifdef MP-WEIXIN
+      // 通过 :data-idx 绑定的索引从 dataset 取出，兼容微信小程序 v-for 事件传参
+      const fIdx = e && e.currentTarget && e.currentTarget.dataset ? parseInt(e.currentTarget.dataset.idx) : -1
+      if (fIdx < 0) return
+      const key = 'i' + fIdx
+      if (this.imageLocalPaths[key]) return
+      const file = this.historyFiles[fIdx]
+      if (!file) return
+      const fullUrl = this.getFileUrl(file.url)
+      if (!fullUrl) {
+        this.$set(this.imageLoadErrors, key, true)
+        return
+      }
+      uni.downloadFile({
+        url: fullUrl,
+        timeout: 30000,
+        success: (res) => {
+          if (res.statusCode === 200 && res.tempFilePath) {
+            this.$set(this.imageLocalPaths, key, res.tempFilePath)
+            this.$set(this.imageLoadErrors, key, false)
+          } else {
+            this.$set(this.imageLoadErrors, key, true)
+          }
+        },
+        fail: () => {
+          this.$set(this.imageLoadErrors, key, true)
+        }
+      })
+      // #endif
     },
-    onImageLoad() {},
+    onImageLoad(e) {
+      // #ifdef MP-WEIXIN
+      const fIdx = e && e.currentTarget && e.currentTarget.dataset ? parseInt(e.currentTarget.dataset.idx) : -1
+      if (fIdx < 0) return
+      const key = 'i' + fIdx
+      this.$set(this.imageLoaded, key, true)
+      this.$set(this.imageLoadErrors, key, false)
+      // #endif
+    },
+    // 查询指定索引图片是否加载出错
+    getImgError(fIdx) {
+      return !!this.imageLoadErrors['i' + fIdx]
+    },
+    // 查询指定索引图片是否已加载完成
+    getImgLoaded(fIdx) {
+      return !!this.imageLoaded['i' + fIdx]
+    },
+    // 空操作（用于 @touchmove.stop 等需要 handler 的场景）
+    noop() {},
 
     // =================== 意见 ===================
     openComment(process, step, index) {
@@ -2116,7 +2234,8 @@ export default {
   &:active { opacity: 0.7; }
 }
 .add-file-btn-text { font-size: 24rpx; color: #6c5bb3; }
-.upload-tip-text { font-size: 22rpx; color: #c0c4cc; margin-bottom: 20rpx; display: block; }
+.upload-tip-text { font-size: 22rpx; color: #c0c4cc; margin-bottom: 10rpx; display: block; }
+.upload-remark-text { font-size: 24rpx; color: #e6a23c; margin-bottom: 20rpx; display: block; font-weight: 500; }
 .file-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2195,6 +2314,22 @@ export default {
 .file-delete-icon { font-size: 20rpx; color: #fff; }
 .file-empty { padding: 30rpx 0; text-align: center; }
 .file-empty-text { font-size: 26rpx; color: #c0c4cc; }
+/* 图片加载失败占位（绝对定位填满父容器 .file-thumb）*/
+.file-thumb-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fef0f0;
+  z-index: 3;
+}
+.file-error-icon { font-size: 36rpx; margin-bottom: 6rpx; }
+.file-error-text { font-size: 18rpx; color: #f56c6c; }
 
 /* ===== 意见弹窗样式 ===== */
 .comment-input-section {
