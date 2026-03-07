@@ -71,10 +71,10 @@
             >
               <text class="dot-icon">{{ step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : '○') }}</text>
             </view>
-            <!-- 标签 -->
+            <!-- 标签（下一步需求颜色同步：绿/黄/红） -->
             <text
               class="label-text"
-              :class="step.status === 'done' ? 'l-done' : (step.status === 'active' ? 'l-active' : '')"
+              :class="(step.nameColorClass || '') || (step.status === 'done' ? 'l-done' : (step.status === 'active' ? 'l-active' : ''))"
             >{{ step.shortName }}</text>
           </view>
         </view>
@@ -105,7 +105,10 @@
               >
                 <text class="step-dot-sm-icon">{{ step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : '○') }}</text>
               </view>
-              <text class="step-name">{{ step.name }}</text>
+              <text
+                class="step-name"
+                :class="step.nameColorClass || ''"
+              >{{ step.name }}</text>
               <view class="step-status-tag" v-if="step.status === 'done'">
                 <text class="tag-done">已完成</text>
               </view>
@@ -117,46 +120,22 @@
               </view>
             </view>
 
-            <!-- 负责人 + 截止日期 -->
+            <!-- 负责人 + 完成日期 -->
             <view class="step-meta" v-if="step.responsible || step.deadline">
               <text class="meta-item" v-if="step.responsible">👤 {{ step.responsible }}</text>
               <text
                 class="meta-item"
                 v-if="step.deadline"
-                :class="step.status !== 'done' && step.deadline ? 'meta-expired' : ''"
               >
-                ⏰ {{ step.deadline }}
+                📅 {{ step.deadline }}
               </text>
             </view>
 
-            <!-- 操作按钮（2列网格）-->
+            <!-- 操作按钮（试制信息记录 + 撤回）-->
             <view class="step-actions">
-              <view class="action-btn btn-upload" @tap="openUpload(item, step, idx)">
-                <text class="action-btn-icon">📁</text>
-                <text class="action-btn-text">录入/上传</text>
-              </view>
-              <view v-if="canEditPhase(idx)" class="action-btn btn-comment" @tap="openComment(item, step, idx)">
-                <text class="action-btn-icon">💬</text>
-                <text class="action-btn-text">
-                  意见
-                  <text v-if="getCommentCount(item, idx) > 0" class="comment-badge">{{ getCommentCount(item, idx) }}</text>
-                </text>
-              </view>
-              <view
-                v-if="canEditPhase(idx) && step.status !== 'done'"
-                class="action-btn btn-deadline"
-                @tap="openDeadline(item, step, idx)"
-              >
-                <text class="action-btn-icon">📅</text>
-                <text class="action-btn-text">截止</text>
-              </view>
-              <view
-                v-if="canEditPhase(idx) && step.status !== 'done'"
-                class="action-btn btn-done"
-                @tap="markStepDone(item, idx)"
-              >
-                <text class="action-btn-icon">✅</text>
-                <text class="action-btn-text">完成</text>
+              <view class="action-btn btn-record" @tap="openRecord(item, step, idx)">
+                <text class="action-btn-icon">📋</text>
+                <text class="action-btn-text">试制信息记录</text>
               </view>
               <view
                 v-if="canEditPhase(idx) && step.status === 'done'"
@@ -216,6 +195,37 @@
             <text class="form-label">试制说明</text>
             <textarea class="form-textarea" v-model="form.description" placeholder="请输入试制说明（选填）" />
           </view>
+          <!-- 基础信息字段 -->
+          <view class="form-section-title">基础信息</view>
+          <view class="form-item">
+            <text class="form-label">产品规格</text>
+            <input class="form-input" v-model="form.productSpec" placeholder="请输入产品规格" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">上机次数</text>
+            <input class="form-input" type="number" v-model="form.machineCount" placeholder="请输入上机次数" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">模具类型</text>
+            <input class="form-input" v-model="form.moldType" placeholder="首模/改模等" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">表面状态</text>
+            <input class="form-input" v-model="form.surfaceStatus" placeholder="精车/全涂等" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">上机类型</text>
+            <input class="form-input" v-model="form.machineType" placeholder="小批量/量产等" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">预计上机时间</text>
+            <picker mode="date" :value="form.planMachineTime || currentDate" @change="onFormDateChange('planMachineTime', $event)">
+              <view class="picker-wrap">
+                <text class="picker-value">{{ form.planMachineTime || '点击选择日期' }}</text>
+                <text class="picker-arrow">▾</text>
+              </view>
+            </picker>
+          </view>
         </view>
         <view class="modal-footer">
           <view class="modal-btn cancel" @tap="dialogVisible = false">
@@ -228,20 +238,57 @@
       </view>
     </view>
 
-    <!-- ===== 全屏弹窗：录入/上传 ===== -->
+    <!-- ===== 全屏弹窗：试制信息记录 ===== -->
     <!-- catchTouchMove 防止弹窗内 touchmove 冒泡到页面，避免干扰 vConsole 悬浮按钮 -->
     <view class="fullpage-modal" v-if="uploadVisible" @touchmove.stop="noop">
       <view class="fullpage-nav" :style="navBarStyle">
         <view class="fullpage-back" @tap="uploadVisible = false">
           <text class="fullpage-back-icon">✕</text>
         </view>
-        <text class="fullpage-title">{{ currentStep.name }} · 录入/上传</text>
+        <text class="fullpage-title">{{ currentStep.name }} · 试制信息记录</text>
         <view v-if="canEditPhase(currentStepIndex)" class="fullpage-save" @tap="submitOE">
           <text class="fullpage-save-text">{{ oeLoading ? '保存中' : '保存' }}</text>
         </view>
       </view>
 
       <scroll-view scroll-y class="fullpage-body">
+        <!-- 完成日期 + 责任人 -->
+        <view class="record-meta-section">
+          <view class="record-meta-row">
+            <view class="record-meta-item">
+              <text class="record-meta-label">完成日期</text>
+              <picker
+                mode="date"
+                :value="recordCompletionDate || currentDate"
+                @change="onRecordCompletionDateChange"
+                :disabled="!canEditPhase(currentStepIndex)"
+              >
+                <view class="record-meta-input">
+                  <text :style="{ color: recordCompletionDate ? '#303133' : '#999' }">{{ recordCompletionDate || '选择完成日期' }}</text>
+                  <text class="picker-arrow">▾</text>
+                </view>
+              </picker>
+            </view>
+            <view class="record-meta-item">
+              <text class="record-meta-label">责任人</text>
+              <picker
+                v-if="userList.length > 0"
+                mode="selector"
+                :range="userNameList"
+                :value="selectedResponsibleIndex"
+                @change="onResponsibleChange"
+                :disabled="!canEditPhase(currentStepIndex)"
+              >
+                <view class="record-meta-input">
+                  <text :style="{ color: stepResponsible ? '#303133' : '#999' }">{{ stepResponsible || '选择责任人' }}</text>
+                  <text class="picker-arrow">▾</text>
+                </view>
+              </picker>
+              <input v-else class="record-meta-input-text" v-model="stepResponsible" placeholder="请输入责任人" :disabled="!canEditPhase(currentStepIndex)" />
+            </view>
+          </view>
+        </view>
+
         <!-- 提示 -->
         <view class="oe-tip">
           <text class="oe-tip-icon">ℹ</text>
@@ -323,7 +370,7 @@
               <textarea class="oe-textarea" v-model="oeForm.hotProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
-              <text class="oe-label">改善记录</text>
+              <text class="oe-label">改善记录（原OE字段）</text>
               <textarea class="oe-textarea" v-model="oeForm.improveRecord" placeholder="请输入改善记录" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
@@ -353,7 +400,7 @@
               <textarea class="oe-textarea" v-model="oeForm.spinProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
-              <text class="oe-label">改模记录</text>
+              <text class="oe-label">改模记录（原OE字段）</text>
               <textarea class="oe-textarea" v-model="oeForm.moldModifyRecord" placeholder="请输入改模记录" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
@@ -407,7 +454,7 @@
               <textarea class="oe-textarea" v-model="oeForm.roughProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
-              <text class="oe-label">改善方案</text>
+              <text class="oe-label">改善方案（原OE字段）</text>
               <textarea class="oe-textarea" v-model="oeForm.improvePlan" placeholder="请输入改善方案" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
@@ -525,10 +572,47 @@
               <textarea class="oe-textarea" v-model="oeForm.productionSummary" placeholder="请输入生产总结" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
             <view class="oe-form-item">
-              <text class="oe-label">改善措施简述</text>
+              <text class="oe-label">改善措施简述（原OE字段）</text>
               <textarea class="oe-textarea" v-model="oeForm.improveMeasures" placeholder="请输入改善措施" :disabled="!canEditPhase(currentStepIndex)" />
             </view>
           </template>
+        </view>
+
+        <!-- 下一步需求（基础信息阶段不显示）-->
+        <view class="next-demand-section" v-if="currentStepIndex > 0">
+          <text class="next-demand-label">下一步需求</text>
+          <view class="next-demand-options">
+            <view
+              class="demand-option"
+              :class="{ 'demand-selected': recordDemand === 'normal' }"
+              @tap="setRecordDemand('normal')"
+            >
+              <text class="demand-option-text">✓ 无异常</text>
+            </view>
+            <view
+              class="demand-option demand-warn"
+              :class="{ 'demand-selected demand-warn-selected': recordDemand === 'minor' }"
+              @tap="setRecordDemand('minor')"
+            >
+              <text class="demand-option-text">⚠ 小异常，待下次关注</text>
+            </view>
+            <view
+              class="demand-option demand-danger"
+              :class="{ 'demand-selected demand-danger-selected': recordDemand === 'major' }"
+              @tap="setRecordDemand('major')"
+            >
+              <text class="demand-option-text">✗ 大异常，待改善</text>
+            </view>
+          </view>
+          <!-- 小异常/大异常时显示改善记录输入框 -->
+          <view v-if="recordDemand === 'minor' || recordDemand === 'major'" class="improve-record-input-area">
+            <textarea
+              class="improve-textarea"
+              v-model="recordImproveText"
+              placeholder="请输入改善措施..."
+              :disabled="!canEditPhase(currentStepIndex)"
+            />
+          </view>
         </view>
 
         <!-- 附件上传区 -->
@@ -591,11 +675,19 @@
           </view>
         </view>
 
-        <view style="height:60rpx"></view>
+        <!-- 完成按钮 -->
+        <view v-if="canEditPhase(currentStepIndex) && currentStep.status !== 'done'" class="record-done-section">
+          <view class="record-done-btn" @tap="markStepDoneFromRecord">
+            <text class="record-done-icon">✅</text>
+            <text class="record-done-text">完成此阶段</text>
+          </view>
+        </view>
+
+        <view style="height:80rpx"></view>
       </scroll-view>
     </view>
 
-    <!-- ===== 全屏弹窗：意见 ===== -->
+    <!-- ===== 全屏弹窗：意见（保留供历史意见查看，但不通过按钮触发）===== -->
     <view class="fullpage-modal" v-if="commentVisible" @touchmove.stop="noop">
       <view class="fullpage-nav" :style="navBarStyle">
         <view class="fullpage-back" @tap="commentVisible = false">
@@ -670,20 +762,20 @@
       </scroll-view>
     </view>
 
-    <!-- ===== 底部弹窗：截止日期 ===== -->
+    <!-- ===== 底部弹窗：完成日期 + 负责人 ===== -->
     <view class="modal-mask" v-if="deadlineVisible" @tap.self="deadlineVisible = false">
       <view class="modal-box">
-        <view class="modal-title">{{ currentStep.name }} · 截止日期</view>
+        <view class="modal-title">{{ currentStep.name }} · 完成日期 + 负责人</view>
         <view class="modal-form">
           <view class="form-item">
-            <text class="form-label">截止日期</text>
+            <text class="form-label">完成日期</text>
             <picker
               mode="date"
               :value="deadlineDate || currentDate"
               @change="onDeadlineChange"
             >
               <view class="picker-wrap">
-                <text class="picker-value">{{ deadlineDate || '点击选择截止日期' }}</text>
+                <text class="picker-value">{{ deadlineDate || '点击选择完成日期' }}</text>
                 <text class="picker-arrow">▾</text>
               </view>
             </picker>
@@ -783,7 +875,14 @@ export default {
       selectedUserIndex: 0,
       // 导航栏适配
       statusBarHeight: 44,
-      capsuleRightPadding: 104
+      capsuleRightPadding: 104,
+      // 下一步需求相关（以 processId_stepIdx 为 key 存储）
+      improveInputMap: {},
+      // 试制信息记录弹窗中的完成日期
+      recordCompletionDate: '',
+      // 试制信息记录弹窗中的下一步需求（本地状态，点击立即生效）
+      recordDemand: '',
+      recordImproveText: ''
     }
   },
   onLoad() {
@@ -857,16 +956,20 @@ export default {
 
     // =================== 步骤数据处理 ===================
     getSteps(item) {
-      return [
+      const steps = [
         { name: '基础信息', shortName: '基础', status: item.step1Status, deadline: item.step1Deadline, responsible: item.step1Responsible },
         { name: '压铸阶段', shortName: '压铸', status: item.step2Status, deadline: item.step2Deadline, responsible: item.step2Responsible },
         { name: '旋压阶段', shortName: '旋压', status: item.step3Status, deadline: item.step3Deadline, responsible: item.step3Responsible },
         { name: '热处理阶段', shortName: '热处理', status: item.step4Status, deadline: item.step4Deadline, responsible: item.step4Responsible },
         { name: '粗车阶段', shortName: '粗车', status: item.step5Status, deadline: item.step5Deadline, responsible: item.step5Responsible },
-        { name: '精车阶段', shortName: '精车', status: item.step6Status, deadline: item.step6Deadline, responsible: item.step6Deadline },
+        { name: '精车阶段', shortName: '精车', status: item.step6Status, deadline: item.step6Deadline, responsible: item.step6Responsible },
         { name: '涂装阶段', shortName: '涂装', status: item.step7Status, deadline: item.step7Deadline, responsible: item.step7Responsible },
         { name: '实验/总结', shortName: '实验', status: item.step8Status, deadline: item.step8Deadline, responsible: item.step8Responsible }
       ]
+      steps.forEach((s, idx) => {
+        s.nameColorClass = this.getStepNameColorClass(item, idx)
+      })
+      return steps
     },
     getCardStatus(item) {
       const steps = this.getSteps(item)
@@ -1018,13 +1121,43 @@ export default {
         step5Status: 'pending',
         step6Status: 'pending',
         step7Status: 'pending',
-        step8Status: 'pending'
+        step8Status: 'pending',
+        productSpec: '',
+        machineCount: '',
+        moldType: '',
+        surfaceStatus: '',
+        machineType: '',
+        planMachineTime: ''
       }
       this.dialogVisible = true
     },
     handleEdit(item) {
       this.dialogTitle = '编辑试制'
-      this.form = { ...item }
+      this.form = {
+        ...item,
+        productSpec: item.productSpec || '',
+        machineCount: item.machineCount || '',
+        moldType: item.moldType || '',
+        surfaceStatus: item.surfaceStatus || '',
+        machineType: item.machineType || '',
+        planMachineTime: item.planMachineTime || ''
+      }
+      // 尝试从OE跟踪加载基础信息字段
+      if (item.moldCode) {
+        listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: item.moldCode }).then(res => {
+          const rows = res.rows || []
+          if (rows.length > 0) {
+            const track = rows[0]
+            this.$set(this.form, 'productSpec', track.productSpec || this.form.productSpec)
+            this.$set(this.form, 'machineCount', track.machineCount || this.form.machineCount)
+            this.$set(this.form, 'moldType', track.moldType || this.form.moldType)
+            this.$set(this.form, 'surfaceStatus', track.surfaceStatus || this.form.surfaceStatus)
+            this.$set(this.form, 'machineType', track.machineType || this.form.machineType)
+            const pt = track.planMachineTime ? this.formatPickerDate(track.planMachineTime) : ''
+            this.$set(this.form, 'planMachineTime', pt || this.form.planMachineTime)
+          }
+        }).catch(() => {})
+      }
       this.dialogVisible = true
     },
     handleDelete(item) {
@@ -1052,14 +1185,39 @@ export default {
         return
       }
       this.submitLoading = true
-      const save = this.form.processId ? updateTrialProcess : addTrialProcess
-      save(this.form).then(() => {
-        uni.showToast({ title: this.form.processId ? '修改成功' : '发起成功', icon: 'success' })
+      const processForm = { ...this.form }
+      const save = processForm.processId ? updateTrialProcess : addTrialProcess
+      save(processForm).then(() => {
+        uni.showToast({ title: processForm.processId ? '修改成功' : '发起成功', icon: 'success' })
         this.dialogVisible = false
+        // 同步基础信息字段到 OE 跟踪
+        if (processForm.moldCode) {
+          const oePayload = {
+            moldCode: processForm.moldCode,
+            productSpec: processForm.productSpec || '',
+            machineCount: processForm.machineCount || '',
+            moldType: processForm.moldType || '',
+            surfaceStatus: processForm.surfaceStatus || '',
+            machineType: processForm.machineType || '',
+            planMachineTime: processForm.planMachineTime || ''
+          }
+          listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: processForm.moldCode }).then(res => {
+            const rows = res.rows || []
+            if (rows.length > 0) {
+              updateTrialTrack({ ...oePayload, trackId: rows[0].trackId }).catch(() => {})
+            } else {
+              addTrialTrack(oePayload).catch(() => {})
+            }
+          }).catch(() => {})
+        }
         this.loadList()
       }).finally(() => {
         this.submitLoading = false
       })
+    },
+    onFormDateChange(field, e) {
+      const val = (e && e.detail && e.detail.value) ? e.detail.value.substring(0, 10) : ''
+      this.$set(this.form, field, val)
     },
     onUserChange(e) {
       const idx = e.detail.value
@@ -1068,8 +1226,8 @@ export default {
       this.showUserPicker = false
     },
 
-    // =================== 录入/上传 ===================
-    openUpload(process, step, index) {
+    // =================== 试制信息记录 ===================
+    openRecord(process, step, index) {
       this.currentProcess = process
       this.currentStep = step
       this.currentStepIndex = index
@@ -1080,13 +1238,24 @@ export default {
       } catch (e) {
         this.historyFiles = []
       }
-      // 每次打开上传弹窗时清空图片状态，避免上一个步骤的缓存干扰
+      // 每次打开弹窗时清空图片状态，避免上一个步骤的缓存干扰
       this.imageLocalPaths = {}
       this.imageLoaded = {}
       this.imageLoadErrors = {}
       this.prefetchImagesForDisplay()
-      // 先加载OE跟踪数据，加载完成后再打开弹窗（避免日期字段的竞态条件）
-      // 预初始化所有日期字段，确保 Vue 响应式系统能正确追踪变更
+      // 初始化完成日期（使用已有的 deadline 或空）
+      this.recordCompletionDate = step.deadline || ''
+      // 初始化下一步需求
+      const demandKey = `step${index + 1}Demand`
+      const recordKey = `step${index + 1}ImproveRecord`
+      this.recordDemand = process[demandKey] || ''
+      this.recordImproveText = process[recordKey] || ''
+      // 初始化责任人：优先使用已设置的负责人，否则默认为当前登录用户（任务2）
+      const currentName = this.$store.state.name || ''
+      this.stepResponsible = step.responsible || currentName
+      const respIdx = this.userList.findIndex(u => u.nickName === this.stepResponsible)
+      this.selectedResponsibleIndex = respIdx >= 0 ? respIdx : 0
+      // 加载OE跟踪数据
       const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
         'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
       const baseOeForm = {
@@ -1100,7 +1269,6 @@ export default {
           const rows = res.rows || []
           if (rows.length > 0) {
             const loaded = { ...baseOeForm, ...rows[0] }
-            // 格式化日期字段，避免 [object Object]
             dateFields.forEach(f => { if (loaded[f]) { loaded[f] = this.formatPickerDate(loaded[f]) } })
             this.oeForm = loaded
           } else {
@@ -1115,6 +1283,86 @@ export default {
         this.oeForm = { ...baseOeForm }
         this.uploadVisible = true
       }
+    },
+    // 兼容旧调用（保留 openUpload 别名）
+    openUpload(process, step, index) {
+      this.openRecord(process, step, index)
+    },
+    onRecordCompletionDateChange(e) {
+      this.recordCompletionDate = (e && e.detail && e.detail.value) ? e.detail.value.substring(0, 10) : ''
+    },
+    markStepDoneFromRecord() {
+      const item = this.currentProcess
+      const index = this.currentStepIndex
+      if (!item) return
+      const stepName = this.getSteps(item)[index].name
+      uni.showModal({
+        title: '确认完成',
+        content: `确认将"${stepName}"标记为已完成？`,
+        confirmText: '确定',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            const stepNum = index + 1
+            const updateData = { processId: item.processId }
+            updateData[`step${stepNum}Status`] = 'done'
+            if (stepNum < 8) {
+              updateData[`step${stepNum + 1}Status`] = 'active'
+            }
+            // 同步完成日期和责任人
+            if (this.recordCompletionDate) {
+              updateData[`step${stepNum}Deadline`] = this.recordCompletionDate
+            }
+            if (this.stepResponsible) {
+              updateData[`step${stepNum}Responsible`] = this.stepResponsible
+            }
+            if (index > 0) {
+              updateData[`step${stepNum}Demand`] = this.recordDemand || ''
+              updateData[`step${stepNum}ImproveRecord`] = (this.recordDemand === 'minor' || this.recordDemand === 'major') ? (this.recordImproveText || '') : ''
+            }
+            // 先保存 OE 数据再标记完成
+            this.submitOESilent().then(() => {
+              updateTrialProcess(updateData).then(() => {
+                uni.showToast({ title: '已标记为完成', icon: 'success' })
+                this.uploadVisible = false
+                this.loadList()
+              })
+            }).catch(() => {
+              updateTrialProcess(updateData).then(() => {
+                uni.showToast({ title: '已标记为完成', icon: 'success' })
+                this.uploadVisible = false
+                this.loadList()
+              })
+            })
+          }
+        }
+      })
+    },
+    // 静默保存OE数据（不关闭弹窗不提示）
+    submitOESilent() {
+      return new Promise((resolve, reject) => {
+        const imageUrls = this.historyFiles.filter(f => this.isImageFile(f.name)).map(f => f.url).join(',')
+        if (imageUrls) {
+          if (this.currentPhase === 'base') this.$set(this.oeForm, 'baseImage', imageUrls)
+          else if (this.currentPhase === 'hot') this.$set(this.oeForm, 'hotCheckMeasureImage', imageUrls)
+          else if (this.currentPhase === 'spin') this.$set(this.oeForm, 'spinFrontDistanceImage', imageUrls)
+          else if (this.currentPhase === 'heat') this.$set(this.oeForm, 'heatFlowSheetImage', imageUrls)
+          else if (this.currentPhase === 'rough') this.$set(this.oeForm, 'roughImage', imageUrls)
+          else if (this.currentPhase === 'fine') this.$set(this.oeForm, 'fineImage', imageUrls)
+          else if (this.currentPhase === 'paint') this.$set(this.oeForm, 'paintFlowSheetImage', imageUrls)
+          else if (this.currentPhase === 'test') this.$set(this.oeForm, 'testImage', imageUrls)
+        }
+        const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
+          'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
+        const payload = { ...this.oeForm }
+        dateFields.forEach(f => {
+          if (!payload[f]) return
+          if (typeof payload[f] === 'string') { payload[f] = payload[f].substring(0, 10); return }
+          try { payload[f] = new Date(payload[f]).toISOString().substring(0, 10) } catch(e) { payload[f] = null }
+        })
+        const save = payload.trackId ? updateTrialTrack : addTrialTrack
+        save(payload).then(resolve).catch(reject)
+      })
     },
     submitOE() {
       if (this.oeLoading) return
@@ -1143,34 +1391,44 @@ export default {
       })
       const save = payload.trackId ? updateTrialTrack : addTrialTrack
       save(payload).then(() => {
-        uni.showToast({ title: 'OE数据已保存', icon: 'success' })
-        this.uploadVisible = false
-
-        // 将OE关键日期同步到试制流程步骤的 deadline，使步骤卡片显示最新日期
+        // 同步完成日期和责任人到步骤
+        const stepNum = this.currentStepIndex + 1
+        const stepUpdate = { processId: this.currentProcess.processId }
+        if (this.recordCompletionDate) {
+          stepUpdate[`step${stepNum}Deadline`] = this.recordCompletionDate
+        }
+        if (this.stepResponsible) {
+          stepUpdate[`step${stepNum}Responsible`] = this.stepResponsible
+        }
+        // 同步OE关键日期到 deadline
         const dateMap = {
-          base:      { field: 'planMachineTime', step: 1 },
-          hot:       { field: 'hotMachineDate',  step: 2 },
-          spin:      { field: 'spinMachineDate', step: 3 },
-          heat:      { field: 'heatTransferTime', step: 4 },
-          rough:     { field: 'roughMachineDate', step: 5 },
-          fine:      { field: 'fineMachineDate',  step: 6 },
-          paint:     { field: 'paintMachineDate', step: 7 },
-          test:      { field: 'impactTestDate',   step: 8 }
+          base:  { field: 'planMachineTime', step: 1 },
+          hot:   { field: 'hotMachineDate',  step: 2 },
+          spin:  { field: 'spinMachineDate', step: 3 },
+          heat:  { field: 'heatTransferTime', step: 4 },
+          rough: { field: 'roughMachineDate', step: 5 },
+          fine:  { field: 'fineMachineDate',  step: 6 },
+          paint: { field: 'paintMachineDate', step: 7 },
+          test:  { field: 'impactTestDate',   step: 8 }
         }
         const mapping = dateMap[this.currentPhase]
-        if (mapping && payload[mapping.field] && this.currentProcess) {
-          const stepUpdate = {
-            processId: this.currentProcess.processId,
-            [`step${mapping.step}Deadline`]: payload[mapping.field]
-          }
+        if (mapping && payload[mapping.field]) {
+          stepUpdate[`step${mapping.step}Deadline`] = payload[mapping.field]
+        }
+        // 保存下一步需求（非基础信息阶段）
+        if (this.currentStepIndex > 0) {
+          stepUpdate[`step${stepNum}Demand`] = this.recordDemand || ''
+          stepUpdate[`step${stepNum}ImproveRecord`] = (this.recordDemand === 'minor' || this.recordDemand === 'major') ? (this.recordImproveText || '') : ''
+        }
+        if (Object.keys(stepUpdate).length > 1) {
           updateTrialProcess(stepUpdate).then(() => {
             this.loadList()
-          }).catch(() => {
-            this.loadList()
-          })
+          }).catch(() => { this.loadList() })
         } else {
           this.loadList()
         }
+        uni.showToast({ title: 'OE数据已保存', icon: 'success' })
+        this.uploadVisible = false
       }).catch(() => {
         uni.showToast({ title: '保存失败', icon: 'none' })
       }).finally(() => {
@@ -1635,7 +1893,11 @@ export default {
       this.currentStep = step
       this.currentStepIndex = index
       this.deadlineDate = step.deadline || ''
-      this.stepResponsible = step.responsible || ''
+      // 默认负责人：已设置则使用，否则默认当前登录用户（任务2）
+      const currentName = this.$store.state.name || ''
+      this.stepResponsible = step.responsible || currentName
+      const respIdx = this.userList.findIndex(u => u.nickName === this.stepResponsible)
+      this.selectedResponsibleIndex = respIdx >= 0 ? respIdx : 0
       this.deadlineVisible = true
     },
     onDeadlineChange(e) {
@@ -1672,6 +1934,103 @@ export default {
       if (perms.includes('*:*:*') || perms.includes('tech:trialTrack:edit') || perms.includes('tech:process:edit')) return true
       const phasePerms = ['tech:trial:phase:base:edit', 'tech:trial:phase:hot:edit', 'tech:trial:phase:spin:edit', 'tech:trial:phase:heat:edit', 'tech:trial:phase:rough:edit', 'tech:trial:phase:fine:edit', 'tech:trial:phase:paint:edit', 'tech:trial:phase:test:edit']
       return index >= 0 && index < 8 && perms.includes(phasePerms[index])
+    },
+
+    // =================== 下一步需求 ===================
+    /** 在试制信息记录弹窗内设置下一步需求（本地状态，立即生效） */
+    setRecordDemand(demand) {
+      if (!this.canEditPhase(this.currentStepIndex)) {
+        uni.showToast({ title: '无编辑权限', icon: 'none' })
+        return
+      }
+      this.recordDemand = demand
+      if (demand === 'normal') {
+        this.recordImproveText = ''
+      }
+    },
+    /** 获取某阶段的下一步需求状态（normal/minor/major） */
+    getStepDemand(item, idx) {
+      const key = `step${idx + 1}Demand`
+      return item[key] || ''
+    },
+    /** 获取某阶段改善记录（已提交的） */
+    getStepImproveRecord(item, idx) {
+      const key = `step${idx + 1}ImproveRecord`
+      return item[key] || ''
+    },
+    /** 设置某阶段的下一步需求状态 */
+    setStepDemand(item, idx, demand) {
+      const key = `step${idx + 1}Demand`
+      const updateData = { processId: item.processId, [key]: demand }
+      // 若改为无异常，清空改善记录输入框
+      if (demand === 'normal') {
+        const inputKey = `${item.processId}_${idx}`
+        this.$set(this.improveInputMap, inputKey, '')
+      }
+      updateTrialProcess(updateData).then(() => {
+        this.$set(item, key, demand)
+        // 若已提交改善记录且改为无异常，也清除改善记录让阶段变绿
+        if (demand === 'normal') {
+          const recordKey = `step${idx + 1}ImproveRecord`
+          this.$set(item, recordKey, '')
+        }
+      }).catch(() => {
+        uni.showToast({ title: '设置失败', icon: 'none' })
+      })
+    },
+    /** 获取改善记录输入框的值 */
+    getImproveInputVal(processId, idx) {
+      return this.improveInputMap[`${processId}_${idx}`] || ''
+    },
+    /** 改善记录输入框 input 事件 */
+    onImproveInput(processId, idx, e) {
+      const val = e && e.detail ? e.detail.value : ''
+      this.$set(this.improveInputMap, `${processId}_${idx}`, val)
+    },
+    /** 提交改善记录 */
+    submitImproveRecord(item, idx) {
+      const inputKey = `${item.processId}_${idx}`
+      const val = (this.improveInputMap[inputKey] || '').trim()
+      if (!val) {
+        uni.showToast({ title: '请输入改善措施', icon: 'none' })
+        return
+      }
+      const recordKey = `step${idx + 1}ImproveRecord`
+      const demandKey = `step${idx + 1}Demand`
+      const updateData = { processId: item.processId, [recordKey]: val }
+      updateTrialProcess(updateData).then(() => {
+        this.$set(item, recordKey, val)
+        // 提交改善措施后，阶段变绿（将 demand 重置为 normal）
+        const demandUpdate = { processId: item.processId, [demandKey]: 'normal' }
+        updateTrialProcess(demandUpdate).then(() => {
+          this.$set(item, demandKey, 'normal')
+        }).catch(() => {})
+        this.$set(this.improveInputMap, inputKey, '')
+        uni.showToast({ title: '改善措施已提交', icon: 'success' })
+      }).catch(() => {
+        uni.showToast({ title: '提交失败', icon: 'none' })
+      })
+    },
+    /** 修改已提交的改善记录 */
+    editImproveRecord(item, idx) {
+      const recordKey = `step${idx + 1}ImproveRecord`
+      const inputKey = `${item.processId}_${idx}`
+      this.$set(this.improveInputMap, inputKey, item[recordKey] || '')
+      // 清除已提交记录，显示输入框
+      this.$set(item, recordKey, '')
+    },
+    /** 获取步骤名称颜色class */
+    getStepNameColorClass(item, idx) {
+      if (idx === 0) return '' // 基础信息不参与颜色逻辑
+      const demand = this.getStepDemand(item, idx)
+      const improveRecord = this.getStepImproveRecord(item, idx)
+      // 无异常 或 已提交改善记录 -> 绿色
+      if (demand === 'normal' || (demand && improveRecord)) return 'step-name-green'
+      // 小异常（未提交改善记录） -> 黄色
+      if (demand === 'minor') return 'step-name-yellow'
+      // 大异常（未提交改善记录） -> 红色
+      if (demand === 'major') return 'step-name-red'
+      return ''
     }
   }
 }
@@ -2421,4 +2780,165 @@ export default {
 .comment-action-text.danger { color: #f56c6c; }
 .comment-history-empty { padding: 40rpx 24rpx; text-align: center; }
 .history-empty-text { font-size: 26rpx; color: #c0c4cc; }
+
+/* ===== 下一步需求 ===== */
+.next-demand-section {
+  margin: 12rpx 0 12rpx 48rpx;
+  background: #f8f9fc;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+}
+.next-demand-label {
+  font-size: 24rpx;
+  color: #606266;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+  display: block;
+}
+.next-demand-options {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+.demand-option {
+  flex: 1;
+  padding: 10rpx 0;
+  border-radius: 10rpx;
+  border: 2rpx solid #dcdfe6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  &:active { opacity: 0.7; }
+}
+.demand-selected {
+  border-color: #67c23a;
+  background: #f0f9eb;
+}
+.demand-warn { border-color: #e6a23c; }
+.demand-warn-selected { background: #fdf6ec; border-color: #e6a23c; }
+.demand-danger { border-color: #f56c6c; }
+.demand-danger-selected { background: #fef0f0; border-color: #f56c6c; }
+.demand-option-text { font-size: 22rpx; color: #606266; }
+.demand-selected .demand-option-text { color: #67c23a; font-weight: 600; }
+.demand-warn-selected .demand-option-text { color: #e6a23c; font-weight: 600; }
+.demand-danger-selected .demand-option-text { color: #f56c6c; font-weight: 600; }
+
+.improve-record-display {
+  background: #fff;
+  border-radius: 10rpx;
+  padding: 12rpx 16rpx;
+  border: 1rpx solid #ebeef5;
+}
+.improve-record-title { font-size: 22rpx; color: #909399; }
+.improve-record-content { font-size: 24rpx; color: #303133; line-height: 1.6; }
+.improve-edit-btn {
+  margin-top: 8rpx;
+  display: inline-block;
+  &:active { opacity: 0.7; }
+}
+.improve-edit-text { font-size: 22rpx; color: #6c5bb3; }
+
+.improve-record-input-area { margin-top: 8rpx; }
+.improve-textarea {
+  width: 100%;
+  border: 2rpx solid #ebeef5;
+  border-radius: 10rpx;
+  padding: 12rpx 16rpx;
+  font-size: 24rpx;
+  color: #303133;
+  background: #fff;
+  box-sizing: border-box;
+  min-height: 100rpx;
+}
+.improve-submit-btn {
+  margin-top: 10rpx;
+  background: linear-gradient(135deg, #4a3b8f, #6c5bb3);
+  border-radius: 20rpx;
+  padding: 12rpx 30rpx;
+  display: inline-block;
+  &:active { opacity: 0.8; }
+}
+.improve-submit-text { font-size: 24rpx; color: #fff; font-weight: 600; }
+
+/* 步骤名称颜色 */
+.step-name-green { color: #67c23a !important; }
+.step-name-yellow { color: #e6a23c !important; }
+.step-name-red { color: #f56c6c !important; }
+
+/* ===== 试制信息记录弹窗 ===== */
+.record-meta-section {
+  margin: 20rpx 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+}
+.record-meta-row {
+  display: flex;
+  gap: 20rpx;
+}
+.record-meta-item {
+  flex: 1;
+}
+.record-meta-label {
+  display: block;
+  font-size: 24rpx;
+  color: #606266;
+  margin-bottom: 8rpx;
+  font-weight: 600;
+}
+.record-meta-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2rpx solid #dcdfe6;
+  border-radius: 10rpx;
+  padding: 14rpx 16rpx;
+  background: #f8f9fc;
+  font-size: 26rpx;
+  color: #303133;
+}
+.record-meta-input-text {
+  border: 2rpx solid #dcdfe6;
+  border-radius: 10rpx;
+  padding: 14rpx 16rpx;
+  background: #f8f9fc;
+  font-size: 26rpx;
+  color: #303133;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 完成按钮 */
+.record-done-section {
+  margin: 20rpx 24rpx;
+  display: flex;
+  justify-content: center;
+}
+.record-done-btn {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  background: linear-gradient(135deg, #34a853, #67c23a);
+  border-radius: 50rpx;
+  padding: 24rpx 60rpx;
+  &:active { opacity: 0.8; }
+}
+.record-done-icon { font-size: 30rpx; }
+.record-done-text { font-size: 30rpx; color: #fff; font-weight: 700; }
+
+/* 试制信息按钮 */
+.btn-record { background: #f3f0ff; grid-column: 1 / -1; }
+.btn-record .action-btn-text { color: #4a3b8f; font-weight: 600; }
+
+/* 发起弹窗基础信息分组标题 */
+.form-section-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #4a3b8f;
+  padding: 10rpx 0 14rpx;
+  border-top: 1rpx solid #f0f0f0;
+  margin-top: 8rpx;
+  display: block;
+}
 </style>

@@ -55,6 +55,7 @@ export function uploadFile(filePath) {
       url: BASE_URL + '/common/upload',
       filePath: filePath,
       name: 'file',
+      timeout: 60000,
       header: {
         Authorization: token ? 'Bearer ' + token : ''
       },
@@ -72,12 +73,21 @@ export function uploadFile(filePath) {
         }
       },
       fail: (err) => {
-        uni.showToast({ title: '上传失败', icon: 'none' })
+        if (err && err.errMsg && err.errMsg.includes('timeout')) {
+          uni.showToast({ title: '上传超时，请检查网络', icon: 'none' })
+        } else {
+          uni.showToast({ title: '上传失败', icon: 'none' })
+        }
         reject(err)
       }
     })
   })
 }
 
-// 导出BASE_URL供其他组件使用
+// 动态获取 BASE_URL（每次调用都读取最新配置，避免登录前后值不一致）
+export function getProductBaseUrl() {
+  return getBaseUrl()
+}
+
+// 兼容旧引用：仍导出静态 BASE_URL，但组件应优先使用 getProductBaseUrl()
 export const BASE_URL = getBaseUrl()
