@@ -22,7 +22,14 @@
     {
       "path": "pages/task/detail",
       "style": {
-        "navigationBarTitleText": "任务详情",
+        "navigationBarTitleText": "试制跟踪详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/task/edit",
+      "style": {
+        "navigationBarTitleText": "编辑试制跟踪",
         "navigationStyle": "custom"
       }
     },
@@ -51,6 +58,20 @@
       "path": "pages/trialProcess/index",
       "style": {
         "navigationBarTitleText": "试制流程",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/trialProcess/record",
+      "style": {
+        "navigationBarTitleText": "试制信息记录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/trialProcess/comment",
+      "style": {
+        "navigationBarTitleText": "历史评论",
         "navigationStyle": "custom"
       }
     },

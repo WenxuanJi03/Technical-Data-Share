@@ -136,7 +136,13 @@ export default {
   },
   methods: {
     goPage(url) {
-      uni.navigateTo({ url })
+      // tabBar 页面必须使用 switchTab
+      const tabBarPages = ['/pages/index/index', '/pages/task/index', '/pages/mine/index']
+      if (tabBarPages.includes(url)) {
+        uni.switchTab({ url })
+      } else {
+        uni.navigateTo({ url })
+      }
     },
     loadStats() {
       listNotice({ pageNum: 1, pageSize: 1000 }).then(res => {

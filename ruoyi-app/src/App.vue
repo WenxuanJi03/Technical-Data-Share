@@ -28,4 +28,9 @@ page {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* 强制提升 vConsole 层级，防止被遮挡 (兼容各版本及 H5 组件) */
+#__vconsole {
+  z-index: 9999999 !important;
+}
 </style>

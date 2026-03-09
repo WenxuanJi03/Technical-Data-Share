@@ -67,14 +67,14 @@
             <!-- 圆点 -->
             <view
               class="progress-dot"
-              :class="step.status === 'done' ? 'dot-done' : (step.status === 'active' ? 'dot-active' : 'dot-pending')"
+              :class="step.dotColorClass"
             >
               <text class="dot-icon">{{ step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : '○') }}</text>
             </view>
-            <!-- 标签（下一步需求颜色同步：绿/黄/红） -->
+            <!-- 标签（颜色与节点一致：绿/黄/红） -->
             <text
               class="label-text"
-              :class="(step.nameColorClass || '') || (step.status === 'done' ? 'l-done' : (step.status === 'active' ? 'l-active' : ''))"
+              :class="step.nameColorClass || (step.status === 'done' ? 'l-done' : '')"
             >{{ step.shortName }}</text>
           </view>
         </view>
@@ -96,12 +96,7 @@
             <view class="step-head">
               <view
                 class="step-dot-sm"
-                :class="step.status === 'done'
-                  ? 'sm-done'
-                  : ((step.deadline && step.status !== 'done')
-                      ? 'sm-expired'
-                      : (step.status === 'active' ? 'sm-active' : 'sm-pending')
-                    )"
+                :class="step.smColorClass"
               >
                 <text class="step-dot-sm-icon">{{ step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : '○') }}</text>
               </view>
@@ -166,10 +161,10 @@
     </scroll-view>
 
     <!-- ===== 弹窗：发起/编辑试制 ===== -->
-    <view class="modal-mask" v-if="dialogVisible" @tap.self="dialogVisible = false">
-      <view class="modal-box">
+    <view class="modal-mask" v-if="dialogVisible" @tap="dialogVisible = false">
+      <view class="modal-box" @tap.stop="noop">
         <view class="modal-title">{{ dialogTitle }}</view>
-        <view class="modal-form">
+        <scroll-view scroll-y class="modal-form" style="max-height: 60vh;">
           <view class="form-item">
             <text class="form-label">轮形-模号 *</text>
             <input class="form-input" v-model="form.moldCode" placeholder="如 07122C26-M3" />
@@ -226,7 +221,7 @@
               </view>
             </picker>
           </view>
-        </view>
+        </scroll-view>
         <view class="modal-footer">
           <view class="modal-btn cancel" @tap="dialogVisible = false">
             <text>取消</text>
@@ -238,535 +233,14 @@
       </view>
     </view>
 
-    <!-- ===== 全屏弹窗：试制信息记录 ===== -->
-    <!-- catchTouchMove 防止弹窗内 touchmove 冒泡到页面，避免干扰 vConsole 悬浮按钮 -->
-    <view class="fullpage-modal" v-if="uploadVisible" @touchmove.stop="noop">
-      <view class="fullpage-nav" :style="navBarStyle">
-        <view class="fullpage-back" @tap="uploadVisible = false">
-          <text class="fullpage-back-icon">✕</text>
-        </view>
-        <text class="fullpage-title">{{ currentStep.name }} · 试制信息记录</text>
-        <view v-if="canEditPhase(currentStepIndex)" class="fullpage-save" @tap="submitOE">
-          <text class="fullpage-save-text">{{ oeLoading ? '保存中' : '保存' }}</text>
-        </view>
-      </view>
-
-      <scroll-view scroll-y class="fullpage-body">
-        <!-- 完成日期 + 责任人 -->
-        <view class="record-meta-section">
-          <view class="record-meta-row">
-            <view class="record-meta-item">
-              <text class="record-meta-label">完成日期</text>
-              <picker
-                mode="date"
-                :value="recordCompletionDate || currentDate"
-                @change="onRecordCompletionDateChange"
-                :disabled="!canEditPhase(currentStepIndex)"
-              >
-                <view class="record-meta-input">
-                  <text :style="{ color: recordCompletionDate ? '#303133' : '#999' }">{{ recordCompletionDate || '选择完成日期' }}</text>
-                  <text class="picker-arrow">▾</text>
-                </view>
-              </picker>
-            </view>
-            <view class="record-meta-item">
-              <text class="record-meta-label">责任人</text>
-              <picker
-                v-if="userList.length > 0"
-                mode="selector"
-                :range="userNameList"
-                :value="selectedResponsibleIndex"
-                @change="onResponsibleChange"
-                :disabled="!canEditPhase(currentStepIndex)"
-              >
-                <view class="record-meta-input">
-                  <text :style="{ color: stepResponsible ? '#303133' : '#999' }">{{ stepResponsible || '选择责任人' }}</text>
-                  <text class="picker-arrow">▾</text>
-                </view>
-              </picker>
-              <input v-else class="record-meta-input-text" v-model="stepResponsible" placeholder="请输入责任人" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </view>
-        </view>
-
-        <!-- 提示 -->
-        <view class="oe-tip">
-          <text class="oe-tip-icon">ℹ</text>
-          <text class="oe-tip-text">以下数据与 OE试制跟踪 联动，保存后可在跟踪卡片中查看</text>
-        </view>
-        <view v-if="!canEditPhase(currentStepIndex)" class="oe-tip oe-tip-warn">
-          <text class="oe-tip-icon">⚠</text>
-          <text class="oe-tip-text">您没有此节点的编辑权限，仅可查看</text>
-        </view>
-
-        <!-- OE数据录入表单（按阶段显示不同字段）-->
-        <view class="oe-form-section">
-          <text class="section-label">OE跟踪数据</text>
-
-          <!-- 基础信息 -->
-          <template v-if="currentPhase === 'base'">
-            <view class="oe-form-item">
-              <text class="oe-label">产品规格</text>
-              <input class="oe-input" v-model="oeForm.productSpec" placeholder="请输入产品规格" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">上机次数</text>
-              <input class="oe-input" v-model="oeForm.machineCount" type="number" placeholder="请输入上机次数" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">模具类型</text>
-              <input class="oe-input" v-model="oeForm.moldType" placeholder="首模/改模等" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">表面状态</text>
-              <input class="oe-input" v-model="oeForm.surfaceStatus" placeholder="精车/全涂等" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">上机类型</text>
-              <input class="oe-input" v-model="oeForm.machineType" placeholder="小批量/量产等" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">预计上机时间</text>
-              <picker mode="date" :value="formatPickerDate(oeForm.planMachineTime)" @change="onOEDateChange('planMachineTime', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                  <text :style="{ color: oeForm.planMachineTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.planMachineTime || 'YYYY-MM-DD' }}</text>
-                </view>
-              </picker>
-            </view>
-          </template>
-
-          <!-- 热工阶段 -->
-          <template v-else-if="currentPhase === 'hot'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">压铸上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.hotMachineDate)" @change="onOEDateChange('hotMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.hotMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.hotMachineDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">机台</text>
-                <input class="oe-input" v-model="oeForm.hotMachineStation" placeholder="机台编号" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">保压时间</text>
-                <input class="oe-input" v-model="oeForm.roundKeepTime" placeholder="保压时间" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">负责人</text>
-                <input class="oe-input" v-model="oeForm.hotImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">测量数据</text>
-              <input class="oe-input" v-model="oeForm.hotCheckMeasureData" placeholder="请输入测量数据" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.hotProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">改善记录（原OE字段）</text>
-              <textarea class="oe-textarea" v-model="oeForm.improveRecord" placeholder="请输入改善记录" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-
-          <!-- 旋压阶段 -->
-          <template v-else-if="currentPhase === 'spin'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">旋压上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.spinMachineDate)" @change="onOEDateChange('spinMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.spinMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.spinMachineDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">旋压机台</text>
-                <input class="oe-input" v-model="oeForm.spinMachineStation" placeholder="机台编号" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">负责人</text>
-              <input class="oe-input" v-model="oeForm.spinImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.spinProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">改模记录（原OE字段）</text>
-              <textarea class="oe-textarea" v-model="oeForm.moldModifyRecord" placeholder="请输入改模记录" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-
-          <!-- 热处理阶段 -->
-          <template v-else-if="currentPhase === 'heat'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">下转时间</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.heatTransferTime)" @change="onOEDateChange('heatTransferTime', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.heatTransferTime ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.heatTransferTime || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">接收数量</text>
-                <input class="oe-input" type="number" v-model="oeForm.heatReceiveCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">下转数量</text>
-                <input class="oe-input" type="number" v-model="oeForm.heatTransferCount" placeholder="数量" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">负责人</text>
-                <input class="oe-input" v-model="oeForm.heatImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-          </template>
-
-          <!-- 粗车阶段 -->
-          <template v-else-if="currentPhase === 'rough'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">粗车上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.roughMachineDate)" @change="onOEDateChange('roughMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.roughMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.roughMachineDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">负责人</text>
-                <input class="oe-input" v-model="oeForm.roughImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.roughProduction" placeholder="请输入生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">改善方案（原OE字段）</text>
-              <textarea class="oe-textarea" v-model="oeForm.improvePlan" placeholder="请输入改善方案" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-
-          <!-- 精车阶段 -->
-          <template v-else-if="currentPhase === 'fine'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">精车上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.fineMachineDate)" @change="onOEDateChange('fineMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.fineMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.fineMachineDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">精车负责人</text>
-                <input class="oe-input" v-model="oeForm.fineImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">精车生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.fineProduction" placeholder="请输入精车生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-
-          <!-- 涂装阶段 -->
-          <template v-else-if="currentPhase === 'paint'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">涂装上机日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.paintMachineDate)" @change="onOEDateChange('paintMachineDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.paintMachineDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.paintMachineDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">涂装负责人</text>
-                <input class="oe-input" v-model="oeForm.paintImprovePerson" placeholder="负责人姓名" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">涂装生产情况</text>
-              <textarea class="oe-textarea" v-model="oeForm.paintProduction" placeholder="请输入涂装生产情况" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-
-          <!-- 实验/总结 -->
-          <template v-else-if="currentPhase === 'test'">
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">冲击试验日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.impactTestDate)" @change="onOEDateChange('impactTestDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.impactTestDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.impactTestDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">冲击试验结果</text>
-                <input class="oe-input" v-model="oeForm.impactTestResult" placeholder="试验结果" :disabled="!canEditPhase(currentStepIndex)" />
-              </view>
-            </view>
-            <view class="oe-form-row">
-              <view class="oe-form-item half">
-                <text class="oe-label">生产完成日期</text>
-                <picker mode="date" :value="formatPickerDate(oeForm.completeDate)" @change="onOEDateChange('completeDate', $event)" :disabled="!canEditPhase(currentStepIndex)">
-                  <view class="oe-input" style="display:flex;align-items:center;justify-content:space-between">
-                    <text :style="{ color: oeForm.completeDate ? '#303133' : '#999', fontSize: '26rpx' }">{{ oeForm.completeDate || 'YYYY-MM-DD' }}</text>
-                  </view>
-                </picker>
-              </view>
-              <view class="oe-form-item half">
-                <text class="oe-label">全序是否完成</text>
-                <view class="radio-group">
-                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.allProcessDone = '是')">
-                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.allProcessDone === '是' }"></view>
-                    <text class="radio-label">是</text>
-                  </view>
-                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.allProcessDone = '否')">
-                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.allProcessDone === '否' }"></view>
-                    <text class="radio-label">否</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">实验说明</text>
-              <textarea class="oe-textarea" v-model="oeForm.testDescription" placeholder="请输入实验说明" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-row">
-              <view class="oe-form-item" style="flex:1">
-                <text class="oe-label">实验关闭情况</text>
-              </view>
-              <view class="oe-form-item" style="flex:0 0 auto">
-                <view class="radio-group">
-                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.testCloseStatus = '是')">
-                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.testCloseStatus === '是' }"></view>
-                    <text class="radio-label">是</text>
-                  </view>
-                  <view class="radio-item" @tap="canEditPhase(currentStepIndex) && (oeForm.testCloseStatus = '否')">
-                    <view class="radio-circle" :class="{ 'radio-checked': oeForm.testCloseStatus === '否' }"></view>
-                    <text class="radio-label">否</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">实验失效分析</text>
-              <textarea class="oe-textarea" v-model="oeForm.failAnalysis" placeholder="请输入实验失效分析" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">本次生产总结</text>
-              <textarea class="oe-textarea" v-model="oeForm.productionSummary" placeholder="请输入生产总结" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-            <view class="oe-form-item">
-              <text class="oe-label">改善措施简述（原OE字段）</text>
-              <textarea class="oe-textarea" v-model="oeForm.improveMeasures" placeholder="请输入改善措施" :disabled="!canEditPhase(currentStepIndex)" />
-            </view>
-          </template>
-        </view>
-
-        <!-- 下一步需求（基础信息阶段不显示）-->
-        <view class="next-demand-section" v-if="currentStepIndex > 0">
-          <text class="next-demand-label">下一步需求</text>
-          <view class="next-demand-options">
-            <view
-              class="demand-option"
-              :class="{ 'demand-selected': recordDemand === 'normal' }"
-              @tap="setRecordDemand('normal')"
-            >
-              <text class="demand-option-text">✓ 无异常</text>
-            </view>
-            <view
-              class="demand-option demand-warn"
-              :class="{ 'demand-selected demand-warn-selected': recordDemand === 'minor' }"
-              @tap="setRecordDemand('minor')"
-            >
-              <text class="demand-option-text">⚠ 小异常，待下次关注</text>
-            </view>
-            <view
-              class="demand-option demand-danger"
-              :class="{ 'demand-selected demand-danger-selected': recordDemand === 'major' }"
-              @tap="setRecordDemand('major')"
-            >
-              <text class="demand-option-text">✗ 大异常，待改善</text>
-            </view>
-          </view>
-          <!-- 小异常/大异常时显示改善记录输入框 -->
-          <view v-if="recordDemand === 'minor' || recordDemand === 'major'" class="improve-record-input-area">
-            <textarea
-              class="improve-textarea"
-              v-model="recordImproveText"
-              placeholder="请输入改善措施..."
-              :disabled="!canEditPhase(currentStepIndex)"
-            />
-          </view>
-        </view>
-
-        <!-- 附件上传区 -->
-        <view class="upload-section">
-          <view class="section-divider">
-            <text class="section-label">📎 {{ currentStep.name }}流转单照片上传</text>
-            <view v-if="canEditPhase(currentStepIndex)" class="add-file-btn" @tap="chooseAndUpload">
-              <text class="add-file-btn-text">{{ uploadingFile ? '上传中...' : '+ 添加图片/文件' }}</text>
-            </view>
-          </view>
-          <text class="upload-tip-text">支持图片（JPG、JPEG、PNG、GIF、BMP、WEBP）及 PDF 文件</text>
-          <text v-if="currentPhase === 'hot'" class="upload-remark-text">备注：首件测量尺寸、前距数据</text>
-          <text v-else-if="currentPhase === 'spin'" class="upload-remark-text">备注：首件切样及旋压前距数据照片</text>
-          <text v-else-if="currentPhase === 'rough'" class="upload-remark-text">备注：粗车前距数据照片、首件尺寸单照片</text>
-          <text v-else-if="currentPhase === 'test'" class="upload-remark-text">备注：失效清场照片、实验失效照片</text>
-
-          <!-- 已上传文件列表 -->
-          <view class="file-grid" v-if="historyFiles.length > 0">
-            <view
-              v-for="(file, fIdx) in historyFiles"
-              :key="fIdx"
-              class="file-thumb-item"
-            >
-              <view class="file-thumb" @tap="previewFile(file, fIdx)" @longpress="showFileInfo(file)">
-                <!-- 图片文件：正常显示（无错误时） -->
-                <!-- :data-idx 将循环索引传入事件回调，兼容微信小程序 -->
-                <image
-                  v-if="isImageFile(file.name) && !getImgError(fIdx)"
-                  :src="getImageSrc(file, fIdx)"
-                  :data-idx="fIdx"
-                  class="file-thumb-img"
-                  mode="aspectFill"
-                  lazy-load
-                  :show-menu-by-longpress="true"
-                  @error="onImageError"
-                  @load="onImageLoad"
-                />
-                <!-- 图片文件：下载/加载失败时显示错误占位 -->
-                <view v-if="isImageFile(file.name) && getImgError(fIdx)" class="file-thumb-error">
-                  <text class="file-error-icon">⚠️</text>
-                  <text class="file-error-text">加载失败</text>
-                </view>
-                <!-- 图片文件：尚未完成加载时的占位（不覆盖已加载图片）-->
-                <view v-if="isImageFile(file.name) && !getImgLoaded(fIdx) && !getImgError(fIdx)" class="file-loading-placeholder">
-                  <text class="loading-text">🖼️</text>
-                </view>
-                <!-- 非图片文件 -->
-                <view v-if="!isImageFile(file.name)" class="file-thumb-doc">
-                  <text class="file-doc-icon">📄</text>
-                </view>
-              </view>
-              <text class="file-thumb-name">{{ shortenName(file.name) }}</text>
-              <view v-if="canEditPhase(currentStepIndex)" class="file-delete-btn" @tap.stop="deleteFile(fIdx)">
-                <text class="file-delete-icon">✕</text>
-              </view>
-            </view>
-          </view>
-          <view class="file-empty" v-else>
-            <text class="file-empty-text">暂无附件</text>
-          </view>
-        </view>
-
-        <!-- 完成按钮 -->
-        <view v-if="canEditPhase(currentStepIndex) && currentStep.status !== 'done'" class="record-done-section">
-          <view class="record-done-btn" @tap="markStepDoneFromRecord">
-            <text class="record-done-icon">✅</text>
-            <text class="record-done-text">完成此阶段</text>
-          </view>
-        </view>
-
-        <view style="height:80rpx"></view>
-      </scroll-view>
-    </view>
-
-    <!-- ===== 全屏弹窗：意见（保留供历史意见查看，但不通过按钮触发）===== -->
-    <view class="fullpage-modal" v-if="commentVisible" @touchmove.stop="noop">
-      <view class="fullpage-nav" :style="navBarStyle">
-        <view class="fullpage-back" @tap="commentVisible = false">
-          <text class="fullpage-back-icon">✕</text>
-        </view>
-        <text class="fullpage-title">{{ currentStep.name }} · 意见</text>
-        <view style="width:100rpx"></view>
-      </view>
-
-      <scroll-view scroll-y class="fullpage-body">
-        <!-- 发表新意见 -->
-        <view class="comment-input-section">
-          <view v-if="!canEditPhase(currentStepIndex)" class="oe-tip oe-tip-warn" style="margin-bottom:12rpx">
-            <text class="oe-tip-icon">⚠</text>
-            <text class="oe-tip-text">您没有此节点的编辑权限，仅可查看</text>
-          </view>
-          <text class="section-label">发表意见</text>
-          <textarea
-            class="comment-textarea"
-            v-model="commentText"
-            placeholder="请输入您的意见..."
-            maxlength="500"
-            :disabled="!canEditPhase(currentStepIndex)"
-          />
-          <view class="comment-submit-row">
-            <text class="comment-char-count">{{ commentText.length }}/500</text>
-            <view v-if="canEditPhase(currentStepIndex)" class="comment-submit-btn" @tap="submitComment">
-              <text class="comment-submit-text">提交意见</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 历史意见列表 -->
-        <view class="comment-history-section" v-if="historyComments.length > 0">
-          <text class="section-label">历史意见（{{ historyComments.length }}）</text>
-          <view
-            v-for="(c, cIdx) in historyComments"
-            :key="cIdx"
-            class="comment-card"
-          >
-            <view class="comment-card-header">
-              <text class="comment-user">👤 {{ c.user }}</text>
-              <text class="comment-time">{{ formatChineseDateTime(c.time) }}{{ c.edited ? ' (已编辑)' : '' }}</text>
-            </view>
-            <view v-if="editCommentIdx === cIdx" class="comment-edit-area">
-              <textarea class="comment-textarea" v-model="editCommentText" />
-              <view class="comment-edit-actions">
-                <view class="edit-cancel-btn" @tap="cancelEditComment">
-                  <text>取消</text>
-                </view>
-                <view class="edit-save-btn" @tap="saveEditComment(cIdx)">
-                  <text>保存</text>
-                </view>
-              </view>
-            </view>
-            <text v-else class="comment-content">{{ c.content }}</text>
-            <view v-if="canEditPhase(currentStepIndex)" class="comment-card-actions">
-              <view class="comment-action-btn" @tap="editComment(cIdx)">
-                <text class="comment-action-text">✏ 编辑</text>
-              </view>
-              <view class="comment-action-btn danger" @tap="deleteComment(cIdx)">
-                <text class="comment-action-text danger">🗑 删除</text>
-              </view>
-            </view>
-          </view>
-        </view>
-        <view class="comment-history-empty" v-else>
-          <text class="history-empty-text">暂无历史意见</text>
-        </view>
-
-        <view style="height:60rpx"></view>
-      </scroll-view>
-    </view>
+    <!-- 试制信息记录已提取至独立页面 src/pages/trialProcess/record.vue -->
+    <!-- 意见已提取至独立页面 src/pages/trialProcess/comment.vue -->
 
     <!-- ===== 底部弹窗：完成日期 + 负责人 ===== -->
-    <view class="modal-mask" v-if="deadlineVisible" @tap.self="deadlineVisible = false">
-      <view class="modal-box">
+    <view class="modal-mask" v-if="deadlineVisible" @tap="deadlineVisible = false">
+      <view class="modal-box" @tap.stop="noop">
         <view class="modal-title">{{ currentStep.name }} · 完成日期 + 负责人</view>
-        <view class="modal-form">
+        <scroll-view scroll-y class="modal-form" style="max-height: 60vh;">
           <view class="form-item">
             <text class="form-label">完成日期</text>
             <picker
@@ -796,7 +270,7 @@
             </picker>
             <input v-else class="form-input" v-model="stepResponsible" placeholder="请输入负责人姓名" />
           </view>
-        </view>
+        </scroll-view>
         <view class="modal-footer">
           <view class="modal-btn cancel" @tap="deadlineVisible = false">
             <text>取消</text>
@@ -898,6 +372,12 @@ export default {
       }
       // #endif
     } catch (e) {}
+
+    // 监听记录和意见子页面刷新事件
+    uni.$on('refreshProcessList', this.refreshData)
+  },
+  onUnload() {
+    uni.$off('refreshProcessList', this.refreshData)
   },
   computed: {
     filteredList() {
@@ -934,6 +414,10 @@ export default {
     goBack() {
       uni.navigateBack()
     },
+    refreshData() {
+      // Refresh list handler
+      this.loadList()
+    },
     loadList() {
       this.loading = true
       listTrialProcess({ pageNum: 1, pageSize: 100 }).then(res => {
@@ -966,8 +450,12 @@ export default {
         { name: '涂装阶段', shortName: '涂装', status: item.step7Status, deadline: item.step7Deadline, responsible: item.step7Responsible },
         { name: '实验/总结', shortName: '实验', status: item.step8Status, deadline: item.step8Deadline, responsible: item.step8Responsible }
       ]
+      const dotMap = { 'step-name-green': 'dot-green', 'step-name-yellow': 'dot-yellow', 'step-name-red': 'dot-red' }
+      const smMap  = { 'step-name-green': 'sm-green',  'step-name-yellow': 'sm-yellow',  'step-name-red': 'sm-red'  }
       steps.forEach((s, idx) => {
         s.nameColorClass = this.getStepNameColorClass(item, idx)
+        s.dotColorClass  = dotMap[s.nameColorClass] || (s.status === 'done' ? 'dot-done' : 'dot-pending')
+        s.smColorClass   = smMap[s.nameColorClass]  || (s.status === 'done' ? 'sm-done'  : 'sm-pending')
       })
       return steps
     },
@@ -1228,61 +716,12 @@ export default {
 
     // =================== 试制信息记录 ===================
     openRecord(process, step, index) {
-      this.currentProcess = process
-      this.currentStep = step
-      this.currentStepIndex = index
-      this.currentPhase = this.getPhaseKey(index)
-      const filesKey = `step${index + 1}Files`
-      try {
-        this.historyFiles = process[filesKey] ? JSON.parse(process[filesKey]) : []
-      } catch (e) {
-        this.historyFiles = []
-      }
-      // 每次打开弹窗时清空图片状态，避免上一个步骤的缓存干扰
-      this.imageLocalPaths = {}
-      this.imageLoaded = {}
-      this.imageLoadErrors = {}
-      this.prefetchImagesForDisplay()
-      // 初始化完成日期（使用已有的 deadline 或空）
-      this.recordCompletionDate = step.deadline || ''
-      // 初始化下一步需求
-      const demandKey = `step${index + 1}Demand`
-      const recordKey = `step${index + 1}ImproveRecord`
-      this.recordDemand = process[demandKey] || ''
-      this.recordImproveText = process[recordKey] || ''
-      // 初始化责任人：优先使用已设置的负责人，否则默认为当前登录用户（任务2）
-      const currentName = this.$store.state.name || ''
-      this.stepResponsible = step.responsible || currentName
-      const respIdx = this.userList.findIndex(u => u.nickName === this.stepResponsible)
-      this.selectedResponsibleIndex = respIdx >= 0 ? respIdx : 0
-      // 加载OE跟踪数据
-      const dateFields = ['planMachineTime','hotMachineDate','spinMachineDate','heatTransferTime',
-        'roughMachineDate','fineMachineDate','paintMachineDate','impactTestDate','completeDate']
-      const baseOeForm = {
-        moldCode: process.moldCode,
-        allProcessDone: '否',
-        planMachineTime: '', hotMachineDate: '', spinMachineDate: '', heatTransferTime: '',
-        roughMachineDate: '', fineMachineDate: '', paintMachineDate: '', impactTestDate: '', completeDate: ''
-      }
-      if (process.moldCode) {
-        listTrialTrack({ pageNum: 1, pageSize: 1, moldCode: process.moldCode }).then(res => {
-          const rows = res.rows || []
-          if (rows.length > 0) {
-            const loaded = { ...baseOeForm, ...rows[0] }
-            dateFields.forEach(f => { if (loaded[f]) { loaded[f] = this.formatPickerDate(loaded[f]) } })
-            this.oeForm = loaded
-          } else {
-            this.oeForm = { ...baseOeForm }
-          }
-          this.uploadVisible = true
-        }).catch(() => {
-          this.oeForm = { ...baseOeForm }
-          this.uploadVisible = true
-        })
-      } else {
-        this.oeForm = { ...baseOeForm }
-        this.uploadVisible = true
-      }
+      uni.navigateTo({
+        url: `/pages/trialProcess/record?stepIndex=${index}`,
+        success: (res) => {
+          res.eventChannel.emit('acceptDataFromOpenerPage', { data: process })
+        }
+      })
     },
     // 兼容旧调用（保留 openUpload 别名）
     openUpload(process, step, index) {
@@ -1399,21 +838,6 @@ export default {
         }
         if (this.stepResponsible) {
           stepUpdate[`step${stepNum}Responsible`] = this.stepResponsible
-        }
-        // 同步OE关键日期到 deadline
-        const dateMap = {
-          base:  { field: 'planMachineTime', step: 1 },
-          hot:   { field: 'hotMachineDate',  step: 2 },
-          spin:  { field: 'spinMachineDate', step: 3 },
-          heat:  { field: 'heatTransferTime', step: 4 },
-          rough: { field: 'roughMachineDate', step: 5 },
-          fine:  { field: 'fineMachineDate',  step: 6 },
-          paint: { field: 'paintMachineDate', step: 7 },
-          test:  { field: 'impactTestDate',   step: 8 }
-        }
-        const mapping = dateMap[this.currentPhase]
-        if (mapping && payload[mapping.field]) {
-          stepUpdate[`step${mapping.step}Deadline`] = payload[mapping.field]
         }
         // 保存下一步需求（非基础信息阶段）
         if (this.currentStepIndex > 0) {
@@ -1801,19 +1225,12 @@ export default {
 
     // =================== 意见 ===================
     openComment(process, step, index) {
-      this.currentProcess = process
-      this.currentStep = step
-      this.currentStepIndex = index
-      this.commentText = ''
-      this.editCommentIdx = -1
-      this.editCommentText = ''
-      const key = `step${index + 1}Comments`
-      try {
-        this.historyComments = process[key] ? JSON.parse(process[key]) : []
-      } catch (e) {
-        this.historyComments = []
-      }
-      this.commentVisible = true
+      uni.navigateTo({
+        url: `/pages/trialProcess/comment?stepIndex=${index}`,
+        success: (res) => {
+          res.eventChannel.emit('acceptDataFromOpenerPage', { data: process })
+        }
+      })
     },
     submitComment() {
       if (!this.commentText.trim()) {
@@ -1944,6 +1361,11 @@ export default {
         return
       }
       this.recordDemand = demand
+      // 立即更新卡片列表中对应阶段的颜色（响应式）
+      if (this.currentProcess) {
+        const stepNum = this.currentStepIndex + 1
+        this.$set(this.currentProcess, `step${stepNum}Demand`, demand)
+      }
       if (demand === 'normal') {
         this.recordImproveText = ''
       }
@@ -2021,14 +1443,10 @@ export default {
     },
     /** 获取步骤名称颜色class */
     getStepNameColorClass(item, idx) {
-      if (idx === 0) return '' // 基础信息不参与颜色逻辑
+      if (idx === 0) return 'step-name-green' // 基础信息始终绿色
       const demand = this.getStepDemand(item, idx)
-      const improveRecord = this.getStepImproveRecord(item, idx)
-      // 无异常 或 已提交改善记录 -> 绿色
-      if (demand === 'normal' || (demand && improveRecord)) return 'step-name-green'
-      // 小异常（未提交改善记录） -> 黄色
+      if (demand === 'normal') return 'step-name-green'
       if (demand === 'minor') return 'step-name-yellow'
-      // 大异常（未提交改善记录） -> 红色
       if (demand === 'major') return 'step-name-red'
       return ''
     }
@@ -2208,13 +1626,16 @@ export default {
 }
 .dot-done { background: #c0c4cc; }
 .dot-done .dot-icon { color: #fff; font-size: 20rpx; }
-.dot-active { background: #6c5bb3; }
-.dot-active .dot-icon { color: #fff; font-size: 18rpx; }
 .dot-pending { background: #e0e0e0; }
 .dot-pending .dot-icon { color: #c0c4cc; font-size: 18rpx; }
+.dot-green { background: #67c23a; }
+.dot-green .dot-icon { color: #fff; font-size: 18rpx; }
+.dot-yellow { background: #e6a23c; }
+.dot-yellow .dot-icon { color: #fff; font-size: 18rpx; }
+.dot-red { background: #f56c6c; }
+.dot-red .dot-icon { color: #fff; font-size: 18rpx; }
 .label-text { font-size: 18rpx; color: #909399; text-align: center; }
 .l-done { color: #c0c4cc; }
-.l-active { color: #6c5bb3; font-weight: 600; }
 
 /* ===== 纵向步骤列表 ===== */
 .step-list {
@@ -2247,9 +1668,10 @@ export default {
   flex-shrink: 0;
 }
 .sm-done { background: #c0c4cc; }
-.sm-expired { background: #f56c6c; }
-.sm-active { background: #6c5bb3; }
 .sm-pending { background: #e0e0e0; }
+.sm-green { background: #67c23a; }
+.sm-yellow { background: #e6a23c; }
+.sm-red { background: #f56c6c; }
 .step-dot-sm-icon { font-size: 18rpx; color: #fff; }
 .step-name { font-size: 28rpx; color: #303133; flex: 1; }
 .step-status-tag { flex-shrink: 0; }
@@ -2384,31 +1806,38 @@ export default {
   margin-bottom: 10rpx;
 }
 .form-input {
-  width: 100%;
-  min-height: 96rpx;
-  border: 2rpx solid #dcdfe6;
+  background: #f5f7fa;
   border-radius: 12rpx;
-  padding: 18rpx 20rpx;
+  padding: 24rpx 20rpx;
   font-size: 28rpx;
-  line-height: 1.5;
+  line-height: 40rpx;
+  min-height: 90rpx;
   color: #303133;
+  width: 100%;
   box-sizing: border-box;
-  background: #f8f9fc;
 }
 .form-picker {
-  display: block;
+  background: #f5f7fa;
+  border-radius: 12rpx;
+  padding: 24rpx 20rpx;
   width: 100%;
+  box-sizing: border-box;
+  .picker-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 .form-textarea {
-  width: 100%;
-  border: 2rpx solid #dcdfe6;
+  background: #f5f7fa;
   border-radius: 12rpx;
-  padding: 18rpx 20rpx;
+  padding: 24rpx 20rpx;
   font-size: 28rpx;
+  line-height: 40rpx;
   color: #303133;
+  width: 100%;
+  min-height: 160rpx;
   box-sizing: border-box;
-  background: #f8f9fc;
-  min-height: 140rpx;
 }
 .picker-wrap {
   display: flex;
@@ -2527,27 +1956,26 @@ export default {
   margin-bottom: 8rpx;
 }
 .oe-input {
-  width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  border: 2rpx solid #ebeef5;
+  background: #f5f7fa;
   border-radius: 10rpx;
-  padding: 0 20rpx;
+  padding: 24rpx 20rpx;
   font-size: 28rpx;
+  line-height: 40rpx;
+  min-height: 90rpx;
   color: #303133;
-  background: #f8f9fc;
+  width: 100%;
   box-sizing: border-box;
 }
 .oe-textarea {
-  width: 100%;
-  border: 2rpx solid #ebeef5;
+  background: #f5f7fa;
   border-radius: 10rpx;
-  padding: 16rpx;
-  font-size: 26rpx;
+  padding: 24rpx 20rpx;
+  font-size: 28rpx;
+  line-height: 40rpx;
   color: #303133;
-  background: #f8f9fc;
+  width: 100%;
+  min-height: 160rpx;
   box-sizing: border-box;
-  min-height: 120rpx;
 }
 .radio-group {
   display: flex;
@@ -2909,19 +2337,32 @@ export default {
   box-sizing: border-box;
 }
 
-/* 完成按钮 */
-.record-done-section {
-  margin: 20rpx 24rpx;
+/* 底部操作按钮行 */
+.record-bottom-actions {
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 24rpx;
+  margin: 20rpx 24rpx;
 }
+.record-save-btn-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6c23e;
+  border-radius: 50rpx;
+  padding: 24rpx 50rpx;
+  &:active { opacity: 0.8; }
+}
+.record-save-btn-text { font-size: 30rpx; color: #7a5000; font-weight: 700; }
 .record-done-btn {
   display: flex;
   align-items: center;
   gap: 10rpx;
   background: linear-gradient(135deg, #34a853, #67c23a);
   border-radius: 50rpx;
-  padding: 24rpx 60rpx;
+  padding: 24rpx 50rpx;
   &:active { opacity: 0.8; }
 }
 .record-done-icon { font-size: 30rpx; }
@@ -2940,5 +2381,44 @@ export default {
   border-top: 1rpx solid #f0f0f0;
   margin-top: 8rpx;
   display: block;
+}
+.record-done-btn-top {
+  width: 100%;
+  height: 80rpx;
+  background: #fff;
+  border: 2rpx solid #07c160;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+  &:active { opacity: 0.8; }
+  .record-done-icon { font-size: 32rpx; margin-right: 8rpx; }
+  .record-done-text { font-size: 28rpx; font-weight: 600; color: #07c160; }
+}
+.btn-save-bottom {
+  width: 100%;
+  height: 88rpx;
+  background: #07c160;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+  &:active { opacity: 0.85; }
+}
+.bottom-action-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 40rpx;
+  background: #fff;
+  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.05);
+  z-index: 100;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 </style>

@@ -1,335 +1,512 @@
 <template>
-  <view class="task-page">
-    <!-- 顶部 -->
-    <view class="header-bg">
-      <view class="header-badge">试制任务</view>
-      <view class="user-card">
-        <view class="user-avatar">👤</view>
-        <view class="user-info">
-          <text class="user-name">{{ userName }}</text>
-          <text class="user-roles">🔒 {{ userRoles }}</text>
-        </view>
+  <view class="page">
+    <!-- 自定义导航栏 -->
+    <view class="nav-bar" :style="navBarStyle">
+      <view class="nav-back" @tap="goBack">
+        <text class="nav-back-icon">‹</text>
       </view>
+      <text class="nav-title">试制任务</text>
+      <view class="nav-add"></view>
     </view>
 
-    <!-- 搜索 -->
+    <!-- 搜索栏 -->
     <view class="search-bar">
       <input
-        v-model="searchText"
-        placeholder="搜索任务、工序或日期..."
         class="search-input"
+        v-model="searchKeyword"
+        placeholder="搜索模号..."
+        placeholder-class="search-placeholder"
+        @input="onSearch"
         confirm-type="search"
-        @confirm="doSearch"
       />
     </view>
 
-    <!-- 任务列表卡片 -->
-    <view class="task-card">
-      <view class="task-header">
-        <text class="task-title">任务列表</text>
-        <view class="tab-group">
-          <view class="tab-item" :class="{ active: tab === 'doing' }" @tap="switchTab('doing')">
-            进行中 {{ doingCount }}
-          </view>
-          <view class="tab-item" :class="{ active: tab === 'done' }" @tap="switchTab('done')">
-            已完成 {{ doneCount }}
-          </view>
+    <!-- 筛选栏 -->
+    <view class="filter-bar">
+      <picker mode="selector" :range="moldTypeOptions" :value="moldTypeIndex" @change="onMoldTypeChange">
+        <view class="filter-chip" :class="{ active: queryParams.moldType }">
+          <text>{{ queryParams.moldType || '模具类型' }}</text>
+          <text class="chip-arrow">▾</text>
         </view>
+      </picker>
+      <picker mode="selector" :range="surfaceOptions" :value="surfaceIndex" @change="onSurfaceChange">
+        <view class="filter-chip" :class="{ active: queryParams.surfaceStatus }">
+          <text>{{ queryParams.surfaceStatus || '表面状态' }}</text>
+          <text class="chip-arrow">▾</text>
+        </view>
+      </picker>
+      <picker mode="selector" :range="machineTypeOptions" :value="machineTypeIndex" @change="onMachineTypeChange">
+        <view class="filter-chip" :class="{ active: queryParams.machineType }">
+          <text>{{ queryParams.machineType || '上机类型' }}</text>
+          <text class="chip-arrow">▾</text>
+        </view>
+      </picker>
+      <picker mode="selector" :range="statusLabels" :value="statusIndex" @change="onStatusChange">
+        <view class="filter-chip" :class="{ active: queryParams.allProcessDone }">
+          <text>{{ statusDisplayText }}</text>
+          <text class="chip-arrow">▾</text>
+        </view>
+      </picker>
+      <view class="filter-chip reset" v-if="hasFilters" @tap="resetFilters">
+        <text>重置</text>
       </view>
-
-      <view class="filter-info">
-        <text class="filter-label">{{ tab === 'doing' ? '显示进行中任务' : '显示已完成任务' }}</text>
-        <text class="filter-count">{{ filteredList.length }} 个任务</text>
-      </view>
-
-      <!-- 列表 -->
-      <scroll-view scroll-y class="task-list" refresher-enabled @refresherrefresh="onRefresh" :refresher-triggered="refreshing">
-        <view
-          v-for="item in filteredList"
-          :key="item.noticeId"
-          class="task-item"
-          @tap="openDetail(item)"
-        >
-          <view class="item-icon">📋</view>
-          <view class="item-info">
-            <text class="item-name">{{ item.wheelCode || item.noticeCode }}-{{ item.craftProcess || '低压铸造' }}+{{ item.surfaceStatus || '全涂' }}</text>
-            <text class="item-meta" v-if="item.trialStart">📅 {{ formatDate(item.trialStart) }}</text>
-          </view>
-          <view class="item-priority" :class="item.urgency === '紧急' ? 'danger' : item.urgency === '优先' ? 'warning' : 'normal'">
-            {{ item.urgency || '正常' }}
-          </view>
-        </view>
-
-        <view v-if="filteredList.length === 0 && !loading" class="empty">
-          <text>暂无{{ tab === 'doing' ? '进行中' : '已完成' }}的任务</text>
-        </view>
-      </scroll-view>
     </view>
 
-    <!-- 底部 -->
-    <view class="footer-text">© 2026 任务状态管理系统 | 版本 3.0</view>
+    <!-- 统计栏 -->
+    <view class="stats-bar" v-if="total > 0">
+      <text class="stats-text">共 <text class="stats-num">{{ total }}</text> 条试制记录</text>
+    </view>
+
+    <!-- 卡片网格 -->
+    <scroll-view scroll-y class="card-scroll" @scrolltolower="loadMore" refresher-enabled @refresherrefresh="onRefresh" :refresher-triggered="refreshing">
+      <view v-if="trackList.length === 0 && !loading" class="empty-state">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">暂无试制跟踪记录</text>
+      </view>
+
+      <view class="card-grid">
+        <view
+          v-for="item in trackList"
+          :key="item.trackId"
+          class="track-card"
+          @tap="showDetail(item)"
+        >
+          <!-- 卡片顶部 -->
+          <view class="card-top">
+            <text class="mold-code">{{ item.moldCode }}</text>
+            <view class="done-badge" :class="item.allProcessDone === '是' ? 'done-yes' : 'done-no'" @tap.stop="toggleStatus(item)">
+              <text class="badge-text">{{ item.allProcessDone === '是' ? '✓ 已完成' : '● 进行中' }}</text>
+            </view>
+          </view>
+
+          <!-- 标签 -->
+          <view class="card-tags">
+            <view v-if="item.moldType" class="tag tag-warning">
+              <text class="tag-text">{{ item.moldType }}</text>
+            </view>
+            <view v-if="item.surfaceStatus" class="tag tag-success">
+              <text class="tag-text">{{ item.surfaceStatus }}</text>
+            </view>
+            <view v-if="item.machineType" class="tag tag-info">
+              <text class="tag-text">{{ item.machineType }}</text>
+            </view>
+          </view>
+
+          <!-- 关键信息 -->
+          <view class="card-meta">
+            <view class="meta-row" v-if="item.productSpec">
+              <text class="meta-l">轮型</text>
+              <text class="meta-v">{{ item.productSpec }}</text>
+            </view>
+            <view class="meta-row" v-if="item.hotMachineDate || item.hotMachineStation">
+              <text class="meta-l">压铸</text>
+              <text class="meta-v">{{ item.hotMachineDate || '-' }} / {{ item.hotMachineStation || '-' }}</text>
+            </view>
+            <view class="meta-row" v-if="item.hotProduction">
+              <text class="meta-l">生产</text>
+              <text class="meta-v meta-ellipsis">{{ item.hotProduction }}</text>
+            </view>
+            <view class="meta-row" v-if="item.impactTestResult">
+              <text class="meta-l">实验</text>
+              <text class="meta-v">{{ item.impactTestResult }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="list-bottom" v-if="trackList.length > 0">
+        <text class="list-bottom-text" v-if="noMore">—— 没有更多了 ——</text>
+        <text class="list-bottom-text" v-else-if="loading">加载中...</text>
+      </view>
+    </scroll-view>
+
+
   </view>
 </template>
 
 <script>
-import { listNotice } from '@/api/notice'
+import { listTrialTrack, getTrialTrack, updateTrialTrack, delTrialTrack } from '@/api/trialTrack'
 
 export default {
   data() {
     return {
       loading: false,
       refreshing: false,
-      searchText: '',
-      tab: 'doing',
-      taskList: [],
-      doingCount: 0,
-      doneCount: 0
+      noMore: false,
+      total: 0,
+      trackList: [],
+      searchKeyword: '',
+      searchTimer: null,
+      // query params
+      queryParams: {
+        pageNum: 1,
+        pageSize: 20,
+        moldCode: null,
+        moldType: null,
+        surfaceStatus: null,
+        machineType: null,
+        allProcessDone: null
+      },
+      // filter options
+      moldTypeOptions: ['首模', '改模', '翻模'],
+      moldTypeIndex: -1,
+      surfaceOptions: ['精车', '全涂', '全涂装'],
+      surfaceIndex: -1,
+      machineTypeOptions: ['小批量', '量产'],
+      machineTypeIndex: -1,
+      statusLabels: ['进行中', '已完成'],
+      statusValues: ['doing', 'done'],
+      statusIndex: -1,
+      statusIndex: -1
     }
   },
   computed: {
-    userName() { return this.$store.state.name || '用户' },
-    userRoles() { return '产品开发组-项目管理权限、产品开发组-试制管理权限' },
-    filteredList() {
-      let list = this.taskList.filter(i => {
-        return this.tab === 'doing' ? i.status !== '已完成' : i.status === '已完成'
-      })
-      if (this.searchText) {
-        const kw = this.searchText.toLowerCase()
-        list = list.filter(i =>
-          (i.wheelCode && i.wheelCode.toLowerCase().includes(kw)) ||
-          (i.noticeCode && i.noticeCode.toLowerCase().includes(kw)) ||
-          (i.responsible && i.responsible.toLowerCase().includes(kw))
-        )
-      }
-      return list
+    navBarStyle() {
+      const info = uni.getSystemInfoSync()
+      const statusBarHeight = info.statusBarHeight || 20
+      return `padding-top: ${statusBarHeight}px`
+    },
+    statusDisplayText() {
+      if (!this.queryParams.allProcessDone) return '状态'
+      return this.queryParams.allProcessDone === 'doing' ? '进行中' : '已完成'
+    },
+    hasFilters() {
+      return this.queryParams.moldType || this.queryParams.surfaceStatus || this.queryParams.machineType || this.queryParams.allProcessDone || this.searchKeyword
     }
   },
+  onLoad() {
+    const now = new Date()
+    this.currentDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+    uni.$on('refreshTaskList', this.reloadList)
+    this.reloadList()
+  },
+  onUnload() {
+    uni.$off('refreshTaskList', this.reloadList)
+  },
   onShow() {
-    this.loadData()
+    // Only fetch if necessary
   },
   methods: {
-    formatDate(d) {
-      if (!d) return ''
-      return String(d).slice(0, 10)
+    noop() {},
+    goBack() {
+      // Because it's a tab bar page, navigateBack won't work. Switch back to home instead.
+      uni.switchTab({ url: '/pages/index/index' })
     },
+    // ===== Data =====
     loadData() {
       this.loading = true
-      listNotice({ pageNum: 1, pageSize: 500 }).then(res => {
-        this.taskList = res.rows || []
-        this.countTasks()
-      }).catch(() => {
-        this.taskList = []
-        this.countTasks()
+      const params = { ...this.queryParams }
+      if (this.searchKeyword) {
+        params.moldCode = this.searchKeyword
+      }
+      // 清除 null/undefined/空字符串 的参数，防止后端查询异常
+      Object.keys(params).forEach(k => {
+        if (params[k] === null || params[k] === undefined || params[k] === '') {
+          delete params[k]
+        }
+      })
+      console.log('[试制任务] loadData params:', JSON.stringify(params))
+      listTrialTrack(params).then(res => {
+        console.log('[试制任务] loadData response:', JSON.stringify(res).substring(0, 500))
+        const rows = res.rows || []
+        if (this.queryParams.pageNum === 1) {
+          this.trackList = rows
+        } else {
+          this.trackList = this.trackList.concat(rows)
+        }
+        this.total = res.total || 0
+        this.noMore = this.trackList.length >= this.total
+      }).catch((err) => {
+        console.error('[试制任务] loadData error:', err)
+        uni.showToast({ title: '加载失败: ' + (err.msg || '请检查网络'), icon: 'none', duration: 3000 })
+        if (this.queryParams.pageNum === 1) this.trackList = []
       }).finally(() => {
         this.loading = false
         this.refreshing = false
       })
     },
-    countTasks() {
-      this.doingCount = this.taskList.filter(i => i.status !== '已完成').length
-      this.doneCount = this.taskList.filter(i => i.status === '已完成').length
-    },
-    switchTab(t) { this.tab = t },
-    doSearch() { /* computed自动过滤 */ },
-    onRefresh() {
-      this.refreshing = true
+    loadMore() {
+      if (this.loading || this.noMore) return
+      this.queryParams.pageNum++
       this.loadData()
     },
-    openDetail(item) {
-      uni.navigateTo({ url: '/pages/task/detail?id=' + item.noticeId })
+    onRefresh() {
+      this.refreshing = true
+      this.queryParams.pageNum = 1
+      this.trackList = []
+      this.loadData()
+    },
+    onSearch() {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = setTimeout(() => {
+        this.queryParams.pageNum = 1
+        this.trackList = []
+        this.loadData()
+      }, 400)
+    },
+
+    // ===== Filters =====
+    onMoldTypeChange(e) {
+      const idx = e.detail.value
+      this.moldTypeIndex = idx
+      this.queryParams.moldType = this.moldTypeOptions[idx]
+      this.reloadList()
+    },
+    onSurfaceChange(e) {
+      const idx = e.detail.value
+      this.surfaceIndex = idx
+      this.queryParams.surfaceStatus = this.surfaceOptions[idx]
+      this.reloadList()
+    },
+    onMachineTypeChange(e) {
+      const idx = e.detail.value
+      this.machineTypeIndex = idx
+      this.queryParams.machineType = this.machineTypeOptions[idx]
+      this.reloadList()
+    },
+    onStatusChange(e) {
+      const idx = e.detail.value
+      this.statusIndex = idx
+      this.queryParams.allProcessDone = this.statusValues[idx]
+      this.reloadList()
+    },
+    resetFilters() {
+      this.searchKeyword = ''
+      this.moldTypeIndex = -1
+      this.surfaceIndex = -1
+      this.machineTypeIndex = -1
+      this.statusIndex = -1
+      this.queryParams.moldCode = null
+      this.queryParams.moldType = null
+      this.queryParams.surfaceStatus = null
+      this.queryParams.machineType = null
+      this.queryParams.allProcessDone = null
+      this.reloadList()
+    },
+    reloadList() {
+      this.queryParams.pageNum = 1
+      this.trackList = []
+      this.loadData()
+    },
+    
+    toggleStatus(item) {
+      const newStatus = item.allProcessDone === '是' ? '否' : '是'
+      uni.showModal({
+        title: '确认切换状态',
+        content: `确认将该试制跟踪状态切换为"${newStatus === '是' ? '已完成' : '进行中'}"？`,
+        success: (res) => {
+          if (res.confirm) {
+            uni.showLoading({ title: '处理中...' })
+            updateTrialTrack({ trackId: item.trackId, allProcessDone: newStatus }).then(() => {
+              uni.hideLoading()
+              uni.showToast({ title: '状态流转成功', icon: 'success' })
+              this.reloadList()
+            }).catch(() => {
+              uni.hideLoading()
+            })
+          }
+        }
+      })
+    },
+
+    // ===== Detail =====
+    showDetail(item) {
+      uni.navigateTo({
+        url: `/pages/task/detail?id=${item.trackId}`
+      })
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.task-page {
+.page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #4a3b8f 0%, #6c5bb3 35%, #f0f2f5 35%);
-  padding-bottom: 30rpx;
+  background: linear-gradient(180deg, #4a3b8f 0%, #6c5bb3 220rpx, #f0f2f5 220rpx);
 }
 
-.header-bg {
-  padding: 30rpx 30rpx 20rpx;
-
-  .header-badge {
-    text-align: center;
-    font-size: 28rpx;
-    color: rgba(255,255,255,0.8);
-    margin-bottom: 20rpx;
-  }
-}
-
-.user-card {
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.15);
-  border-radius: 24rpx;
-  padding: 24rpx;
-
-  .user-avatar {
-    width: 76rpx;
-    height: 76rpx;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 38rpx;
-    margin-right: 18rpx;
-  }
-
-  .user-name {
-    display: block;
-    font-size: 32rpx;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  .user-roles {
-    display: block;
-    font-size: 22rpx;
-    color: rgba(255,255,255,0.7);
-    margin-top: 4rpx;
-  }
-}
-
-.search-bar {
-  margin: 20rpx 30rpx;
-
-  .search-input {
-    background: #fff;
-    border-radius: 50rpx;
-    padding: 0 30rpx;
-    height: 80rpx;
-    font-size: 28rpx;
-    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
-  }
-}
-
-.task-card {
-  margin: 0 24rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
-}
-
-.task-header {
+/* ===== 导航栏 ===== */
+.nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
-
-  .task-title {
+  padding: 10rpx 30rpx;
+  .nav-back { width: 60rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; }
+  .nav-back-icon { font-size: 52rpx; color: #fff; font-weight: 300; line-height: 1; }
+  .nav-title {
     font-size: 34rpx;
     font-weight: 700;
-    color: #303133;
+    color: #fff;
   }
+  .nav-add { width: 60rpx; height: 60rpx; }
 }
 
-.tab-group {
-  display: flex;
-  gap: 14rpx;
-
-  .tab-item {
-    padding: 10rpx 24rpx;
+/* ===== 搜索栏 ===== */
+.search-bar {
+  margin: 16rpx 24rpx 12rpx;
+  .search-input {
+    background: #e6f0ff;
+    border: 2rpx solid #a8cfff;
     border-radius: 50rpx;
-    font-size: 24rpx;
-    background: #f0f2f5;
-    color: #606266;
-
-    &.active {
-      background: #6c5bb3;
-      color: #fff;
-    }
+    padding: 0 30rpx;
+    height: 72rpx;
+    font-size: 28rpx;
+    color: #1a73e8;
+    box-shadow: 0 4rpx 16rpx rgba(26, 115, 232, 0.1);
   }
 }
 
-.filter-info {
+.search-placeholder {
+  color: #8ab4f8;
+}
+
+/* ===== 筛选栏 ===== */
+.filter-bar {
   display: flex;
-  justify-content: space-between;
-  padding-bottom: 16rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-  margin-bottom: 10rpx;
-
-  .filter-label { font-size: 24rpx; color: #409EFF; }
-  .filter-count { font-size: 24rpx; color: #909399; }
+  flex-wrap: wrap;
+  gap: 12rpx;
+  padding: 0 24rpx 16rpx;
 }
-
-.task-list {
-  max-height: 800rpx;
-}
-
-.task-item {
+.filter-chip {
   display: flex;
   align-items: center;
-  padding: 22rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  gap: 4rpx;
+  background: #e6f0ff;
+  border: 2rpx solid #a8cfff;
+  border-radius: 30rpx;
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  color: #1a73e8;
+  &.active {
+    background: #1a73e8;
+    color: #fff;
+    border-color: #1a73e8;
+    font-weight: 600;
+  }
+  &.reset {
+    background: #fef0f0;
+    color: #f56c6c;
+    border-color: #fbc4c4;
+  }
+  .chip-arrow { font-size: 20rpx; }
+}
 
-  &:last-child { border-bottom: none; }
-  &:active { opacity: 0.7; }
+/* ===== 统计 ===== */
+.stats-bar {
+  padding: 0 30rpx 12rpx;
+  .stats-text { font-size: 24rpx; color: #909399; }
+  .stats-num { color: #6c5bb3; font-weight: 700; }
+}
 
-  .item-icon {
-    width: 64rpx;
-    height: 64rpx;
-    border-radius: 14rpx;
-    background: #e8f0fe;
+/* ===== 卡片滚动区 ===== */
+.card-scroll {
+  height: calc(100vh - 420rpx);
+  padding: 0 20rpx;
+  box-sizing: border-box; /* Fix for cards being cut off on the right */
+}
+
+/* ===== 卡片网格 ===== */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16rpx 0;
+}
+.track-card {
+  width: calc(50% - 8rpx);
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
+  &:active { opacity: 0.85; transform: scale(0.98); }
+}
+
+/* 卡片顶部 */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+  gap: 12rpx;
+}
+.mold-code {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #303133;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.done-badge {
+  flex-shrink: 0;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  .badge-text { font-size: 20rpx; font-weight: bold; }
+  &.done-yes { background: #f0f9eb; border: 1rpx solid #e1f3d8; .badge-text { color: #67c23a; } }
+  &.done-no { background: #ecf5ff; border: 1rpx solid #d9ecff; .badge-text { color: #409eff; } }
+}
+
+/* 标签 */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-bottom: 12rpx;
+}
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  .tag-text { font-size: 20rpx; }
+  &.tag-warning { background: #fdf6ec; .tag-text { color: #e6a23c; } }
+  &.tag-success { background: #f0f9eb; .tag-text { color: #67c23a; } }
+  &.tag-info { background: #ecf5ff; .tag-text { color: #409eff; } }
+}
+
+/* 卡片元数据 */
+.card-meta {
+  .meta-row {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32rpx;
-    margin-right: 18rpx;
-    flex-shrink: 0;
+    margin-bottom: 6rpx;
   }
-
-  .item-info {
-    flex: 1;
-    min-width: 0;
-
-    .item-name {
-      display: block;
-      font-size: 28rpx;
-      font-weight: 500;
-      color: #303133;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .item-meta {
-      display: block;
-      font-size: 22rpx;
-      color: #909399;
-      margin-top: 6rpx;
-    }
-  }
-
-  .item-priority {
-    padding: 6rpx 16rpx;
-    border-radius: 8rpx;
+  .meta-l {
     font-size: 22rpx;
-    font-weight: 500;
+    color: #909399;
+    width: 60rpx;
     flex-shrink: 0;
-    margin-left: 12rpx;
-
-    &.normal { color: #67c23a; background: #f0f9eb; }
-    &.warning { color: #e6a23c; background: #fdf6ec; }
-    &.danger { color: #f56c6c; background: #fef0f0; }
+  }
+  .meta-v {
+    font-size: 22rpx;
+    color: #606266;
+    font-weight: 500;
+  }
+  .meta-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200rpx;
   }
 }
 
-.empty {
-  text-align: center;
-  padding: 60rpx 0;
-  color: #c0c4cc;
-  font-size: 28rpx;
+/* ===== 空状态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+  .empty-icon { font-size: 80rpx; margin-bottom: 20rpx; }
+  .empty-text { font-size: 28rpx; color: #c0c4cc; }
 }
-
-.footer-text {
+.list-bottom {
   text-align: center;
-  padding: 30rpx;
-  font-size: 22rpx;
-  color: #c0c4cc;
+  padding: 30rpx 0;
+  .list-bottom-text { font-size: 24rpx; color: #c0c4cc; }
 }
 </style>

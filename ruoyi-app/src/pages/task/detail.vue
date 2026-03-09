@@ -1,633 +1,471 @@
 <template>
-  <view class="detail-page">
-    <!-- 顶部 -->
-    <view class="header-bg">
-      <view class="header-badge">移动端菜单</view>
-      <view class="sys-title">
-        <view class="title-left">
-          <text class="title-main">试制信息录入系统</text>
-          <text class="title-sub">试制监控与管理</text>
-        </view>
-        <view class="title-right">
-          <text class="resp-name">{{ notice.responsible || '负责人' }}</text>
-          <text class="resp-line">{{ notice.craftProcess || '生产线' }}</text>
-        </view>
+  <view class="page">
+    <view class="nav-bar" :style="navBarStyle">
+      <view class="nav-back" @tap="goBack">
+        <text class="nav-back-icon">‹</text>
       </view>
+      <text class="nav-title">试制跟踪详情</text>
+      <view style="width:100rpx"></view>
     </view>
 
-    <!-- 产品信息概览 -->
-    <view class="info-card">
-      <view class="card-bar">产品信息概览</view>
-      <view class="product-section">
-        <view class="product-img">
-          <image v-if="notice.wheelImage" :src="notice.wheelImage" mode="aspectFill" class="wheel-img" />
-          <view v-else class="img-placeholder">🔩</view>
-        </view>
-        <view class="product-grid">
-          <view class="grid-row">
-            <view class="grid-cell"><text class="cell-label">模具编号:</text> {{ notice.wheelCode || '-' }} <text :class="notice.urgency === '紧急' ? 'dot-red' : 'dot-green'">●</text> {{ notice.urgency || '正常' }}</view>
-            <view class="grid-cell"><text class="cell-label">试制编号:</text> {{ notice.noticeCode || '-' }}</view>
+    <scroll-view scroll-y class="page-body">
+      <!-- 顶部概览 -->
+      <view class="detail-header">
+        <text class="dh-code">{{ detail.moldCode }}</text>
+        <view class="dh-tags">
+          <view v-if="detail.moldType" class="dtag dtag-warning">
+            <text>{{ detail.moldType }}</text>
           </view>
-          <view class="grid-row">
-            <view class="grid-cell"><text class="cell-label">试制类型:</text> {{ notice.trialType || '-' }} <text class="dot-orange">●</text></view>
-            <view class="grid-cell"><text class="cell-label">涂装次数:</text> 1 <text class="dot-red">●</text> 表面状态: {{ notice.surfaceStatus || '-' }}</view>
+          <view v-if="detail.surfaceStatus" class="dtag dtag-success">
+            <text>{{ detail.surfaceStatus }}</text>
           </view>
-          <view class="grid-row">
-            <view class="grid-cell"><text class="cell-label">当前工序:</text> {{ currentProcess }} <text class="dot-orange">●</text></view>
-            <view class="grid-cell"><text class="cell-label">产品尺寸:</text> {{ notice.sizeSpec || '-' }}</view>
+          <view v-if="detail.machineType" class="dtag dtag-info">
+            <text>{{ detail.machineType }}</text>
           </view>
-          <view class="grid-row">
-            <view class="grid-cell highlight"><text class="cell-label">工艺流程:</text> {{ notice.craftProcess || '-' }}+{{ notice.surfaceStatus || '-' }}</view>
-            <view class="grid-cell"><text class="cell-label">#</text> 下转数: 无、试制数: {{ notice.trialQuantity || 0 }}、交样数: {{ notice.sampleQuantity || 0 }}</view>
-          </view>
-          <view class="grid-row">
-            <view class="grid-cell"><text class="cell-label">试制目的:</text> {{ notice.devType || '新产品首次试制-小批量' }}</view>
-            <view class="grid-cell notice-cell">
-              <text class="cell-label">注意事项及特殊要求:</text>
-              <text class="notice-text">{{ experimentText }}</text>
-            </view>
+          <view class="dtag" :class="detail.allProcessDone === '是' ? 'dtag-success' : 'dtag-info'">
+            <text>{{ detail.allProcessDone === '是' ? '✓ 全序完成' : '● 进行中' }}</text>
           </view>
         </view>
       </view>
 
-      <view class="action-row">
-        <view class="action-btn blue" @tap="openFilesDialog">&#128196; 文件</view>
-        <view class="action-btn orange" @tap="goBack">⬅ 返回</view>
-      </view>
-    </view>
-
-    <!-- 已录入数据 -->
-    <view class="data-card">
-      <view class="data-header">
-        <view>
-          <text class="data-title">已录入数据</text>
-          <text class="data-sub">最近录入记录</text>
+      <!-- 基础信息 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">基础信息</text>
         </view>
-        <view class="data-actions">
-          <view class="small-btn" @tap="copyData">📋 复制数据</view>
-          <view class="small-btn" @tap="loadDetail">🔄 刷新</view>
-        </view>
-      </view>
-
-      <view class="record-list">
-        <view v-for="(proc, idx) in processDataList" :key="idx" class="record-row">
-          <text class="record-label">{{ proc.name }}</text>
-          <text class="record-value" :class="{ 'no-data': !proc.result || proc.result === '无' }">{{ proc.result || '无' }}</text>
-        </view>
-      </view>
-
-      <view class="input-area">
-        <button class="input-btn" @tap="showInputForm = true">✏ 输入</button>
-      </view>
-    </view>
-
-    <!-- 数据录入弹窗 -->
-    <view v-if="showInputForm" class="modal-mask" @tap.self="showInputForm = false">
-      <view class="modal-content">
-        <view class="modal-title">工序数据录入</view>
-        <scroll-view scroll-y class="modal-scroll">
-          <view v-for="proc in fixedProcesses" :key="proc" class="form-row">
-            <text class="form-label">{{ proc }}</text>
-            <picker :value="inputIndex[proc]" :range="resultOptions" @change="onPickerChange($event, proc)">
-              <view class="form-picker">{{ inputForm[proc] || '请选择结果' }}</view>
-            </picker>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">产品规格</text>
+            <text class="desc-value">{{ detail.productSpec || '-' }}</text>
           </view>
-          <view class="form-row">
-            <text class="form-label">备注</text>
-            <input v-model="inputForm.remark" placeholder="输入备注" class="form-input" />
+          <view class="desc-item">
+            <text class="desc-label">上机次数</text>
+            <text class="desc-value">{{ detail.machineCount != null ? detail.machineCount : '-' }}</text>
           </view>
-        </scroll-view>
-        <view class="modal-footer">
-          <button class="modal-btn cancel" @tap="showInputForm = false">取消</button>
-          <button class="modal-btn confirm" @tap="submitInput">提交</button>
+          <view class="desc-item">
+            <text class="desc-label">预计上机</text>
+            <text class="desc-value">{{ detail.planMachineTime || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">模具类型</text>
+            <text class="desc-value">{{ detail.moldType || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">表面状态</text>
+            <text class="desc-value">{{ detail.surfaceStatus || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">上机类型</text>
+            <text class="desc-value">{{ detail.machineType || '-' }}</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 文件弹窗 -->
-    <view v-if="showFilesDialog" class="modal-mask" @tap.self="showFilesDialog = false">
-      <view class="modal-content">
-        <view class="modal-title">相关文件</view>
-        <scroll-view scroll-y class="modal-scroll" v-if="relatedFiles.length > 0">
-          <view v-for="(file, idx) in relatedFiles" :key="idx" class="file-item" @tap="openFile(file)">
-            <view class="file-icon" :style="{ background: getFileColor(file.fileType) }">
-              <text class="file-ext">{{ getFileExt(file.fileType) }}</text>
-            </view>
-            <view class="file-info">
-              <text class="file-name">{{ file.docName }}</text>
-              <text class="file-meta">{{ file.fileType ? file.fileType.toUpperCase() : '' }} {{ formatFileSize(file.fileSize) }}</text>
-            </view>
-            <view class="file-download">下载</view>
+      <!-- 压铸阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">压铸阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">上机日期</text>
+            <text class="desc-value">{{ detail.hotMachineDate || '-' }}</text>
           </view>
-        </scroll-view>
-        <view v-else class="empty-files">&#128194; 暂无相关文件</view>
-        <view class="modal-footer">
-          <button class="modal-btn confirm" @tap="showFilesDialog = false">关闭</button>
+          <view class="desc-item">
+            <text class="desc-label">机台</text>
+            <text class="desc-value">{{ detail.hotMachineStation || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">保压时间</text>
+            <text class="desc-value">{{ detail.roundKeepTime || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">测量数据</text>
+            <text class="desc-value">{{ detail.hotCheckMeasureData || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">生产情况</text>
+            <text class="desc-value">{{ detail.hotProduction || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">改善记录</text>
+            <text class="desc-value">{{ detail.improveRecord || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">负责人</text>
+            <text class="desc-value">{{ detail.hotImprovePerson || '-' }}</text>
+          </view>
         </view>
       </view>
-    </view>
+
+      <!-- 旋压阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">旋压阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">上机日期</text>
+            <text class="desc-value">{{ detail.spinMachineDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">旋压机台</text>
+            <text class="desc-value">{{ detail.spinMachineStation || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">生产情况</text>
+            <text class="desc-value">{{ detail.spinProduction || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">改模记录</text>
+            <text class="desc-value">{{ detail.moldModifyRecord || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">负责人</text>
+            <text class="desc-value">{{ detail.spinImprovePerson || '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 热处理阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">热处理阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">下转时间</text>
+            <text class="desc-value">{{ detail.heatTransferTime || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">接收数量</text>
+            <text class="desc-value">{{ detail.heatReceiveCount != null ? detail.heatReceiveCount : '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">下转数量</text>
+            <text class="desc-value">{{ detail.heatTransferCount != null ? detail.heatTransferCount : '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 粗车阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">粗车阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">上机日期</text>
+            <text class="desc-value">{{ detail.roughMachineDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">负责人</text>
+            <text class="desc-value">{{ detail.roughImprovePerson || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">生产情况</text>
+            <text class="desc-value">{{ detail.roughProduction || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">改善方案</text>
+            <text class="desc-value">{{ detail.improvePlan || '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 精车阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">精车阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">精车上机</text>
+            <text class="desc-value">{{ detail.fineMachineDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">精车负责人</text>
+            <text class="desc-value">{{ detail.fineImprovePerson || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">精车情况</text>
+            <text class="desc-value">{{ detail.fineProduction || '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 涂装阶段 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">涂装阶段</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">涂装上机</text>
+            <text class="desc-value">{{ detail.paintMachineDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">涂装负责人</text>
+            <text class="desc-value">{{ detail.paintImprovePerson || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">涂装情况</text>
+            <text class="desc-value">{{ detail.paintProduction || '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 实验/总结 -->
+      <view class="detail-section">
+        <view class="section-title-bar">
+          <text class="section-title">实验 / 总结</text>
+        </view>
+        <view class="desc-grid">
+          <view class="desc-item">
+            <text class="desc-label">冲击试验日</text>
+            <text class="desc-value">{{ detail.impactTestDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">试验结果</text>
+            <text class="desc-value">{{ detail.impactTestResult || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">完成日期</text>
+            <text class="desc-value">{{ detail.completeDate || '-' }}</text>
+          </view>
+          <view class="desc-item">
+            <text class="desc-label">全序完成</text>
+            <text class="desc-value">{{ detail.allProcessDone || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">实验说明</text>
+            <text class="desc-value">{{ detail.testDescription || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">失效分析</text>
+            <text class="desc-value">{{ detail.failAnalysis || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">生产总结</text>
+            <text class="desc-value">{{ detail.productionSummary || '-' }}</text>
+          </view>
+          <view class="desc-item full">
+            <text class="desc-label">改善措施</text>
+            <text class="desc-value">{{ detail.improveMeasures || '-' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部操作 -->
+      <view class="detail-actions">
+        <view class="detail-btn btn-edit" @tap="handleEdit">
+          <text class="detail-btn-text">✏ 编辑</text>
+        </view>
+        <view class="detail-btn btn-delete" @tap="handleDelete">
+          <text class="detail-btn-text">🗑 删除</text>
+        </view>
+      </view>
+
+      <view style="height:80rpx"></view>
+    </scroll-view>
   </view>
 </template>
 
 <script>
-import { getNotice, updateNotice } from '@/api/notice'
-import { listDocument } from '@/api/document'
-import config from '@/config/index'
-
-const FIXED = ['压铸', '旋压', '热处理', 'X光', '粗车', '涂装', '终检', '精车', '台架实验', '性能实验', '总结']
+import { getTrialTrack, delTrialTrack } from '@/api/trialTrack'
 
 export default {
   data() {
     return {
-      notice: {},
-      processDataList: [],
-      fixedProcesses: FIXED,
-      resultOptions: ['合格', '不合格', '无', '待检'],
-      showInputForm: false,
-      showFilesDialog: false,
-      inputForm: {},
-      inputIndex: {},
-      relatedFiles: []
+      trackId: null,
+      detail: {}
     }
   },
   computed: {
-    experimentText() {
-      return this.notice.experimentItems ? this.notice.experimentItems.replace(/,/g, ', ') : '无'
-    },
-    currentProcess() {
-      const cur = this.processDataList.find(p => p.status === '进行中')
-      if (cur) return cur.name
-      const pen = this.processDataList.find(p => p.status === '待开始')
-      return pen ? pen.name : '已完成'
+    navBarStyle() {
+      const info = uni.getSystemInfoSync()
+      const statusBarHeight = info.statusBarHeight || 20
+      return `padding-top: ${statusBarHeight}px`
     }
   },
   onLoad(options) {
-    if (options.id) this.loadDetail(options.id)
-    this.resetInput()
+    if (options.id) {
+      this.trackId = options.id
+      this.loadDetail()
+    }
+  },
+  onShow() {
+    // 每次显示时重新加载数据，因为可能从编辑页返回
+    if (this.trackId) {
+      this.loadDetail()
+    }
   },
   methods: {
-    loadDetail(id) {
-      const nid = id || this.notice.noticeId
-      if (!nid) return
+    goBack() {
+      uni.navigateBack()
+    },
+    loadDetail() {
       uni.showLoading({ title: '加载中' })
-      getNotice(nid).then(res => {
-        this.notice = res.data || {}
-        this.parseProcess()
-      }).catch(() => {
-        // 模拟数据
-        this.notice = {
-          noticeId: nid, wheelCode: '07125C67-M1', noticeCode: 'CD16-2025-0516',
-          trialType: '新产品小批量', surfaceStatus: '全涂', craftProcess: '低压铸造',
-          sizeSpec: '1770', trialQuantity: 200, sampleQuantity: 0, responsible: '王工 (生产主管)',
-          urgency: '正常', devType: '新产品首次试制-小批量',
-          experimentItems: '13度冲击,90度冲击,CASS中性盐雾,化学成分,弯曲疲劳,径向疲劳,机械性能,金相'
-        }
-        this.initEmpty()
+      getTrialTrack(this.trackId).then(res => {
+        this.detail = res.data || {}
       }).finally(() => {
         uni.hideLoading()
       })
     },
-    parseProcess() {
-      if (this.notice.processData) {
-        try {
-          this.processDataList = JSON.parse(this.notice.processData)
-          this.ensureAll()
-        } catch (e) { this.initEmpty() }
-      } else { this.initEmpty() }
-    },
-    initEmpty() {
-      this.processDataList = FIXED.map(n => ({ name: n, status: '待开始', result: '', remark: '' }))
-    },
-    ensureAll() {
-      const exist = this.processDataList.map(p => p.name)
-      FIXED.forEach(n => {
-        if (!exist.includes(n)) this.processDataList.push({ name: n, status: '待开始', result: '', remark: '' })
+    handleEdit() {
+      uni.navigateTo({
+        url: `/pages/task/edit?id=${this.trackId}`
       })
-      this.processDataList.sort((a, b) => FIXED.indexOf(a.name) - FIXED.indexOf(b.name))
     },
-    resetInput() {
-      this.inputForm = {}
-      this.inputIndex = {}
-      FIXED.forEach(p => { this.inputForm[p] = ''; this.inputIndex[p] = -1 })
-      this.inputForm.remark = ''
-    },
-    onPickerChange(e, proc) {
-      const idx = e.detail.value
-      this.$set(this.inputForm, proc, this.resultOptions[idx])
-      this.$set(this.inputIndex, proc, idx)
-    },
-    submitInput() {
-      FIXED.forEach(name => {
-        if (this.inputForm[name]) {
-          const proc = this.processDataList.find(p => p.name === name)
-          if (proc) {
-            proc.result = this.inputForm[name]
-            if (this.inputForm[name] !== '无') proc.status = '已完成'
+    handleDelete() {
+      uni.showModal({
+        title: '确认删除',
+        content: '确认删除模号 "' + this.detail.moldCode + '" 的跟踪记录？',
+        success: (res) => {
+          if (res.confirm) {
+            uni.showLoading({ title: '删除中...' })
+            delTrialTrack(this.trackId).then(() => {
+              uni.showToast({ title: '删除成功', icon: 'success' })
+              uni.$emit('refreshTaskList')
+              setTimeout(() => {
+                uni.navigateBack()
+              }, 1000)
+            }).catch(() => {
+              uni.showToast({ title: '删除失败', icon: 'none' })
+            }).finally(() => {
+              uni.hideLoading()
+            })
           }
         }
       })
-      const data = { noticeId: this.notice.noticeId, processData: JSON.stringify(this.processDataList) }
-      updateNotice(data).then(() => {
-        uni.showToast({ title: '录入成功', icon: 'success' })
-        this.showInputForm = false
-        this.resetInput()
-        this.loadDetail()
-      }).catch(() => {
-        uni.showToast({ title: '录入成功（本地）', icon: 'success' })
-        this.showInputForm = false
-        this.resetInput()
-      })
-    },
-    openFilesDialog() {
-      this.showFilesDialog = true
-      this.loadRelatedFiles()
-    },
-    loadRelatedFiles() {
-      listDocument({ pageNum: 1, pageSize: 100 }).then(res => {
-        this.relatedFiles = (res.rows || []).filter(f => {
-          if (!this.notice.wheelCode) return false
-          return (f.docName && f.docName.includes(this.notice.wheelCode)) ||
-                 (f.docCode && f.docCode.includes(this.notice.wheelCode)) ||
-                 (f.projectName && this.notice.customerName && f.projectName.includes(this.notice.customerName))
-        })
-      }).catch(() => {
-        this.relatedFiles = []
-      })
-    },
-    openFile(file) {
-      if (!file.filePath) {
-        uni.showToast({ title: '暂无文件', icon: 'none' })
-        return
-      }
-      uni.showLoading({ title: '准备下载...' })
-      const url = config.baseUrl + '/common/download/resource?resource=' + encodeURIComponent(file.filePath)
-      // #ifdef MP-WEIXIN
-      uni.downloadFile({
-        url: url,
-        header: { 'Authorization': 'Bearer ' + uni.getStorageSync('token') },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            uni.openDocument({
-              filePath: res.tempFilePath,
-              showMenu: true,
-              fail: () => { uni.showToast({ title: '无法打开此文件', icon: 'none' }) }
-            })
-          }
-        },
-        fail: () => { uni.showToast({ title: '下载失败', icon: 'none' }) },
-        complete: () => { uni.hideLoading() }
-      })
-      // #endif
-      // #ifdef H5
-      window.open(url)
-      uni.hideLoading()
-      // #endif
-    },
-    getFileColor(type) {
-      const t = (type || '').toLowerCase()
-      const colors = { 'xlsx': '#217346', 'xls': '#217346', 'doc': '#2B579A', 'docx': '#2B579A', 'pdf': '#D32F2F', 'dwg': '#E65100' }
-      return colors[t] || '#909399'
-    },
-    getFileExt(type) {
-      return (type || '?').toUpperCase().substring(0, 4)
-    },
-    formatFileSize(size) {
-      if (!size) return ''
-      if (size < 1024) return size + 'B'
-      if (size < 1024 * 1024) return (size / 1024).toFixed(1) + 'KB'
-      return (size / (1024 * 1024)).toFixed(1) + 'MB'
-    },
-    copyData() {
-      let txt = `模具编号: ${this.notice.wheelCode}\n试制编号: ${this.notice.noticeCode}\n`
-      this.processDataList.forEach(p => { txt += `${p.name}: ${p.result || '无'}\n` })
-      uni.setClipboardData({ data: txt, success: () => { uni.showToast({ title: '已复制' }) } })
-    },
-    goBack() { uni.navigateBack() }
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.detail-page {
+.page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #2d2452 0%, #3d3470 12%, #f0f2f5 12%);
-  padding-bottom: 40rpx;
+  background: #f0f2f5;
+  display: flex;
+  flex-direction: column;
 }
 
-.header-bg {
-  padding: 24rpx 30rpx 16rpx;
-
-  .header-badge {
-    text-align: center;
-    font-size: 26rpx;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 12rpx;
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #4a3b8f, #6c5bb3);
+  padding-bottom: 14rpx;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
+}
+.nav-back {
+  width: 100rpx;
+  .nav-back-icon {
+    font-size: 56rpx;
+    color: #fff;
   }
 }
-
-.sys-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  .title-main { display: block; font-size: 30rpx; font-weight: 600; color: #fff; }
-  .title-sub { display: block; font-size: 20rpx; color: rgba(255,255,255,0.5); }
-  .resp-name { display: block; font-size: 24rpx; color: #fff; text-align: right; }
-  .resp-line { display: block; font-size: 20rpx; color: rgba(255,255,255,0.5); text-align: right; }
+.nav-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #fff;
+}
+.page-body {
+  flex: 1;
+  height: 0;
+  padding: 20rpx;
 }
 
-.info-card, .data-card {
-  margin: 16rpx 20rpx;
+/* ===== 详情样式 ===== */
+.detail-header {
+  text-align: center;
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+.dh-code {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #303133;
+  margin-bottom: 16rpx;
+}
+.dh-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.dtag {
+  padding: 6rpx 18rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  &.dtag-warning { background: #fdf6ec; color: #e6a23c; }
+  &.dtag-success { background: #f0f9eb; color: #67c23a; }
+  &.dtag-info { background: #ecf5ff; color: #409eff; }
+}
+.detail-section {
   background: #fff;
   border-radius: 20rpx;
   padding: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
 }
-
-.card-bar {
-  font-size: 30rpx;
+.section-title-bar {
+  margin-bottom: 16rpx;
+  padding-left: 14rpx;
+  border-left: 6rpx solid #6c5bb3;
+}
+.section-title {
+  font-size: 28rpx;
   font-weight: 700;
   color: #303133;
-  padding-left: 16rpx;
-  border-left: 6rpx solid #6c5bb3;
-  margin-bottom: 20rpx;
 }
-
-.product-section {
-  display: flex;
-  gap: 16rpx;
-}
-
-.product-img {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 16rpx;
-  overflow: hidden;
-  background: #f5f5f5;
-  flex-shrink: 0;
-
-  .wheel-img { width: 100%; height: 100%; }
-  .img-placeholder {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 48rpx;
-  }
-}
-
-.product-grid {
-  flex: 1;
-  min-width: 0;
-}
-
-.grid-row {
-  display: flex;
-  gap: 10rpx;
-  margin-bottom: 8rpx;
-}
-
-.grid-cell {
-  flex: 1;
-  font-size: 22rpx;
-  color: #303133;
-  line-height: 1.5;
-  word-break: break-all;
-
-  &.highlight {
-    background: #e8f4fd;
-    padding: 4rpx 10rpx;
-    border-radius: 8rpx;
-    color: #1890ff;
-  }
-
-  .cell-label { color: #909399; }
-}
-
-.notice-cell {
-  flex-direction: column;
-  .notice-text { display: block; font-size: 22rpx; line-height: 1.5; color: #303133; }
-}
-
-.dot-green { color: #52c41a; }
-.dot-red { color: #f5222d; }
-.dot-orange { color: #fa8c16; }
-
-.action-row {
-  display: flex;
-  gap: 16rpx;
-  margin-top: 20rpx;
-
-  .action-btn {
-    padding: 12rpx 28rpx;
-    border-radius: 12rpx;
-    font-size: 26rpx;
-    font-weight: 500;
-
-    &.blue { background: #409EFF; color: #fff; }
-    &.orange { background: #fa8c16; color: #fff; }
-    &:active { opacity: 0.8; }
-  }
-}
-
-.data-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16rpx;
-
-  .data-title { font-size: 30rpx; font-weight: 700; color: #303133; }
-  .data-sub { display: block; font-size: 22rpx; color: #909399; }
-}
-
-.data-actions {
-  display: flex;
-  gap: 10rpx;
-
-  .small-btn {
-    font-size: 22rpx;
-    padding: 8rpx 16rpx;
-    background: #6c5bb3;
-    color: #fff;
-    border-radius: 8rpx;
-    &:active { opacity: 0.8; }
-  }
-}
-
-.record-list {
+.desc-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
-  background: #f8f9fd;
-  padding: 16rpx;
-  border-radius: 12rpx;
 }
-
-.record-row {
+.desc-item {
   width: calc(50% - 6rpx);
-
-  .record-label { font-size: 22rpx; color: #909399; display: block; }
-  .record-value {
-    font-size: 26rpx; font-weight: 500; color: #303133;
-    &.no-data { color: #c0c4cc; }
-  }
-}
-
-.input-area {
-  text-align: center;
-  margin-top: 20rpx;
-
-  .input-btn {
-    display: inline-block;
-    background: #6c5bb3;
-    color: #fff;
-    font-size: 28rpx;
-    padding: 14rpx 48rpx;
-    border-radius: 12rpx;
-    border: none;
-    &::after { border: none; }
-  }
-}
-
-/* 弹窗 */
-.modal-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal-content {
-  width: 90%;
-  max-height: 80vh;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 30rpx;
-}
-
-.modal-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 20rpx;
-  color: #303133;
-}
-
-.modal-scroll {
-  max-height: 60vh;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
-
-  .form-label {
-    width: 160rpx;
-    font-size: 26rpx;
-    color: #303133;
-    flex-shrink: 0;
-  }
-
-  .form-picker {
-    flex: 1;
-    font-size: 26rpx;
-    color: #606266;
-    background: #f5f7fa;
-    padding: 14rpx 20rpx;
-    border-radius: 10rpx;
-  }
-
-  .form-input {
-    flex: 1;
-    font-size: 26rpx;
-    background: #f5f7fa;
-    padding: 14rpx 20rpx;
-    border-radius: 10rpx;
-  }
-}
-
-.modal-footer {
-  display: flex;
-  gap: 20rpx;
-  margin-top: 24rpx;
-
-  .modal-btn {
-    flex: 1;
-    height: 80rpx;
-    line-height: 80rpx;
-    border-radius: 12rpx;
-    font-size: 28rpx;
-    border: none;
-    &::after { border: none; }
-
-    &.cancel { background: #f0f2f5; color: #606266; }
-    &.confirm { background: #6c5bb3; color: #fff; }
-  }
-}
-
-.file-item {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
-  &:last-child { border-bottom: none; }
-  &:active { opacity: 0.7; }
-}
-
-.file-icon {
-  width: 68rpx;
-  height: 68rpx;
-  border-radius: 14rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16rpx;
-  flex-shrink: 0;
-}
-
-.file-ext {
-  color: #fff;
-  font-size: 20rpx;
-  font-weight: 700;
-}
-
-.file-info {
-  flex: 1;
-  min-width: 0;
-  .file-name {
-    display: block;
-    font-size: 26rpx;
-    font-weight: 500;
-    color: #303133;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .file-meta {
+  &.full { width: 100%; }
+  .desc-label {
     display: block;
     font-size: 22rpx;
     color: #909399;
-    margin-top: 4rpx;
+    margin-bottom: 4rpx;
+  }
+  .desc-value {
+    display: block;
+    font-size: 26rpx;
+    color: #303133;
+    word-break: break-all;
   }
 }
-
-.file-download {
-  padding: 8rpx 20rpx;
-  background: #6c5bb3;
-  color: #fff;
-  border-radius: 8rpx;
-  font-size: 22rpx;
-  flex-shrink: 0;
-  margin-left: 12rpx;
+.detail-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 0;
 }
-
-.empty-files {
+.detail-btn {
+  flex: 1;
   text-align: center;
-  padding: 60rpx 0;
-  color: #c0c4cc;
-  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 16rpx;
+  &:active { opacity: 0.8; }
+  .detail-btn-text { font-size: 30rpx; font-weight: 600; }
+  &.btn-edit {
+    background: #6c5bb3;
+    .detail-btn-text { color: #fff; }
+  }
+  &.btn-delete {
+    background: #fff;
+    border: 2rpx solid #f56c6c;
+    .detail-btn-text { color: #f56c6c; }
+  }
 }
 </style>
