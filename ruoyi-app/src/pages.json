@@ -103,12 +103,6 @@
         "selectedIconPath": "static/tab/home-active.png"
       },
       {
-        "pagePath": "pages/task/index",
-        "text": "任务",
-        "iconPath": "static/tab/task.png",
-        "selectedIconPath": "static/tab/task-active.png"
-      },
-      {
         "pagePath": "pages/mine/index",
         "text": "我的",
         "iconPath": "static/tab/mine.png",

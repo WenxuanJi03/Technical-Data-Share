@@ -189,8 +189,8 @@ export default {
   methods: {
     noop() {},
     goBack() {
-      // Because it's a tab bar page, navigateBack won't work. Switch back to home instead.
-      uni.switchTab({ url: '/pages/index/index' })
+      // It is a normal page now, we can use navigateBack
+      uni.navigateBack()
     },
     // ===== Data =====
     loadData() {
@@ -401,7 +401,7 @@ export default {
 /* ===== 卡片滚动区 ===== */
 .card-scroll {
   height: calc(100vh - 420rpx);
-  padding: 0 20rpx;
+  padding: 0 10rpx;
   box-sizing: border-box; /* Fix for cards being cut off on the right */
 }
 
@@ -413,11 +413,11 @@ export default {
   gap: 16rpx 0;
 }
 .track-card {
-  width: calc(50% - 8rpx);
+  width: calc(50% - 6rpx);
   box-sizing: border-box;
   background: #fff;
   border-radius: 20rpx;
-  padding: 20rpx;
+  padding: 16rpx;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.05);
   &:active { opacity: 0.85; transform: scale(0.98); }
 }
@@ -426,30 +426,30 @@ export default {
 .card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12rpx;
-  gap: 12rpx;
+  align-items: flex-start;
+  margin-bottom: 10rpx;
+  gap: 8rpx;
 }
 .mold-code {
   font-size: 30rpx;
   font-weight: 700;
   color: #303133;
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-all;
 }
 .done-badge {
   flex-shrink: 0;
-  padding: 8rpx 16rpx;
-  border-radius: 12rpx;
-  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.1);
   transition: all 0.2s;
   &:active {
     transform: scale(0.95);
     opacity: 0.8;
   }
-  .badge-text { font-size: 20rpx; font-weight: bold; }
+  .badge-text { font-size: 18rpx; font-weight: 500; }
   &.done-yes { background: #f0f9eb; border: 1rpx solid #e1f3d8; .badge-text { color: #67c23a; } }
   &.done-no { background: #ecf5ff; border: 1rpx solid #d9ecff; .badge-text { color: #409eff; } }
 }

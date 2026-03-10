@@ -6,13 +6,12 @@
         <text class="nav-back-icon">‹</text>
       </view>
       <text class="nav-title">试制流程</text>
-      <view class="nav-add" @tap="showAddDialog">
-        <text class="nav-add-icon">＋</text>
-      </view>
+      <!-- balance nav-back for absolute center -->
+      <view class="nav-placeholder"></view>
     </view>
 
-    <!-- 搜索栏 -->
-    <view class="search-bar">
+    <!-- 搜索栏及操作区 -->
+    <view class="search-action-bar">
       <input
         class="search-input"
         v-model="searchKeyword"
@@ -20,6 +19,10 @@
         @input="onSearch"
         confirm-type="search"
       />
+      <view class="add-btn" @tap="showAddDialog">
+        <text class="add-btn-icon">＋</text>
+        <text class="add-btn-text">发起试制</text>
+      </view>
     </view>
 
     <!-- 流程列表 -->
@@ -1486,6 +1489,12 @@ export default {
   font-size: 34rpx;
   font-weight: 600;
   color: #fff;
+  flex: 1;
+  text-align: center;
+}
+.nav-placeholder {
+  width: 60rpx;
+  height: 60rpx;
 }
 .nav-add {
   width: 60rpx;
@@ -1502,17 +1511,42 @@ export default {
   line-height: 1;
 }
 
-/* ===== 搜索栏 ===== */
-.search-bar {
+/* ===== 搜索栏及操作区 ===== */
+.search-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
   margin: 20rpx 24rpx;
 }
 .search-input {
+  flex: 1;
   background: #fff;
   border-radius: 40rpx;
   padding: 16rpx 30rpx;
   font-size: 26rpx;
   color: #303133;
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #4a3b8f, #6c5bb3);
+  padding: 16rpx 30rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 4rpx 12rpx rgba(108, 91, 179, 0.3);
+  flex-shrink: 0;
+  &:active { opacity: 0.8; transform: scale(0.98); }
+}
+.add-btn-icon {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}
+.add-btn-text {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
 }
 
 /* ===== 列表 ===== */

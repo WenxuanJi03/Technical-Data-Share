@@ -112,6 +112,26 @@ public class TechTrialProcess extends BaseEntity {
     private String step7Comments;
     private String step8Comments;
 
+    // ===== 8个步骤的下一步需求(normal/minor/major) =====
+    private String step1Demand;
+    private String step2Demand;
+    private String step3Demand;
+    private String step4Demand;
+    private String step5Demand;
+    private String step6Demand;
+    private String step7Demand;
+    private String step8Demand;
+
+    // ===== 8个步骤的改善记录 =====
+    private String step1ImproveRecord;
+    private String step2ImproveRecord;
+    private String step3ImproveRecord;
+    private String step4ImproveRecord;
+    private String step5ImproveRecord;
+    private String step6ImproveRecord;
+    private String step7ImproveRecord;
+    private String step8ImproveRecord;
+
     /** 删除标志 */
     private String delFlag;
 
@@ -491,6 +511,40 @@ public class TechTrialProcess extends BaseEntity {
     public void setStep8Comments(String step8Comments) {
         this.step8Comments = step8Comments;
     }
+
+    public String getStep1Demand() { return step1Demand; }
+    public void setStep1Demand(String step1Demand) { this.step1Demand = step1Demand; }
+    public String getStep2Demand() { return step2Demand; }
+    public void setStep2Demand(String step2Demand) { this.step2Demand = step2Demand; }
+    public String getStep3Demand() { return step3Demand; }
+    public void setStep3Demand(String step3Demand) { this.step3Demand = step3Demand; }
+    public String getStep4Demand() { return step4Demand; }
+    public void setStep4Demand(String step4Demand) { this.step4Demand = step4Demand; }
+    public String getStep5Demand() { return step5Demand; }
+    public void setStep5Demand(String step5Demand) { this.step5Demand = step5Demand; }
+    public String getStep6Demand() { return step6Demand; }
+    public void setStep6Demand(String step6Demand) { this.step6Demand = step6Demand; }
+    public String getStep7Demand() { return step7Demand; }
+    public void setStep7Demand(String step7Demand) { this.step7Demand = step7Demand; }
+    public String getStep8Demand() { return step8Demand; }
+    public void setStep8Demand(String step8Demand) { this.step8Demand = step8Demand; }
+
+    public String getStep1ImproveRecord() { return step1ImproveRecord; }
+    public void setStep1ImproveRecord(String step1ImproveRecord) { this.step1ImproveRecord = step1ImproveRecord; }
+    public String getStep2ImproveRecord() { return step2ImproveRecord; }
+    public void setStep2ImproveRecord(String step2ImproveRecord) { this.step2ImproveRecord = step2ImproveRecord; }
+    public String getStep3ImproveRecord() { return step3ImproveRecord; }
+    public void setStep3ImproveRecord(String step3ImproveRecord) { this.step3ImproveRecord = step3ImproveRecord; }
+    public String getStep4ImproveRecord() { return step4ImproveRecord; }
+    public void setStep4ImproveRecord(String step4ImproveRecord) { this.step4ImproveRecord = step4ImproveRecord; }
+    public String getStep5ImproveRecord() { return step5ImproveRecord; }
+    public void setStep5ImproveRecord(String step5ImproveRecord) { this.step5ImproveRecord = step5ImproveRecord; }
+    public String getStep6ImproveRecord() { return step6ImproveRecord; }
+    public void setStep6ImproveRecord(String step6ImproveRecord) { this.step6ImproveRecord = step6ImproveRecord; }
+    public String getStep7ImproveRecord() { return step7ImproveRecord; }
+    public void setStep7ImproveRecord(String step7ImproveRecord) { this.step7ImproveRecord = step7ImproveRecord; }
+    public String getStep8ImproveRecord() { return step8ImproveRecord; }
+    public void setStep8ImproveRecord(String step8ImproveRecord) { this.step8ImproveRecord = step8ImproveRecord; }
 
     public String getMoldType() {
         return moldType;

@@ -137,7 +137,7 @@ export default {
   methods: {
     goPage(url) {
       // tabBar 页面必须使用 switchTab
-      const tabBarPages = ['/pages/index/index', '/pages/task/index', '/pages/mine/index']
+      const tabBarPages = ['/pages/index/index', '/pages/mine/index']
       if (tabBarPages.includes(url)) {
         uni.switchTab({ url })
       } else {

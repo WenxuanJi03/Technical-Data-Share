@@ -44,15 +44,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="step6Files"       column="step6_files"       />
         <result property="step7Files"       column="step7_files"       />
         <result property="step8Files"       column="step8_files"       />
-        <result property="step1Comments"    column="step1_comments"    />
-        <result property="step2Comments"    column="step2_comments"    />
-        <result property="step3Comments"    column="step3_comments"    />
-        <result property="step4Comments"    column="step4_comments"    />
-        <result property="step5Comments"    column="step5_comments"    />
-        <result property="step6Comments"    column="step6_comments"    />
-        <result property="step7Comments"    column="step7_comments"    />
-        <result property="step8Comments"    column="step8_comments"    />
-        <result property="delFlag"          column="del_flag"          />
+        <result property="step1Comments"       column="step1_comments"        />
+        <result property="step2Comments"       column="step2_comments"        />
+        <result property="step3Comments"       column="step3_comments"        />
+        <result property="step4Comments"       column="step4_comments"        />
+        <result property="step5Comments"       column="step5_comments"        />
+        <result property="step6Comments"       column="step6_comments"        />
+        <result property="step7Comments"       column="step7_comments"        />
+        <result property="step8Comments"       column="step8_comments"        />
+        <result property="step1Demand"         column="step1_demand"          />
+        <result property="step2Demand"         column="step2_demand"          />
+        <result property="step3Demand"         column="step3_demand"          />
+        <result property="step4Demand"         column="step4_demand"          />
+        <result property="step5Demand"         column="step5_demand"          />
+        <result property="step6Demand"         column="step6_demand"          />
+        <result property="step7Demand"         column="step7_demand"          />
+        <result property="step8Demand"         column="step8_demand"          />
+        <result property="step1ImproveRecord"  column="step1_improve_record"  />
+        <result property="step2ImproveRecord"  column="step2_improve_record"  />
+        <result property="step3ImproveRecord"  column="step3_improve_record"  />
+        <result property="step4ImproveRecord"  column="step4_improve_record"  />
+        <result property="step5ImproveRecord"  column="step5_improve_record"  />
+        <result property="step6ImproveRecord"  column="step6_improve_record"  />
+        <result property="step7ImproveRecord"  column="step7_improve_record"  />
+        <result property="step8ImproveRecord"  column="step8_improve_record"  />
+        <result property="delFlag"             column="del_flag"              />
         <result property="createBy"         column="create_by"         />
         <result property="createTime"       column="create_time"       />
         <result property="updateBy"         column="update_by"         />
@@ -67,6 +83,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             step1_responsible, step2_responsible, step3_responsible, step4_responsible, step5_responsible, step6_responsible, step7_responsible, step8_responsible,
             step1_files, step2_files, step3_files, step4_files, step5_files, step6_files, step7_files, step8_files,
             step1_comments, step2_comments, step3_comments, step4_comments, step5_comments, step6_comments, step7_comments, step8_comments,
+            step1_demand, step2_demand, step3_demand, step4_demand, step5_demand, step6_demand, step7_demand, step8_demand,
+            step1_improve_record, step2_improve_record, step3_improve_record, step4_improve_record, step5_improve_record, step6_improve_record, step7_improve_record, step8_improve_record,
             del_flag, create_by, create_time, update_by, update_time, remark
         from tech_trial_process
     </sql>
@@ -158,6 +176,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="step6Comments != null">step6_comments,</if>
             <if test="step7Comments != null">step7_comments,</if>
             <if test="step8Comments != null">step8_comments,</if>
+            <if test="step1Demand != null">step1_demand,</if>
+            <if test="step2Demand != null">step2_demand,</if>
+            <if test="step3Demand != null">step3_demand,</if>
+            <if test="step4Demand != null">step4_demand,</if>
+            <if test="step5Demand != null">step5_demand,</if>
+            <if test="step6Demand != null">step6_demand,</if>
+            <if test="step7Demand != null">step7_demand,</if>
+            <if test="step8Demand != null">step8_demand,</if>
+            <if test="step1ImproveRecord != null">step1_improve_record,</if>
+            <if test="step2ImproveRecord != null">step2_improve_record,</if>
+            <if test="step3ImproveRecord != null">step3_improve_record,</if>
+            <if test="step4ImproveRecord != null">step4_improve_record,</if>
+            <if test="step5ImproveRecord != null">step5_improve_record,</if>
+            <if test="step6ImproveRecord != null">step6_improve_record,</if>
+            <if test="step7ImproveRecord != null">step7_improve_record,</if>
+            <if test="step8ImproveRecord != null">step8_improve_record,</if>
             <if test="createBy != null">create_by,</if>
             create_time,
             <if test="remark != null">remark,</if>
@@ -209,6 +243,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="step6Comments != null">#{step6Comments},</if>
             <if test="step7Comments != null">#{step7Comments},</if>
             <if test="step8Comments != null">#{step8Comments},</if>
+            <if test="step1Demand != null">#{step1Demand},</if>
+            <if test="step2Demand != null">#{step2Demand},</if>
+            <if test="step3Demand != null">#{step3Demand},</if>
+            <if test="step4Demand != null">#{step4Demand},</if>
+            <if test="step5Demand != null">#{step5Demand},</if>
+            <if test="step6Demand != null">#{step6Demand},</if>
+            <if test="step7Demand != null">#{step7Demand},</if>
+            <if test="step8Demand != null">#{step8Demand},</if>
+            <if test="step1ImproveRecord != null">#{step1ImproveRecord},</if>
+            <if test="step2ImproveRecord != null">#{step2ImproveRecord},</if>
+            <if test="step3ImproveRecord != null">#{step3ImproveRecord},</if>
+            <if test="step4ImproveRecord != null">#{step4ImproveRecord},</if>
+            <if test="step5ImproveRecord != null">#{step5ImproveRecord},</if>
+            <if test="step6ImproveRecord != null">#{step6ImproveRecord},</if>
+            <if test="step7ImproveRecord != null">#{step7ImproveRecord},</if>
+            <if test="step8ImproveRecord != null">#{step8ImproveRecord},</if>
             <if test="createBy != null">#{createBy},</if>
             sysdate(),
             <if test="remark != null">#{remark},</if>
@@ -264,6 +314,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="step6Comments != null">step6_comments = #{step6Comments},</if>
             <if test="step7Comments != null">step7_comments = #{step7Comments},</if>
             <if test="step8Comments != null">step8_comments = #{step8Comments},</if>
+            <if test="step1Demand != null">step1_demand = #{step1Demand},</if>
+            <if test="step2Demand != null">step2_demand = #{step2Demand},</if>
+            <if test="step3Demand != null">step3_demand = #{step3Demand},</if>
+            <if test="step4Demand != null">step4_demand = #{step4Demand},</if>
+            <if test="step5Demand != null">step5_demand = #{step5Demand},</if>
+            <if test="step6Demand != null">step6_demand = #{step6Demand},</if>
+            <if test="step7Demand != null">step7_demand = #{step7Demand},</if>
+            <if test="step8Demand != null">step8_demand = #{step8Demand},</if>
+            <if test="step1ImproveRecord != null">step1_improve_record = #{step1ImproveRecord},</if>
+            <if test="step2ImproveRecord != null">step2_improve_record = #{step2ImproveRecord},</if>
+            <if test="step3ImproveRecord != null">step3_improve_record = #{step3ImproveRecord},</if>
+            <if test="step4ImproveRecord != null">step4_improve_record = #{step4ImproveRecord},</if>
+            <if test="step5ImproveRecord != null">step5_improve_record = #{step5ImproveRecord},</if>
+            <if test="step6ImproveRecord != null">step6_improve_record = #{step6ImproveRecord},</if>
+            <if test="step7ImproveRecord != null">step7_improve_record = #{step7ImproveRecord},</if>
+            <if test="step8ImproveRecord != null">step8_improve_record = #{step8ImproveRecord},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             update_time = sysdate(),
             <if test="remark != null">remark = #{remark},</if>
