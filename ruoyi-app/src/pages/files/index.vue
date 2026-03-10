@@ -165,7 +165,7 @@
 
 <script>
 import { listDocument } from '@/api/document'
-import config from '@/config/index'
+import { getProductBaseUrl } from '@/api/product'
 
 export default {
   data() {
@@ -251,7 +251,7 @@ export default {
         return
       }
       uni.showLoading({ title: '准备下载...' })
-      const url = config.baseUrl + '/common/download/resource?resource=' + encodeURIComponent(doc.filePath)
+      const url = getProductBaseUrl() + '/common/download/resource?resource=' + encodeURIComponent(doc.filePath)
       // #ifdef MP-WEIXIN
       uni.downloadFile({
         url: url,

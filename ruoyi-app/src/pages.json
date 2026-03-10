@@ -88,6 +88,20 @@
         "navigationBarTitleText": "轮毂识别",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/productImage/index",
+      "style": {
+        "navigationBarTitleText": "产品图",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/productImage/detail",
+      "style": {
+        "navigationBarTitleText": "产品详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {

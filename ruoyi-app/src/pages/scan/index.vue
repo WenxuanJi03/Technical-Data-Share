@@ -64,8 +64,8 @@
         >
           <view class="result-thumb">
             <image
-              v-if="item.frontImage"
-              :src="baseUrl + item.frontImage"
+              v-if="item._localImg"
+              :src="item._localImg"
               mode="aspectFill"
               class="thumb-img"
             />
@@ -120,8 +120,7 @@
 </template>
 
 <script>
-import { recognizeProduct } from '@/api/product'
-import config from '@/config/index'
+import { recognizeProduct, buildImageUrl, resolveImageUrl } from '@/api/product'
 
 export default {
   name: 'WheelScan',
@@ -129,8 +128,7 @@ export default {
     return {
       previewUrl: '',
       recognizing: false,
-      results: [],
-      baseUrl: config.baseUrl
+      results: []
     }
   },
   computed: {
@@ -160,23 +158,37 @@ export default {
     startRecognize(filePath) {
       this.recognizing = true
       this.results = []
+      var self = this
       recognizeProduct(filePath)
-        .then(res => {
-          this.results = res.data || []
-          if (!this.results.length) {
+        .then(function (res) {
+          self.results = res.data || []
+          if (!self.results.length) {
             uni.showToast({ title: '未识别到相似轮型', icon: 'none' })
           }
+          self.resolveResultImages()
         })
-        .catch(() => {})
-        .finally(() => {
-          this.recognizing = false
+        .catch(function () {})
+        .finally(function () {
+          self.recognizing = false
         })
     },
+    resolveResultImages() {
+      var self = this
+      this.results.forEach(function (item, index) {
+        if (!item.frontImage) return
+        resolveImageUrl(item.frontImage).then(function (localPath) {
+          self.$set(self.results[index], '_localImg', localPath)
+        })
+      })
+    },
+    getImageUrl(path) {
+      return buildImageUrl(path)
+    },
     previewResultImage(item) {
-      if (item.frontImage) {
+      if (item._localImg) {
         uni.previewImage({
-          urls: [this.baseUrl + item.frontImage],
-          current: this.baseUrl + item.frontImage
+          urls: [item._localImg],
+          current: item._localImg
         })
       }
     }
