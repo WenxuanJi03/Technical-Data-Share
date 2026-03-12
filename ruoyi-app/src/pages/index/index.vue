@@ -52,6 +52,11 @@
           <text class="card-title">产品图</text>
           <text class="card-desc">产品图库展示</text>
         </view>
+        <view v-if="canSeeMenu.blankImage" class="menu-card" @tap="goPage('/pages/blankImage/index')">
+          <view class="card-icon orange">📐</view>
+          <text class="card-title">毛胚图</text>
+          <text class="card-desc">毛胚图库展示</text>
+        </view>
         <!-- 无任何菜单权限时的提示 -->
         <view v-if="noMenuVisible" class="no-menu-tip">
           <text class="no-menu-icon">🔒</text>
@@ -111,16 +116,16 @@ export default {
       const perms = this.$store.state.permissions || []
       const isAdmin = perms.includes('*:*:*')
       if (isAdmin) {
-        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true, productImage: true }
+        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true, productImage: true, blankImage: true }
       }
       const mobilePerms = [
         'mobile:task:view', 'mobile:review:view', 'mobile:files:view',
-        'mobile:workorder:view', 'mobile:trialProcess:view', 'mobile:scan:view', 'mobile:productImage:view'
+        'mobile:workorder:view', 'mobile:trialProcess:view', 'mobile:scan:view', 'mobile:productImage:view', 'mobile:blankImage:view'
       ]
       // SQL 未执行（权限节点不存在）时，用户 perms 不含任何 mobile 权限 → 全部默认显示
       const controlEnabled = mobilePerms.some(p => perms.includes(p))
       if (!controlEnabled) {
-        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true, productImage: true }
+        return { task: true, review: true, files: true, workorder: true, trialProcess: true, scan: true, productImage: true, blankImage: true }
       }
       return {
         task: perms.includes('mobile:task:view'),
@@ -129,12 +134,13 @@ export default {
         workorder: perms.includes('mobile:workorder:view'),
         trialProcess: perms.includes('mobile:trialProcess:view'),
         scan: perms.includes('mobile:scan:view'),
-        productImage: perms.includes('mobile:productImage:view')
+        productImage: perms.includes('mobile:productImage:view'),
+        blankImage: perms.includes('mobile:blankImage:view')
       }
     },
     noMenuVisible() {
       const m = this.canSeeMenu
-      return !m.task && !m.review && !m.files && !m.workorder && !m.trialProcess && !m.scan && !m.productImage
+      return !m.task && !m.review && !m.files && !m.workorder && !m.trialProcess && !m.scan && !m.productImage && !m.blankImage
     }
   },
   onShow() {

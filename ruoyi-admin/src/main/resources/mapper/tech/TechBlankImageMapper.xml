@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.tech.mapper.TechBlankImageMapper">
+
+    <resultMap type="TechBlankImage" id="TechBlankImageResult">
+        <result property="blankId"      column="blank_id"      />
+        <result property="moldNo"       column="mold_no"       />
+        <result property="modelCode"    column="model_code"    />
+        <result property="version"      column="version"       />
+        <result property="releaseDate"  column="release_date"  />
+        <result property="blankImage"   column="blank_image"   />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateBy"     column="update_by"     />
+        <result property="updateTime"   column="update_time"   />
+        <result property="delFlag"      column="del_flag"      />
+        <result property="remark"       column="remark"        />
+    </resultMap>
+
+    <sql id="selectTechBlankImageVo">
+        select blank_id, mold_no, model_code, version, release_date, blank_image,
+               create_by, create_time, update_by, update_time, del_flag, remark
+        from tech_blank_image
+    </sql>
+
+    <select id="selectTechBlankImageList" parameterType="TechBlankImage" resultMap="TechBlankImageResult">
+        <include refid="selectTechBlankImageVo"/>
+        <where>
+            <if test="moldNo != null and moldNo != ''"> and mold_no like concat('%', #{moldNo}, '%')</if>
+            <if test="modelCode != null and modelCode != ''"> and model_code like concat('%', #{modelCode}, '%')</if>
+            <if test="version != null and version != ''"> and version = #{version}</if>
+            and del_flag = '0'
+        </where>
+        order by mold_no asc, model_code asc
+    </select>
+
+    <select id="selectTechBlankImageByBlankId" parameterType="Long" resultMap="TechBlankImageResult">
+        <include refid="selectTechBlankImageVo"/>
+        where blank_id = #{blankId}
+    </select>
+
+    <select id="selectTechBlankImageByModelCode" parameterType="String" resultMap="TechBlankImageResult">
+        <include refid="selectTechBlankImageVo"/>
+        where model_code = #{modelCode} and del_flag = '0'
+        limit 1
+    </select>
+
+    <insert id="insertTechBlankImage" parameterType="TechBlankImage" useGeneratedKeys="true" keyProperty="blankId">
+        insert into tech_blank_image
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="moldNo != null">mold_no,</if>
+            <if test="modelCode != null and modelCode != ''">model_code,</if>
+            <if test="version != null">version,</if>
+            <if test="releaseDate != null">release_date,</if>
+            <if test="blankImage != null">blank_image,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="moldNo != null">#{moldNo},</if>
+            <if test="modelCode != null and modelCode != ''">#{modelCode},</if>
+            <if test="version != null">#{version},</if>
+            <if test="releaseDate != null">#{releaseDate},</if>
+            <if test="blankImage != null">#{blankImage},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTechBlankImage" parameterType="TechBlankImage">
+        update tech_blank_image
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moldNo != null">mold_no = #{moldNo},</if>
+            <if test="modelCode != null and modelCode != ''">model_code = #{modelCode},</if>
+            <if test="version != null">version = #{version},</if>
+            <if test="releaseDate != null">release_date = #{releaseDate},</if>
+            <if test="blankImage != null">blank_image = #{blankImage},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where blank_id = #{blankId}
+    </update>
+
+    <delete id="deleteTechBlankImageByBlankId" parameterType="Long">
+        delete from tech_blank_image where blank_id = #{blankId}
+    </delete>
+
+    <delete id="deleteTechBlankImageByBlankIds" parameterType="String">
+        delete from tech_blank_image where blank_id in
+        <foreach item="blankId" collection="array" open="(" separator="," close=")">
+            #{blankId}
+        </foreach>
+    </delete>
+</mapper>

@@ -102,6 +102,20 @@
         "navigationBarTitleText": "产品详情",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/blankImage/index",
+      "style": {
+        "navigationBarTitleText": "毛胚图",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/blankImage/detail",
+      "style": {
+        "navigationBarTitleText": "毛胚图详情",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {
