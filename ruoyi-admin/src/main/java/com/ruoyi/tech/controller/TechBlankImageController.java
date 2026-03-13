@@ -107,6 +107,17 @@ public class TechBlankImageController extends BaseController {
     }
 
     /**
+     * 按条件清空毛胚图（全选删除）
+     */
+    @PreAuthorize("@ss.hasPermi('tech:blankImage:remove')")
+    @Log(title = "毛胚图", businessType = BusinessType.DELETE)
+    @DeleteMapping("/cleanAll")
+    public AjaxResult cleanAll(TechBlankImage techBlankImage) {
+        int count = techBlankImageService.cleanBlankImages(techBlankImage);
+        return success("成功删除 " + count + " 条数据");
+    }
+
+    /**
      * 导入毛胚图数据（自定义解析：支持卡片式布局的 XLS/XLSX 表格）
      *
      * 表格布局（每4行一组，横向铺开）：

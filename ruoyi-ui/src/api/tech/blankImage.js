@@ -42,3 +42,12 @@ export function delBlankImage(blankId) {
     method: 'delete'
   })
 }
+
+// 清空毛胚图（全选删除）
+export function cleanBlankImage(query) {
+  return request({
+    url: '/tech/blankImage/cleanAll',
+    method: 'delete',
+    params: query
+  })
+}

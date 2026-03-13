@@ -5,14 +5,34 @@
       <el-form-item label="型号" prop="modelCode">
         <el-input v-model="queryParams.modelCode" placeholder="请输入型号" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="模号" prop="moldNo">
-        <el-input v-model="queryParams.moldNo" placeholder="请输入模号" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
       <el-form-item label="版本" prop="version">
         <el-select v-model="queryParams.version" placeholder="全部" clearable>
           <el-option label="A" value="A" />
           <el-option label="B" value="B" />
           <el-option label="C" value="C" />
+          <el-option label="D" value="D" />
+          <el-option label="E" value="E" />
+          <el-option label="F" value="F" />
+          <el-option label="G" value="G" />
+          <el-option label="H" value="H" />
+          <el-option label="I" value="I" />
+          <el-option label="J" value="J" />
+          <el-option label="K" value="K" />
+          <el-option label="L" value="L" />
+          <el-option label="M" value="M" />
+          <el-option label="N" value="N" />
+          <el-option label="O" value="O" />
+          <el-option label="P" value="P" />
+          <el-option label="Q" value="Q" />
+          <el-option label="R" value="R" />
+          <el-option label="S" value="S" />
+          <el-option label="T" value="T" />
+          <el-option label="U" value="U" />
+          <el-option label="V" value="V" />
+          <el-option label="W" value="W" />
+          <el-option label="X" value="X" />
+          <el-option label="Y" value="Y" />
+          <el-option label="Z" value="Z" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -51,8 +71,11 @@
     <div class="stats-bar" v-if="total > 0">
       <span class="stats-item">共 <b>{{ total }}</b> 条毛胚图</span>
       <el-divider direction="vertical"></el-divider>
-      <span class="stats-item" v-if="queryParams.moldNo">模号: {{ queryParams.moldNo }}</span>
       <span class="stats-item" v-if="queryParams.version">版本: {{ queryParams.version }}</span>
+      <span class="stats-item" v-if="queryParams.version">版本: {{ queryParams.version }}</span>
+      <el-divider direction="vertical"></el-divider>
+      <el-checkbox v-model="selectAll" style="margin-left:8px">全选所有 {{ total }} 条毛胚图</el-checkbox>
+      <el-button v-if="selectAll" type="danger" size="mini" icon="el-icon-delete" style="margin-left:12px" @click="handleCleanAll" v-hasPermi="['tech:blankImage:remove']">删除全部</el-button>
     </div>
 
     <!-- ★ 卡片视图（默认） -->
@@ -76,10 +99,6 @@
         <!-- 信息区域 -->
         <div class="card-body">
           <div class="wheel-code">{{ item.modelCode }}</div>
-          <div class="card-info-row">
-            <span class="info-label">模号</span>
-            <span class="info-value">{{ item.moldNo || '-' }}</span>
-          </div>
           <div class="card-info-row" v-if="item.releaseDate">
             <span class="info-label">下发</span>
             <span class="info-value">{{ item.releaseDate }}</span>
@@ -96,7 +115,6 @@
     <!-- 表格视图 -->
     <el-table v-if="viewMode === 'table'" v-loading="loading" :data="blankList" @selection-change="handleSelectionChange" border size="mini">
       <el-table-column type="selection" width="40" align="center" />
-      <el-table-column label="模号" align="center" prop="moldNo" width="80" />
       <el-table-column label="型号" align="center" prop="modelCode" width="120">
         <template slot-scope="scope">
           <el-link type="primary" @click="showDetail(scope.row)">{{ scope.row.modelCode }}</el-link>
@@ -125,8 +143,8 @@
 
     <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" :page-sizes="[10, 20, 24, 30, 50]" @pagination="getList" />
 
-    <!-- ★ 详情抽屉 ★ -->
-    <el-drawer :title="detailData.modelCode || '毛胚图详情'" :visible.sync="detailVisible" size="520px" direction="rtl">
+    <!-- ★ 详情弹窗 ★ -->
+    <el-dialog :title="detailData.modelCode || '毛胚图详情'" :visible.sync="detailVisible" width="80%" top="5vh" append-to-body center>
       <div class="detail-drawer" v-if="detailData.blankId">
         <!-- 大图 -->
         <div class="detail-image-wrap">
@@ -164,7 +182,6 @@
           <div class="section-title">基础信息</div>
           <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="型号">{{ detailData.modelCode }}</el-descriptions-item>
-            <el-descriptions-item label="模号">{{ detailData.moldNo || '-' }}</el-descriptions-item>
             <el-descriptions-item label="版本">
               <el-tag type="primary" size="mini">{{ detailData.version || '-' }}</el-tag>
             </el-descriptions-item>
@@ -178,20 +195,42 @@
           <el-button type="danger" size="small" icon="el-icon-delete" @click="handleDelete(detailData)" v-hasPermi="['tech:blankImage:remove']">删除</el-button>
         </div>
       </div>
-    </el-drawer>
+    </el-dialog>
 
     <!-- 添加/修改对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px" size="small">
         <el-form-item label="型号" prop="modelCode"><el-input v-model="form.modelCode" placeholder="如 00919F03" /></el-form-item>
         <el-row :gutter="20">
-          <el-col :span="12"><el-form-item label="模号"><el-input v-model="form.moldNo" placeholder="如 009" /></el-form-item></el-col>
           <el-col :span="12">
             <el-form-item label="版本">
               <el-select v-model="form.version" style="width:100%">
                 <el-option label="A" value="A" />
                 <el-option label="B" value="B" />
                 <el-option label="C" value="C" />
+                <el-option label="D" value="D" />
+                <el-option label="E" value="E" />
+                <el-option label="F" value="F" />
+                <el-option label="G" value="G" />
+                <el-option label="H" value="H" />
+                <el-option label="I" value="I" />
+                <el-option label="J" value="J" />
+                <el-option label="K" value="K" />
+                <el-option label="L" value="L" />
+                <el-option label="M" value="M" />
+                <el-option label="N" value="N" />
+                <el-option label="O" value="O" />
+                <el-option label="P" value="P" />
+                <el-option label="Q" value="Q" />
+                <el-option label="R" value="R" />
+                <el-option label="S" value="S" />
+                <el-option label="T" value="T" />
+                <el-option label="U" value="U" />
+                <el-option label="V" value="V" />
+                <el-option label="W" value="W" />
+                <el-option label="X" value="X" />
+                <el-option label="Y" value="Y" />
+                <el-option label="Z" value="Z" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -281,7 +320,7 @@
 </template>
 
 <script>
-import { listBlankImage, getBlankImage, delBlankImage, addBlankImage, updateBlankImage } from "@/api/tech/blankImage"
+import { listBlankImage, getBlankImage, delBlankImage, addBlankImage, updateBlankImage, cleanBlankImage } from "@/api/tech/blankImage"
 import { getToken } from "@/utils/auth"
 
 export default {
@@ -298,6 +337,7 @@ export default {
       title: "",
       open: false,
       viewMode: "card",
+      selectAll: false,
       // 详情抽屉
       detailVisible: false,
       detailData: {},
@@ -384,6 +424,12 @@ export default {
     handleBatchDelete() {
       this.$modal.confirm('确认删除选中的 ' + this.ids.length + ' 条毛胚图？').then(() => delBlankImage(this.ids.join(','))).then(() => {
         this.getList(); this.$modal.msgSuccess("删除成功")
+      }).catch(() => {})
+    },
+    handleCleanAll() {
+      const q = { ...this.queryParams }; delete q.pageNum; delete q.pageSize;
+      this.$modal.confirm('确认删除全部 ' + this.total + ' 条毛胚图？此操作不可恢复！').then(() => cleanBlankImage(q)).then(res => {
+        this.selectAll = false; this.getList(); this.$modal.msgSuccess(res.msg || "删除成功")
       }).catch(() => {})
     },
     handleImport() { this.importOpen = true },
@@ -530,9 +576,9 @@ export default {
   color: #909399;
 }
 
-/* ===== 详情抽屉 ===== */
+/* ===== 详情弹窗 ===== */
 .detail-drawer {
-  padding: 0 20px 20px;
+  padding: 0 10px 10px;
 }
 
 .detail-image-wrap {
@@ -543,7 +589,7 @@ export default {
 
 .detail-image {
   width: 100%;
-  max-height: 280px;
+  max-height: 80vh;
   object-fit: contain;
   border-radius: 12px;
   background: #f5f7fa;

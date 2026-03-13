@@ -171,4 +171,17 @@ public class TechBlankImageServiceImpl implements ITechBlankImageService {
         return "同步完成！新增 " + insertCount + " 条，更新 " + updateCount + " 条" +
                 (skipCount > 0 ? "，跳过 " + skipCount + " 条" : "") + "。";
     }
+
+    /**
+     * 按条件清空毛胚图（全选删除）
+     */
+    @Override
+    public int cleanBlankImages(TechBlankImage query) {
+        List<TechBlankImage> list = techBlankImageMapper.selectTechBlankImageList(query);
+        if (list == null || list.isEmpty()) {
+            return 0;
+        }
+        Long[] ids = list.stream().map(TechBlankImage::getBlankId).toArray(Long[]::new);
+        return techBlankImageMapper.deleteTechBlankImageByBlankIds(ids);
+    }
 }

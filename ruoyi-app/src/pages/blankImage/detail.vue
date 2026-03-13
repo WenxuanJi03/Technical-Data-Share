@@ -78,71 +78,73 @@
     </view>
 
     <!-- 编辑表单弹层 -->
-    <view class="form-overlay" v-if="formVisible">
-      <view class="form-wrap">
-        <view class="form-header">
-          <view class="form-header-back" @tap="closeForm">
-            <text class="form-header-back-icon">&#x2039;</text>
+    <page-container :show="formVisible" @clickoverlay="closeForm" @afterleave="closeForm" position="right" :overlay="false" custom-style="z-index: 1000; width: 100%; height: 100%;">
+      <view class="form-overlay" v-if="formVisible">
+        <view class="form-wrap">
+          <view class="form-header">
+            <view class="form-header-back" @tap="closeForm">
+              <text class="form-header-back-icon">&#x2039;</text>
+            </view>
+            <text class="form-header-title">编辑毛胚图</text>
+            <view style="width: 60rpx;"></view>
           </view>
-          <text class="form-header-title">编辑毛胚图</text>
-          <view style="width: 60rpx;"></view>
-        </view>
-        <scroll-view scroll-y class="form-body">
-          <!-- 图片 -->
-          <view class="form-section">
-            <view class="form-section-title">毛胚图</view>
-            <view class="form-image-row" @tap="handleImageChoose">
-              <image v-if="formData._localPreview" :src="formData._localPreview" class="form-preview-img" mode="aspectFill"></image>
-              <view v-else class="form-image-placeholder">
-                <text class="form-image-icon">📷</text>
-                <text class="form-image-text">点击更换图片</text>
-              </view>
-              <view v-if="imageUploading" class="form-image-uploading">
-                <text class="form-image-uploading-text">上传中...</text>
-              </view>
-            </view>
-          </view>
-
-          <!-- 基础信息 -->
-          <view class="form-section">
-            <view class="form-section-title">基础信息</view>
-            <view class="form-item">
-              <text class="form-label"><text class="required">*</text>型号</text>
-              <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
-            </view>
-            <view class="form-item">
-              <text class="form-label">模号</text>
-              <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
-            </view>
-            <view class="form-item form-item-picker">
-              <text class="form-label">版本</text>
-              <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">
-                <view class="form-picker-value">
-                  <text>{{ formData.version || '请选择' }}</text>
-                  <text class="form-picker-arrow">&#x25BE;</text>
+          <scroll-view scroll-y class="form-body">
+            <!-- 图片 -->
+            <view class="form-section">
+              <view class="form-section-title">毛胚图</view>
+              <view class="form-image-row" @tap="handleImageChoose">
+                <image v-if="formData._localPreview" :src="formData._localPreview" class="form-preview-img" mode="aspectFill"></image>
+                <view v-else class="form-image-placeholder">
+                  <text class="form-image-icon">📷</text>
+                  <text class="form-image-text">点击更换图片</text>
                 </view>
-              </picker>
+                <view v-if="imageUploading" class="form-image-uploading">
+                  <text class="form-image-uploading-text">上传中...</text>
+                </view>
+              </view>
             </view>
-            <view class="form-item">
-              <text class="form-label">下发时间</text>
-              <input class="form-input" v-model="formData.releaseDate" placeholder="如 2025/9/20" />
+
+            <!-- 基础信息 -->
+            <view class="form-section">
+              <view class="form-section-title">基础信息</view>
+              <view class="form-item">
+                <text class="form-label"><text class="required">*</text>型号</text>
+                <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
+              </view>
+              <view class="form-item">
+                <text class="form-label">模号</text>
+                <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
+              </view>
+              <view class="form-item form-item-picker">
+                <text class="form-label">版本</text>
+                <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">
+                  <view class="form-picker-value">
+                    <text>{{ formData.version || '请选择' }}</text>
+                    <text class="form-picker-arrow">&#x25BE;</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="form-item">
+                <text class="form-label">下发时间</text>
+                <input class="form-input" v-model="formData.releaseDate" placeholder="如 2025/9/20" />
+              </view>
             </view>
-          </view>
 
-          <view style="height: 60rpx;"></view>
-        </scroll-view>
+            <view style="height: 60rpx;"></view>
+          </scroll-view>
 
-        <!-- 表单底部按钮栏 -->
-        <view class="form-footer">
-          <view class="form-footer-btn form-footer-cancel" @tap="closeForm">
-            <text class="form-footer-btn-text">取消</text>
-          </view>
-          <view class="form-footer-btn form-footer-save" @tap="submitForm" :class="{ disabled: formLoading }">
-            <text class="form-footer-btn-text">{{ formLoading ? '保存中...' : '保存' }}</text>
+          <!-- 表单底部按钮栏 -->
+          <view class="form-footer">
+            <view class="form-footer-btn form-footer-cancel" @tap="closeForm">
+              <text class="form-footer-btn-text">取消</text>
+            </view>
+            <view class="form-footer-btn form-footer-save" @tap="submitForm" :class="{ disabled: formLoading }">
+              <text class="form-footer-btn-text">{{ formLoading ? '保存中...' : '保存' }}</text>
+            </view>
           </view>
         </view>
       </view>
-    </view>
+    </page-container>
   </view>
 </template>
 
@@ -162,7 +164,7 @@ export default {
       imageUploading: false,
       formData: {},
       formVersionIndex: 0,
-      versionOptions: ['A', 'B', 'C']
+      versionOptions: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     }
   },
   computed: {
@@ -361,7 +363,7 @@ export default {
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
   .main-image {
     width: 100%;
-    height: 500rpx;
+    height: 60vh;
   }
   &.no-img {
     height: 200rpx;
@@ -377,11 +379,14 @@ export default {
 
 .detail-header {
   text-align: center;
-  padding: 30rpx;
+  padding: 24rpx;
   background: #fff;
   border-radius: 20rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 2;
+  margin-top: -30rpx;
 }
 .dh-code {
   display: block;

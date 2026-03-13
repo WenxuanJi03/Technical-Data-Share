@@ -21,10 +21,6 @@
 
     <view class="filter-bar">
       <view class="filter-chips">
-        <view class="filter-chip" :class="{ active: queryParams.moldNo }" @tap="openFilterInput('moldNo')">
-          <text>{{ queryParams.moldNo || '模号' }}</text>
-          <text class="chip-arrow">&#x25BE;</text>
-        </view>
         <picker mode="selector" :range="versionOptions" :value="versionIndex" @change="onVersionChange">
           <view class="filter-chip" :class="{ active: queryParams.version }">
             <text>{{ queryParams.version || '版本' }}</text>
@@ -35,8 +31,8 @@
           <text>重置</text>
         </view>
       </view>
-      <view class="filter-add-btn" @tap="openAddForm">
-        <text class="filter-add-icon">+</text>
+      <view class="filter-add-btn text-btn" @tap="openAddForm">
+        <text class="filter-add-text">新增</text>
       </view>
     </view>
 
@@ -84,10 +80,6 @@
           </view>
           <view class="card-body">
             <text class="wheel-code">{{ item.modelCode }}</text>
-            <view class="info-row">
-              <text class="info-label">模号</text>
-              <text class="info-value">{{ item.moldNo || '-' }}</text>
-            </view>
             <view class="info-row" v-if="item.releaseDate">
               <text class="info-label">下发</text>
               <text class="info-value">{{ item.releaseDate }}</text>
@@ -102,78 +94,74 @@
       </view>
     </scroll-view>
 
-    <!-- 筛选输入弹窗 -->
-    <view class="dialog-mask" v-if="filterInput.visible" @tap="filterInput.visible = false">
-      <view class="dialog-box" @tap.stop>
-        <text class="dialog-title">{{ filterInput.title }}</text>
-        <input
-          class="dialog-input"
-          v-model="filterInput.value"
-          :placeholder="filterInput.placeholder"
-          :focus="filterInput.visible"
-          @confirm="confirmFilterInput"
-        />
-        <view class="dialog-btns">
-          <view class="dialog-btn cancel" @tap="clearFilterInput">清除</view>
-          <view class="dialog-btn confirm" @tap="confirmFilterInput">确定</view>
-        </view>
-      </view>
-    </view>
-
     <!-- 新增表单弹层 -->
-    <view class="form-overlay" v-if="formVisible">
-      <view class="form-wrap">
-        <view class="form-header">
-          <text class="form-header-cancel" @tap="closeForm">取消</text>
-          <text class="form-header-title">新增毛胚图</text>
-          <text class="form-header-save" @tap="submitForm" :class="{ disabled: formLoading }">保存</text>
-        </view>
-        <scroll-view scroll-y class="form-body">
-          <!-- 图片 -->
-          <view class="form-section">
-            <view class="form-section-title">毛胚图</view>
-            <view class="form-image-row" @tap="handleImageChoose">
-              <image v-if="formData._localPreview" :src="formData._localPreview" class="form-preview-img" mode="aspectFill"></image>
-              <view v-else class="form-image-placeholder">
-                <text class="form-image-icon">📷</text>
-                <text class="form-image-text">点击上传图片</text>
-              </view>
-              <view v-if="imageUploading" class="form-image-uploading">
-                <text class="form-image-uploading-text">上传中...</text>
-              </view>
+    <page-container :show="formVisible" @clickoverlay="closeForm" @afterleave="closeForm" position="right" :overlay="false" custom-style="z-index: 1000; width: 100%; height: 100%;">
+      <view class="form-overlay" v-if="formVisible">
+        <view class="form-wrap">
+          <view class="form-header">
+            <view class="form-header-back" @tap="closeForm">
+              <text class="form-header-back-icon">&#x2039;</text>
             </view>
+            <text class="form-header-title">新增毛胚图</text>
+            <view style="width: 60rpx;"></view>
           </view>
-
-          <!-- 基础信息 -->
-          <view class="form-section">
-            <view class="form-section-title">基础信息</view>
-            <view class="form-item">
-              <text class="form-label"><text class="required">*</text>型号</text>
-              <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
-            </view>
-            <view class="form-item">
-              <text class="form-label">模号</text>
-              <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
-            </view>
-            <view class="form-item form-item-picker">
-              <text class="form-label">版本</text>
-              <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">
-                <view class="form-picker-value">
-                  <text>{{ formData.version || '请选择' }}</text>
-                  <text class="form-picker-arrow">&#x25BE;</text>
+          <scroll-view scroll-y class="form-body">
+            <!-- 图片 -->
+            <view class="form-section">
+              <view class="form-section-title">毛胚图</view>
+              <view class="form-image-row" @tap="handleImageChoose">
+                <image v-if="formData._localPreview" :src="formData._localPreview" class="form-preview-img" mode="aspectFill"></image>
+                <view v-else class="form-image-placeholder">
+                  <text class="form-image-icon">📷</text>
+                  <text class="form-image-text">点击上传图片</text>
                 </view>
-              </picker>
+                <view v-if="imageUploading" class="form-image-uploading">
+                  <text class="form-image-uploading-text">上传中...</text>
+                </view>
+              </view>
             </view>
-            <view class="form-item">
-              <text class="form-label">下发时间</text>
-              <input class="form-input" v-model="formData.releaseDate" placeholder="如 2025/9/20" />
+
+            <!-- 基础信息 -->
+            <view class="form-section">
+              <view class="form-section-title">基础信息</view>
+              <view class="form-item">
+                <text class="form-label"><text class="required">*</text>型号</text>
+                <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
+              </view>
+              <view class="form-item">
+                <text class="form-label">模号</text>
+                <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
+              </view>
+              <view class="form-item form-item-picker">
+                <text class="form-label">版本</text>
+                <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">
+                  <view class="form-picker-value">
+                    <text>{{ formData.version || '请选择' }}</text>
+                    <text class="form-picker-arrow">&#x25BE;</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="form-item">
+                <text class="form-label">下发时间</text>
+                <input class="form-input" v-model="formData.releaseDate" placeholder="如 2025/9/20" />
+              </view>
+            </view>
+
+            <view style="height: 60rpx;"></view>
+          </scroll-view>
+
+          <!-- 表单底部按钮栏 -->
+          <view class="form-footer">
+            <view class="form-footer-btn form-footer-cancel" @tap="closeForm">
+              <text class="form-footer-btn-text">取消</text>
+            </view>
+            <view class="form-footer-btn form-footer-save" @tap="submitForm" :class="{ disabled: formLoading }">
+              <text class="form-footer-btn-text">{{ formLoading ? '保存中...' : '保存' }}</text>
             </view>
           </view>
-
-          <view style="height: 60rpx;"></view>
-        </scroll-view>
+        </view>
       </view>
-    </view>
+    </page-container>
   </view>
 </template>
 
@@ -194,18 +182,10 @@ export default {
         pageNum: 1,
         pageSize: 20,
         modelCode: null,
-        moldNo: null,
         version: null
       },
-      versionOptions: ['A', 'B', 'C'],
+      versionOptions: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
       versionIndex: -1,
-      filterInput: {
-        visible: false,
-        field: '',
-        title: '',
-        placeholder: '',
-        value: ''
-      },
       // 新增表单
       formVisible: false,
       formLoading: false,
@@ -220,7 +200,7 @@ export default {
       return 'padding-top: ' + (sys.statusBarHeight || 20) + 'px'
     },
     hasFilters() {
-      return this.queryParams.moldNo || this.queryParams.version || this.searchKeyword
+      return this.queryParams.version || this.searchKeyword
     }
   },
   onLoad() {
@@ -241,7 +221,6 @@ export default {
       } else if (this.queryParams.modelCode) {
         params.modelCode = this.queryParams.modelCode
       }
-      if (this.queryParams.moldNo) params.moldNo = this.queryParams.moldNo
       if (this.queryParams.version) params.version = this.queryParams.version
 
       listBlankImage(params).then(function (res) {
@@ -300,38 +279,10 @@ export default {
       this.reloadList()
     },
 
-    openFilterInput(field) {
-      var fieldMap = {
-        moldNo: { title: '筛选模号', placeholder: '输入模号，如 009' }
-      }
-      var cfg = fieldMap[field]
-      if (!cfg) return
-      this.filterInput.title = cfg.title
-      this.filterInput.placeholder = cfg.placeholder
-      this.filterInput.value = this.queryParams[field] || ''
-      this.filterInput.field = field
-      this.filterInput.visible = true
-    },
-
-    confirmFilterInput() {
-      var val = this.filterInput.value.trim()
-      this.queryParams[this.filterInput.field] = val || null
-      this.filterInput.visible = false
-      this.reloadList()
-    },
-
-    clearFilterInput() {
-      this.queryParams[this.filterInput.field] = null
-      this.filterInput.value = ''
-      this.filterInput.visible = false
-      this.reloadList()
-    },
-
     resetFilters() {
       this.searchKeyword = ''
       this.versionIndex = -1
       this.queryParams.version = null
-      this.queryParams.moldNo = null
       this.queryParams.modelCode = null
       this.reloadList()
     },
@@ -537,12 +488,14 @@ export default {
   box-shadow: 0 4rpx 12rpx rgba(108, 91, 179, 0.4);
   &:active { opacity: 0.8; }
 }
-.filter-add-icon {
-  font-size: 48rpx;
+.filter-add-btn.text-btn {
+  width: 120rpx;
+  border-radius: 36rpx;
+}
+.filter-add-text {
+  font-size: 28rpx;
   color: #fff;
-  font-weight: 300;
-  line-height: 1;
-  margin-top: -4rpx;
+  font-weight: 500;
 }
 
 .stats-bar {
@@ -668,54 +621,6 @@ export default {
   }
 }
 
-/* 筛选弹窗 */
-.dialog-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-.dialog-box {
-  width: 560rpx;
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx 30rpx;
-}
-.dialog-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 20rpx;
-  text-align: center;
-}
-.dialog-input {
-  background: #f5f7fa;
-  border-radius: 12rpx;
-  padding: 0 20rpx;
-  height: 72rpx;
-  font-size: 28rpx;
-  margin-bottom: 24rpx;
-}
-.dialog-btns {
-  display: flex;
-  gap: 20rpx;
-}
-.dialog-btn {
-  flex: 1;
-  height: 72rpx;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  font-weight: 500;
-  &.cancel { background: #f5f7fa; color: #606266; }
-  &.confirm { background: #6c5bb3; color: #fff; }
-}
-
 /* 新增表单 */
 .form-overlay {
   position: fixed;
@@ -735,20 +640,45 @@ export default {
   align-items: center;
   justify-content: space-between;
   background: linear-gradient(135deg, #4a3b8f, #6c5bb3);
-  padding: 20rpx 30rpx;
-  padding-top: calc(20rpx + env(safe-area-inset-top));
-  .form-header-cancel, .form-header-save {
-    font-size: 28rpx;
-    color: rgba(255,255,255,0.8);
-    padding: 10rpx;
-    &.disabled { opacity: 0.4; }
-  }
-  .form-header-title {
-    font-size: 32rpx;
-    font-weight: 600;
-    color: #fff;
-  }
+  padding: 14rpx 20rpx;
+  padding-top: calc(14rpx + env(safe-area-inset-top));
 }
+.form-header-back {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .form-header-back-icon { font-size: 56rpx; color: #fff; font-weight: 300; }
+}
+.form-header-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #fff;
+}
+.form-footer {
+  display: flex;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  gap: 20rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 16rpx rgba(0,0,0,0.06);
+}
+.form-footer-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &.disabled { opacity: 0.5; }
+  &:active { opacity: 0.85; }
+}
+.form-footer-cancel { background: #f5f7fa; }
+.form-footer-save { background: linear-gradient(135deg, #4a3b8f, #6c5bb3); }
+.form-footer-btn-text { font-size: 30rpx; font-weight: 600; }
+.form-footer-cancel .form-footer-btn-text { color: #606266; }
+.form-footer-save .form-footer-btn-text { color: #fff; }
 .form-body {
   flex: 1;
   min-height: 0;

@@ -29,4 +29,12 @@ public interface ITechBlankImageService {
      * 按 modelCode 判重：存在则更新，不存在则新增
      */
     public String syncBatch(List<TechBlankImage> list, String operName);
+
+    /**
+     * 按条件清空毛胚图（全选删除）
+     * 
+     * @param query 查询条件
+     * @return 结果
+     */
+    public int cleanBlankImages(TechBlankImage query);
 }
