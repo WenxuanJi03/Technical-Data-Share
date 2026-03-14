@@ -147,8 +147,8 @@
     <el-dialog :title="detailData.modelCode || '毛胚图详情'" :visible.sync="detailVisible" width="80%" top="5vh" append-to-body center>
       <div class="detail-drawer" v-if="detailData.blankId">
         <!-- 大图 -->
-        <div class="detail-image-wrap">
-          <img v-if="detailData.blankImage" :src="baseUrl + detailData.blankImage" class="detail-image" />
+        <div class="detail-image-wrap" @wheel.prevent="handleImageWheel">
+          <img v-if="detailData.blankImage" :src="baseUrl + detailData.blankImage" class="detail-image" :style="{ transform: 'scale(' + detailImageScale + ')', transformOrigin: zoomOrigin, cursor: detailImageScale > 1 ? 'zoom-out' : 'zoom-in' }" />
           <div v-else class="detail-no-image">
             <i class="el-icon-picture-outline" style="font-size:60px"></i>
             <p>暂无毛胚图</p>
@@ -341,6 +341,8 @@ export default {
       // 详情抽屉
       detailVisible: false,
       detailData: {},
+      detailImageScale: 1,
+      zoomOrigin: '50% 50%',
       // 导入
       importOpen: false,
       importUploading: false,
@@ -372,9 +374,20 @@ export default {
       })
     },
     showDetail(row) {
+      this.detailImageScale = 1
+      this.zoomOrigin = '50% 50%'
       getBlankImage(row.blankId).then(res => {
         this.detailData = res.data; this.detailVisible = true
       })
+    },
+    handleImageWheel(e) {
+      var rect = e.currentTarget.getBoundingClientRect()
+      var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1)
+      var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1)
+      this.zoomOrigin = x + '% ' + y + '%'
+      var delta = e.deltaY > 0 ? -0.15 : 0.15
+      var s = this.detailImageScale + delta
+      this.detailImageScale = Math.max(1, Math.min(5, s))
     },
     /** 图片上传成功（详情页） */
     handleImageUpload(res) {
@@ -585,6 +598,8 @@ export default {
   text-align: center;
   margin-bottom: 20px;
   position: relative;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 .detail-image {
@@ -593,6 +608,7 @@ export default {
   object-fit: contain;
   border-radius: 12px;
   background: #f5f7fa;
+  transition: transform 0.15s ease;
 }
 
 .detail-no-image {

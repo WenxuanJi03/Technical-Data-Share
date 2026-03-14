@@ -128,10 +128,6 @@
                 <text class="form-label"><text class="required">*</text>型号</text>
                 <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
               </view>
-              <view class="form-item">
-                <text class="form-label">模号</text>
-                <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
-              </view>
               <view class="form-item form-item-picker">
                 <text class="form-label">版本</text>
                 <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">

@@ -116,6 +116,13 @@
         "navigationBarTitleText": "毛胚图详情",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/blankImage/viewer",
+      "style": {
+        "navigationBarTitleText": "查看图片",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {

@@ -53,33 +53,29 @@
       产品清单统计
     </div>
 
-    <!-- 产品状态 - 单独一行 -->
+    <!-- 客户分布 + 产品状态 - 并排显示 -->
     <el-row :gutter="20" style="margin-bottom: 20px;">
-      <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
-        <div class="chart-card">
-          <div class="card-header">
-            <span class="card-title">产品状态分布</span>
-            <span class="card-total">总数: {{ productStats.total || 0 }}</span>
-          </div>
-          <div ref="productStatusChart" class="chart-content"></div>
-        </div>
-      </el-col>
-    </el-row>
-
-    <!-- 客户分布 - 占整行,更大的空间 -->
-    <el-row :gutter="20" style="margin-bottom: 20px;">
-      <el-col :span="24">
-        <div class="chart-card chart-card-xlarge">
+      <el-col :xs="24" :sm="24" :md="14" :lg="14" :xl="14">
+        <div class="chart-card chart-card-medium">
           <div class="card-header">
             <span class="card-title">客户分布统计</span>
             <span class="card-total">客户种类总数: {{ productStats.customerTotal || 0 }}</span>
           </div>
-          <div ref="customerChart" class="chart-content-xlarge"></div>
+          <div ref="customerChart" class="chart-content-medium"></div>
+        </div>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="10" :lg="10" :xl="10">
+        <div class="chart-card chart-card-medium">
+          <div class="card-header">
+            <span class="card-title">产品状态分布</span>
+            <span class="card-total">总数: {{ productStats.total || 0 }}</span>
+          </div>
+          <div ref="productStatusChart" class="chart-content-medium"></div>
         </div>
       </el-col>
     </el-row>
 
-    <!-- 规格分布 - 占整行 -->
+    <!-- 规格分布 + 数量为1的规格 -->
     <el-row :gutter="20" style="margin-bottom: 20px;">
       <el-col :span="24">
         <div class="chart-card chart-card-large">
@@ -88,28 +84,21 @@
             <span class="card-total">规格种类总数: {{ productStats.sizeSpecTotal || 0 }} (不含数量为1的规格)</span>
           </div>
           <div ref="sizeSpecChart" class="chart-content-large"></div>
-        </div>
-      </el-col>
-    </el-row>
-
-    <!-- 数量为1的规格列表 -->
-    <el-row :gutter="20" v-if="singleCountSpecs.length > 0">
-      <el-col :span="24">
-        <div class="chart-card">
-          <div class="card-header">
-            <span class="card-title">数量为1的规格列表</span>
-            <span class="card-total">共 {{ singleCountSpecs.length }} 种规格</span>
-          </div>
-          <div class="specs-list">
-            <el-tag 
-              v-for="spec in singleCountSpecs" 
-              :key="spec.name"
-              size="medium"
-              effect="plain"
-              style="margin: 4px 8px;"
-            >
-              {{ spec.name }}
-            </el-tag>
+          <div v-if="singleCountSpecs.length > 0" class="single-specs-section">
+            <div class="single-specs-header">
+              数量为1的规格列表 (共 {{ singleCountSpecs.length }} 种)
+            </div>
+            <div class="specs-list">
+              <el-tag 
+                v-for="spec in singleCountSpecs" 
+                :key="spec.name"
+                size="medium"
+                effect="plain"
+                style="margin: 4px 8px;"
+              >
+                {{ spec.name }}
+              </el-tag>
+            </div>
           </div>
         </div>
       </el-col>
@@ -128,16 +117,14 @@ export default {
       trialTrackStats: {},
       productStats: {},
       charts: [],
-      singleCountSpecs: [] // 数量为1的规格列表
+      singleCountSpecs: []
     }
   },
   mounted() {
     this.loadData()
-    // 监听窗口大小变化
     window.addEventListener('resize', this.handleResize)
   },
   beforeDestroy() {
-    // 销毁所有图表
     this.charts.forEach(chart => {
       if (chart) {
         chart.dispose()
@@ -151,10 +138,8 @@ export default {
         this.trialTrackStats = response.data.trialTrack || {}
         this.productStats = response.data.product || {}
         
-        // 分离数量为1的规格
         if (this.productStats.sizeSpecStats) {
           this.singleCountSpecs = this.productStats.sizeSpecStats.filter(item => item.value === 1)
-          // 过滤掉数量为1的,只保留数量大于1的用于图表展示
           this.productStats.sizeSpecStats = this.productStats.sizeSpecStats.filter(item => item.value > 1)
         }
         
@@ -183,8 +168,8 @@ export default {
       // 客户分布 - 扇形图(大图)
       this.initPieChart('customerChart', this.productStats.customerStats || [], '#73c0de', true)
       
-      // 规格分布 - 柱状图(大图)
-      this.initBarChart('sizeSpecChart', this.productStats.sizeSpecStats || [], '#3ba272', true)
+      // 规格分布 - 堆叠柱状图(按轮毂半径和轮辋宽度)
+      this.initStackedBarChart('sizeSpecChart', this.productStats.sizeSpecStats || [])
     },
 
     /**
@@ -197,13 +182,9 @@ export default {
       const chart = echarts.init(chartDom)
       this.charts.push(chart)
       
-      // 大图表配置(客户分布等)
       if (isLarge) {
-        // 计算图例列数 - 更大的图例区域
-        const legendColumns = data.length > 30 ? 3 : (data.length > 15 ? 2 : 1)
-        const legendWidth = legendColumns === 3 ? '35%' : (legendColumns === 2 ? '30%' : '25%')
-        const pieCenter = legendColumns === 3 ? '30%' : (legendColumns === 2 ? '33%' : '35%')
-        
+        // 客户分布统计 - 标签融入饼图，小占比项悬浮显示
+        const total = data.reduce((sum, item) => sum + item.value, 0)
         const option = {
           tooltip: {
             trigger: 'item',
@@ -214,48 +195,13 @@ export default {
             confine: true
           },
           legend: {
-            type: 'plain',
-            orient: 'vertical',
-            right: '1%',
-            top: '5%',
-            bottom: '5%',
-            width: legendWidth,
-            itemGap: 14,
-            itemWidth: 22,
-            itemHeight: 16,
-            textStyle: {
-              fontSize: 15,
-              lineHeight: 22,
-              rich: {
-                name: {
-                  fontSize: 15,
-                  width: legendColumns === 3 ? 150 : (legendColumns === 2 ? 170 : 210)
-                }
-              }
-            },
-            formatter: (name) => {
-              const item = data.find(d => d.name === name)
-              if (!item) return name
-              // 不截断名称,完整显示
-              return `{name|${name}: ${item.value}}`
-            },
-            tooltip: {
-              show: true,
-              textStyle: {
-                fontSize: 14
-              }
-            }
-          },
-          grid: {
-            left: '3%',
-            right: legendWidth,
-            containLabel: true
+            show: false
           },
           series: [
             {
               type: 'pie',
-              radius: ['38%', '70%'],
-              center: [pieCenter, '50%'],
+              radius: ['25%', '55%'],
+              center: ['50%', '50%'],
               avoidLabelOverlap: true,
               itemStyle: {
                 borderRadius: 14,
@@ -265,14 +211,11 @@ export default {
               label: {
                 show: true,
                 position: 'outside',
-                fontSize: 14,
-                fontWeight: '600',
-                rotate: 0,
-                align: 'center',
+                fontSize: 13,
+                fontWeight: '500',
                 formatter: (params) => {
-                  // 只显示百分比大于2.5%的标签
-                  if (params.percent > 2.5) {
-                    return `${params.name} ${params.percent}%`
+                  if (params.percent > 3) {
+                    return `${params.name}: ${params.value}\n(${params.percent}%)`
                   }
                   return ''
                 },
@@ -282,10 +225,9 @@ export default {
               emphasis: {
                 label: {
                   show: true,
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: 'bold',
-                  rotate: 0,
-                  formatter: '{b}\n{c} ({d}%)'
+                  formatter: '{b}: {c}\n({d}%)'
                 },
                 itemStyle: {
                   shadowBlur: 18,
@@ -297,7 +239,7 @@ export default {
               labelLine: {
                 show: true,
                 length: 25,
-                length2: 18,
+                length2: 20,
                 smooth: true,
                 lineStyle: {
                   width: 2
@@ -305,7 +247,10 @@ export default {
               },
               data: data.map(item => ({
                 name: item.name,
-                value: item.value
+                value: item.value,
+                label: {
+                  show: (item.value / total * 100) > 3
+                }
               }))
             }
           ],
@@ -313,7 +258,7 @@ export default {
         }
         chart.setOption(option)
       } else {
-        // 小图表配置(原有的)
+        // 小图表 - 数据标签直接显示在饼图上
         const option = {
           tooltip: {
             trigger: 'item',
@@ -321,25 +266,13 @@ export default {
             confine: true
           },
           legend: {
-            orient: 'vertical',
-            left: 'right',
-            top: 'center',
-            textStyle: {
-              fontSize: 12
-            },
-            formatter: (name) => {
-              const item = data.find(d => d.name === name)
-              return item ? `${name}: ${item.value}` : name
-            },
-            tooltip: {
-              show: true
-            }
+            show: false
           },
           series: [
             {
               type: 'pie',
-              radius: ['40%', '70%'],
-              center: ['40%', '50%'],
+              radius: ['28%', '55%'],
+              center: ['50%', '50%'],
               avoidLabelOverlap: true,
               itemStyle: {
                 borderRadius: 8,
@@ -347,14 +280,20 @@ export default {
                 borderWidth: 2
               },
               label: {
-                show: false
+                show: true,
+                position: 'outside',
+                fontSize: 12,
+                fontWeight: '500',
+                formatter: '{b}: {c}\n({d}%)',
+                overflow: 'none',
+                lineHeight: 16
               },
               emphasis: {
                 label: {
                   show: true,
                   fontSize: 14,
                   fontWeight: 'bold',
-                  formatter: '{b}\n{c} ({d}%)'
+                  formatter: '{b}: {c}\n({d}%)'
                 },
                 itemStyle: {
                   shadowBlur: 10,
@@ -363,7 +302,13 @@ export default {
                 }
               },
               labelLine: {
-                show: false
+                show: true,
+                length: 20,
+                length2: 0,
+                smooth: false,
+                lineStyle: {
+                  width: 1.5
+                }
               },
               data: data.map(item => ({
                 name: item.name,
@@ -387,7 +332,6 @@ export default {
       const chart = echarts.init(chartDom)
       this.charts.push(chart)
       
-      // 大图表配置(规格分布等)
       if (isLarge) {
         const option = {
           tooltip: {
@@ -415,11 +359,10 @@ export default {
             data: data.map(item => item.name),
             axisLabel: {
               interval: 0,
-              rotate: 0, // 不旋转,横向显示
+              rotate: 0,
               fontSize: 12,
               color: '#606266',
               formatter: (value) => {
-                // 如果标签太长,进行截断
                 return value.length > 8 ? value.substring(0, 8) + '...' : value
               }
             },
@@ -483,7 +426,6 @@ export default {
         }
         chart.setOption(option)
       } else {
-        // 小图表配置(原有的)
         const option = {
           tooltip: {
             trigger: 'axis',
@@ -534,23 +476,189 @@ export default {
     },
 
     /**
+     * 初始化堆叠柱状图(轮毂规格按半径和轮辋宽度分组)
+     */
+    initStackedBarChart(refName, data) {
+      const chartDom = this.$refs[refName]
+      if (!chartDom) return
+
+      const chart = echarts.init(chartDom)
+      this.charts.push(chart)
+
+      const parsed = []
+      data.forEach(item => {
+        const name = String(item.name).trim()
+        if (name.length >= 4) {
+          parsed.push({
+            radius: name.substring(0, 2),
+            width: name.substring(2),
+            count: item.value
+          })
+        }
+      })
+
+      const radiusMap = {}
+      parsed.forEach(item => {
+        if (!radiusMap[item.radius]) {
+          radiusMap[item.radius] = {}
+        }
+        radiusMap[item.radius][item.width] =
+          (radiusMap[item.radius][item.width] || 0) + item.count
+      })
+
+      const radii = Object.keys(radiusMap).sort()
+      const allWidths = [...new Set(parsed.map(p => p.width))].sort()
+
+      const radiusTotals = {}
+      radii.forEach(r => {
+        radiusTotals[r] = Object.values(radiusMap[r]).reduce((a, b) => a + b, 0)
+      })
+
+      const colorPalette = [
+        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+        '#3ba272', '#fc8452', '#9a60b4', '#4992ff', '#7cffb2',
+        '#fddd60', '#ff6e76', '#58d9f9', '#05c091', '#ff8a45',
+        '#8d48e3', '#ea7ccc', '#48b8d0', '#c4b5fd', '#f97316'
+      ]
+
+      const series = allWidths.map((w, idx) => ({
+        name: w,
+        type: 'bar',
+        stack: 'total',
+        barMaxWidth: radii.length > 15 ? 40 : 60,
+        itemStyle: {
+          color: colorPalette[idx % colorPalette.length]
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 11,
+          color: '#303133',
+          fontWeight: 'bold',
+          formatter: (params) => {
+            const count = params.value
+            if (count === 0) return ''
+            const r = radii[params.dataIndex]
+            const total = radiusTotals[r]
+            const percent = ((count / total) * 100).toFixed(1)
+            if (count / total < 0.08) return ''
+            return `${w}: ${percent}%, ${count}`
+          }
+        },
+        emphasis: {
+          label: {
+            fontSize: 13,
+            fontWeight: 'bold',
+            formatter: (params) => {
+              const count = params.value
+              if (count === 0) return ''
+              const r = radii[params.dataIndex]
+              const total = radiusTotals[r]
+              const percent = ((count / total) * 100).toFixed(1)
+              return `${w}: ${percent}%, ${count}`
+            }
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: 'rgba(0, 0, 0, 0.3)'
+          }
+        },
+        data: radii.map(r => radiusMap[r][w] || 0)
+      }))
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          textStyle: { fontSize: 14 },
+          formatter: (params) => {
+            const r = params[0].name
+            let html = `<strong>轮毂半径: ${r}</strong><br/>总数: ${radiusTotals[r]}<br/><hr style="margin:4px 0;border-color:#eee"/>`
+            params.filter(p => p.value > 0).forEach(p => {
+              const percent = ((p.value / radiusTotals[r]) * 100).toFixed(1)
+              html += `${p.marker} 轮辋宽度 ${p.seriesName}: ${p.value} (${percent}%)<br/>`
+            })
+            return html
+          }
+        },
+        legend: {
+          type: 'scroll',
+          bottom: '0%',
+          textStyle: { fontSize: 12 },
+          itemWidth: 16,
+          itemHeight: 12,
+          formatter: (name) => `宽度 ${name}`
+        },
+        grid: {
+          left: '3%',
+          right: '3%',
+          bottom: '12%',
+          top: '8%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: radii,
+          name: '轮毂半径',
+          nameLocation: 'center',
+          nameGap: 35,
+          nameTextStyle: {
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: '#303133'
+          },
+          axisLabel: {
+            fontSize: 13,
+            color: '#606266',
+            fontWeight: 'bold'
+          },
+          axisLine: {
+            lineStyle: { color: '#dcdfe6' }
+          },
+          axisTick: {
+            alignWithLabel: true
+          }
+        },
+        yAxis: {
+          type: 'value',
+          minInterval: 1,
+          name: '数量',
+          nameTextStyle: {
+            fontSize: 13,
+            color: '#606266',
+            padding: [0, 0, 0, 10]
+          },
+          axisLabel: {
+            fontSize: 12,
+            color: '#606266'
+          },
+          splitLine: {
+            lineStyle: {
+              type: 'dashed',
+              color: '#e4e7ed'
+            }
+          }
+        },
+        series: series
+      }
+
+      chart.setOption(option)
+    },
+
+    /**
      * 生成渐变色系
      */
     generateColors(baseColor, count) {
-      const colors = [
-        ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'],
-        ['#4992ff', '#7cffb2', '#fddd60', '#ff6e76', '#58d9f9', '#05c091', '#ff8a45', '#8d48e3']
+      const palette = [
+        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+        '#3ba272', '#fc8452', '#9a60b4', '#4992ff', '#7cffb2',
+        '#fddd60', '#ff6e76', '#58d9f9', '#05c091', '#ff8a45',
+        '#8d48e3', '#ea7ccc', '#48b8d0', '#c4b5fd', '#f97316',
+        '#0ea5e9', '#22c55e', '#f43f5e', '#a855f7', '#14b8a6',
+        '#e11d48', '#6366f1', '#84cc16', '#f59e0b', '#06b6d4',
+        '#d946ef', '#10b981', '#ef4444', '#8b5cf6', '#f472b6'
       ]
-      
-      // 根据baseColor选择色系
-      if (baseColor === '#5470c6') return colors[0]
-      if (baseColor === '#91cc75') return colors[1]
-      if (baseColor === '#fac858') return colors[0].slice(2)
-      if (baseColor === '#ee6666') return colors[1].slice(3)
-      if (baseColor === '#73c0de') return colors[0].slice(4)
-      if (baseColor === '#3ba272') return colors[1].slice(5)
-      
-      return colors[0]
+      return palette
     },
 
     /**
@@ -626,8 +734,9 @@ export default {
 
 .card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 12px;
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid #ebeef5;
@@ -662,12 +771,35 @@ export default {
   width: 100%;
 }
 
+.chart-content-medium {
+  height: 400px;
+  width: 100%;
+}
+
 .chart-card-large {
   min-height: 520px;
 }
 
 .chart-card-xlarge {
   min-height: 820px;
+}
+
+.chart-card-medium {
+  min-height: 470px;
+}
+
+.single-specs-section {
+  border-top: 1px solid #ebeef5;
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.single-specs-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+  padding-left: 4px;
 }
 
 .specs-list {
@@ -706,6 +838,10 @@ export default {
   .chart-content-xlarge {
     height: 550px;
   }
+
+  .chart-content-medium {
+    height: 300px;
+  }
   
   .chart-card-large {
     min-height: 420px;
@@ -713,6 +849,10 @@ export default {
 
   .chart-card-xlarge {
     min-height: 620px;
+  }
+
+  .chart-card-medium {
+    min-height: 370px;
   }
 
   .specs-list {

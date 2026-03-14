@@ -33,9 +33,6 @@
           <view v-if="detail.version" class="dtag dtag-purple">
             <text>版本 {{ detail.version }}</text>
           </view>
-          <view v-if="detail.moldNo" class="dtag dtag-default">
-            <text>模号 {{ detail.moldNo }}</text>
-          </view>
         </view>
       </view>
 
@@ -43,10 +40,6 @@
       <view class="detail-section">
         <view class="section-title-bar"><text class="section-title">基础信息</text></view>
         <view class="desc-grid">
-          <view class="desc-item">
-            <text class="desc-label">模号</text>
-            <text class="desc-value">{{ detail.moldNo || '-' }}</text>
-          </view>
           <view class="desc-item">
             <text class="desc-label">型号</text>
             <text class="desc-value">{{ detail.modelCode || '-' }}</text>
@@ -62,7 +55,7 @@
         </view>
       </view>
 
-      <view style="height: 180rpx"></view>
+      <view style="height: 80rpx"></view>
     </scroll-view>
 
     <!-- 底部操作栏 -->
@@ -111,10 +104,6 @@
                 <text class="form-label"><text class="required">*</text>型号</text>
                 <input class="form-input" v-model="formData.modelCode" placeholder="如 00919F03" />
               </view>
-              <view class="form-item">
-                <text class="form-label">模号</text>
-                <input class="form-input" v-model="formData.moldNo" placeholder="如 009" />
-              </view>
               <view class="form-item form-item-picker">
                 <text class="form-label">版本</text>
                 <picker mode="selector" :range="versionOptions" :value="formVersionIndex" @change="onFormVersionChange">
@@ -145,6 +134,7 @@
         </view>
       </view>
     </page-container>
+
   </view>
 </template>
 
@@ -211,8 +201,9 @@ export default {
 
     previewImage() {
       if (this.localImageUrl) {
-        uni.previewImage({
-          urls: [this.localImageUrl]
+        uni.setStorageSync('_blankViewerUrl', this.localImageUrl)
+        uni.navigateTo({
+          url: '/pages/blankImage/viewer?title=' + encodeURIComponent(this.detail.modelCode || '')
         })
       }
     },
@@ -352,18 +343,18 @@ export default {
 .page-body {
   flex: 1;
   min-height: 0;
-  padding: 20rpx;
+  padding: 12rpx 16rpx;
 }
 
 .image-section {
   background: #fff;
   border-radius: 20rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 10rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
   .main-image {
     width: 100%;
-    height: 60vh;
+    height: 40vh;
   }
   &.no-img {
     height: 200rpx;
@@ -379,14 +370,14 @@ export default {
 
 .detail-header {
   text-align: center;
-  padding: 24rpx;
+  padding: 16rpx 24rpx;
   background: #fff;
   border-radius: 20rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 10rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 2;
-  margin-top: -30rpx;
+  margin-top: -40rpx;
 }
 .dh-code {
   display: block;
@@ -622,4 +613,5 @@ export default {
 .form-footer-btn-text { font-size: 30rpx; font-weight: 600; }
 .form-footer-cancel .form-footer-btn-text { color: #606266; }
 .form-footer-save .form-footer-btn-text { color: #fff; }
+
 </style>
